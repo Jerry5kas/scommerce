@@ -189,7 +189,10 @@ export default function Home() {
                                 </div>
 
                                 {/* Login */}
-                                <button className="flex items-center gap-1.5 text-gray-700 transition-all duration-300 hover:scale-105 hover:text-[#45AE96] sm:gap-2">
+                                <a
+                                    href="/login"
+                                    className="flex items-center gap-1.5 text-gray-700 transition-all duration-300 hover:scale-105 hover:text-[#45AE96] sm:gap-2"
+                                >
                                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path
                                             strokeLinecap="round"
@@ -199,7 +202,7 @@ export default function Home() {
                                         />
                                     </svg>
                                     <span className="hidden text-sm font-medium lg:inline">Login</span>
-                                </button>
+                                </a>
 
                                 {/* Cart */}
                                 <button className="relative flex items-center gap-1.5 text-gray-700 transition-all duration-300 hover:scale-105 hover:text-[#45AE96] sm:gap-2">
