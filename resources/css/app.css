@@ -5,7 +5,16 @@
 
 @theme {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+        'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* App theme (overridden by JS from DB) */
+:root {
+    --theme-primary-1: #45AE96;
+    --theme-primary-2: #46ae97;
+    --theme-secondary: #c4f5ea;
+    --theme-tertiary: #cf992c;
+    --theme-primary-1-dark: #3a9a85; /* hover/darker variant */
 }
 
 @keyframes marquee {
@@ -44,6 +53,63 @@
     animation-play-state: paused;
 }
 
+/* Slower, sluggish marquee for location strip */
+.animate-marquee-slow {
+    animation: marquee 220s linear infinite;
+    will-change: transform;
+}
+
+.animate-marquee-slow:hover {
+    animation-play-state: paused;
+}
+
+/* Thick, clean marquee text – solid readable pattern */
+.marquee-text-thick {
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.marquee-text-outline {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* Dark marquee – gradient fill (prominent) + outline (secondary) */
+.marquee-dark {
+    background: linear-gradient(90deg, #1f2937 0%, #111827 50%, #1f2937 100%);
+}
+
+.marquee-gradient-fill {
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    background: linear-gradient(
+        90deg,
+        var(--theme-primary-1-dark) 0%,
+        var(--theme-secondary) 35%,
+        #fff 50%,
+        var(--theme-secondary) 65%,
+        var(--theme-primary-1-dark) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-fill-color: transparent;
+}
+
+.marquee-outline-fill {
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.35);
+}
+
+.marquee-sep {
+    color: rgba(255, 255, 255, 0.25);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
 .animate-float {
     animation: float 3s ease-in-out infinite;
 }
@@ -51,6 +117,64 @@
 .animate-float-delayed {
     animation: float-delayed 3.5s ease-in-out infinite;
     animation-delay: 0.5s;
+}
+
+/* Nav drawer item stagger */
+@keyframes nav-drawer-in {
+    from {
+        opacity: 0;
+        transform: translateX(0.5rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.nav-drawer-item {
+    animation: nav-drawer-in 0.3s ease-out forwards;
+}
+
+/* Product cards slider - single row, snap scroll */
+.products-slider {
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.products-slider > * {
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+}
+
+/* Morning delivery – rectangle-based fluid shape (rounded corners breathe) */
+.morning-video-frame {
+    border-radius: 1.25rem;
+    animation: morning-rect-breathe 6s ease-in-out infinite;
+}
+
+@keyframes morning-rect-breathe {
+    0%, 100% { border-radius: 1.25rem; }
+    25% { border-radius: 1.5rem 1.25rem 1.5rem 1.25rem; }
+    50% { border-radius: 1.75rem; }
+    75% { border-radius: 1.25rem 1.5rem 1.25rem 1.5rem; }
+}
+
+/* Morning video – professional angled shape (hero-style) */
+.morning-video-shape {
+    clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
+}
+
+@media (max-width: 1024px) {
+    .morning-video-shape {
+        clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
+    }
+}
+
+@media (max-width: 640px) {
+    .morning-video-shape {
+        clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
+    }
 }
 
 /* Smooth scroll behavior */
@@ -73,6 +197,21 @@ html {
     .hero-image-shape {
         clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
     }
+}
+
+/* Section bg – creative scattered icons, subtle breathe */
+.section-icon-bg img {
+    animation: icon-bg-breathe 8s ease-in-out infinite;
+}
+.section-icon-bg img:nth-child(odd) {
+    animation-delay: -2s;
+}
+.section-icon-bg img:nth-child(3n) {
+    animation-delay: -4s;
+}
+@keyframes icon-bg-breathe {
+    0%, 100% { opacity: 0.06; }
+    50% { opacity: 0.1; }
 }
 
 /* Mobile-first responsive improvements */

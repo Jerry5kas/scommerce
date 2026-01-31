@@ -1,5 +1,6 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import type { SharedData } from '@/types';
 
 const LANGUAGES = [
     { value: 'english', label: 'English' },
@@ -17,8 +18,18 @@ interface LoginPageProps {
 }
 
 export default function Login({ phone: initialPhone, message, errors: serverErrors }: LoginPageProps) {
+    const { theme } = (usePage().props as unknown as SharedData) ?? {};
     const [step, setStep] = useState<'phone' | 'otp'>(initialPhone ? 'otp' : 'phone');
     const [phoneValue, setPhoneValue] = useState(initialPhone ?? '');
+
+    useEffect(() => {
+        if (theme) {
+            document.documentElement.style.setProperty('--theme-primary-1', theme.primary_1);
+            document.documentElement.style.setProperty('--theme-primary-2', theme.primary_2);
+            document.documentElement.style.setProperty('--theme-secondary', theme.secondary);
+            document.documentElement.style.setProperty('--theme-tertiary', theme.tertiary);
+        }
+    }, [theme]);
 
     const sendOtpForm = useForm({
         phone: initialPhone ?? '',
@@ -123,7 +134,7 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                             </div>
 
                             {message && (
-                                <div className="mb-4 rounded-lg bg-[#45AE96]/10 px-4 py-3 text-sm text-[#3a9a85]">
+                                <div className="mb-4 rounded-lg bg-[var(--theme-primary-1)]/10 px-4 py-3 text-sm text-[var(--theme-primary-1-dark)]">
                                     {message}
                                 </div>
                             )}
@@ -134,7 +145,7 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                         <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
                                             Phone number
                                         </label>
-                                        <div className="mt-1 flex rounded-lg border border-gray-300 shadow-sm focus-within:border-[#45AE96] focus-within:ring-1 focus-within:ring-[#45AE96]">
+                                        <div className="mt-1 flex rounded-lg border border-gray-300 shadow-sm focus-within:border-[var(--theme-primary-1)] focus-within:ring-1 focus-within:ring-[var(--theme-primary-1)]">
                                             <span className="inline-flex items-center rounded-l-lg border-r border-gray-300 bg-gray-50 px-3 text-sm text-gray-600">
                                                 +91
                                             </span>
@@ -182,9 +193,9 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                                     type="button"
                                                     role="tab"
                                                     aria-selected={sendOtpForm.data.language === opt.value}
-                                                    className={`flex-1 rounded-md px-3 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#45AE96] focus:ring-offset-1 ${
+                                                    className={`flex-1 rounded-md px-3 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-1 ${
                                                         sendOtpForm.data.language === opt.value
-                                                            ? 'bg-[#45AE96] text-white shadow-sm'
+                                                            ? 'bg-[var(--theme-primary-1)] text-white shadow-sm'
                                                             : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
                                                     }`}
                                                     onClick={() =>
@@ -208,7 +219,7 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                                 type="checkbox"
                                                 checked={sendOtpForm.data.consent}
                                                 onChange={(e) => sendOtpForm.setData('consent', e.target.checked)}
-                                                className="mt-1 h-4 w-4 rounded border-gray-300 text-[#45AE96] focus:ring-[#45AE96]"
+                                                className="mt-1 h-4 w-4 rounded border-gray-300 text-[var(--theme-primary-1)] focus:ring-[var(--theme-primary-1)]"
                                             />
                                             <span className="text-sm text-gray-700">
                                                 I agree to receive updates and offers from Freshtick via Email, SMS,
@@ -225,7 +236,7 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                     <button
                                         type="submit"
                                         disabled={sendOtpForm.processing}
-                                        className="w-full rounded-lg bg-[#45AE96] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#3a9a85] focus:outline-none focus:ring-2 focus:ring-[#45AE96] focus:ring-offset-2 disabled:opacity-70"
+                                        className="w-full rounded-lg bg-[var(--theme-primary-1)] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 disabled:opacity-70"
                                     >
                                         {sendOtpForm.processing ? 'Sending…' : 'Send OTP'}
                                     </button>
@@ -243,7 +254,7 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                             inputMode="numeric"
                                             maxLength={6}
                                             placeholder="000000"
-                                            className="mt-1 block w-full rounded-lg border border-gray-300 py-3 text-center text-lg tracking-[0.4em] text-gray-900 shadow-sm placeholder:tracking-[0.4em] placeholder:text-gray-400 focus:border-[#45AE96] focus:ring-1 focus:ring-[#45AE96] sm:text-sm"
+                                            className="mt-1 block w-full rounded-lg border border-gray-300 py-3 text-center text-lg tracking-[0.4em] text-gray-900 shadow-sm placeholder:tracking-[0.4em] placeholder:text-gray-400 focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] sm:text-sm"
                                             value={verifyOtpForm.data.otp}
                                             onChange={(e) =>
                                                 verifyOtpForm.setData(
@@ -264,7 +275,7 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                     <button
                                         type="submit"
                                         disabled={verifyOtpForm.processing || verifyOtpForm.data.otp.length !== 6}
-                                        className="w-full rounded-lg bg-[#45AE96] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#3a9a85] focus:outline-none focus:ring-2 focus:ring-[#45AE96] focus:ring-offset-2 disabled:opacity-70"
+                                        className="w-full rounded-lg bg-[var(--theme-primary-1)] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 disabled:opacity-70"
                                     >
                                         {verifyOtpForm.processing ? 'Verifying…' : 'Verify & sign in'}
                                     </button>
@@ -272,7 +283,7 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                     <button
                                         type="button"
                                         onClick={handleBackToPhone}
-                                        className="w-full text-sm font-medium text-gray-600 hover:text-[#45AE96]"
+                                        className="w-full text-sm font-medium text-gray-600 hover:text-[var(--theme-primary-1)]"
                                     >
                                         Change phone number
                                     </button>

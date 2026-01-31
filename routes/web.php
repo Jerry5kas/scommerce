@@ -8,6 +8,22 @@ Route::get('/', function () {
     return Inertia::render('home');
 })->name('home');
 
+Route::get('/products', function () {
+    return Inertia::render('products');
+})->name('products');
+
+Route::get('/products/{id}', function (string $id) {
+    return Inertia::render('product-detail', ['id' => $id]);
+})->name('products.show');
+
+Route::get('/cart', function () {
+    return Inertia::render('cart');
+})->name('cart');
+
+Route::get('/subscription', function () {
+    return Inertia::render('subscription', ['planId' => request()->query('plan')]);
+})->name('subscription');
+
 Route::get('/welcome', function () {
     return Inertia::render('welcome');
 })->name('welcome');

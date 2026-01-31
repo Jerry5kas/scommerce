@@ -1,0 +1,17 @@
+<svg class="animated" id="freepik_stories-active-support" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" version="1.1">
+<style>
+svg#freepik_stories-active-support.animated #freepik--background-simple--inject-18 { animation: slideDown 1s cubic-bezier(.36,-0.01,.5,1.38) 0s forwards; }
+svg#freepik_stories-active-support.animated #freepik--Device--inject-18 { animation: lightSpeedLeft 1s cubic-bezier(.36,-0.01,.5,1.38) 0s forwards; }
+svg#freepik_stories-active-support.animated #freepik--Character--inject-18 { animation: slideRight 1s cubic-bezier(.36,-0.01,.5,1.38) 0s forwards; }
+svg#freepik_stories-active-support.animated #freepik--Gears--inject-18 { animation: slideRight 1s cubic-bezier(.36,-0.01,.5,1.38) 0s forwards; }
+svg#freepik_stories-active-support.animated #freepik--speech-bubble--inject-18 { animation: slideUp 1s cubic-bezier(.36,-0.01,.5,1.38) 0s forwards; }
+@keyframes slideDown { 0% { opacity: 0; transform: translateY(-30px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes lightSpeedLeft { from { transform: translate3d(-50%, 0, 0) skewX(20deg); opacity: 0; } 60% { transform: skewX(-10deg); opacity: 1; } 80% { transform: skewX(2deg); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes slideRight { 0% { opacity: 0; transform: translateX(30px); } 100% { opacity: 1; transform: translateX(0); } }
+@keyframes slideUp { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: inherit; } }
+</style>
+<g id="freepik--background-simple--inject-18" class="animable">
+  <path d="M321.06,338.34s39-2.43,65.84-50.39,22-121.12-11.38-161.76S290.17,71.72,240.59,84.73c-24.16,6.34-40.27,22.77-54.19,42.58-12.13,17.26-25.77,33.9-44.13,44.82-18.17,10.82-36.86,19.44-46,40-22.34,50-6,108.22,46.81,127.84C200,361.1,295.05,349.72,321.06,338.34Z" fill="rgb(70, 174, 151)"/>
+</g>
+<rect x="100" y="100" width="300" height="300" rx="24" fill="rgb(70, 174, 151)" opacity="0.2"/>
+</svg>
