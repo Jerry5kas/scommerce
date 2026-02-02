@@ -12,7 +12,13 @@ const DAY_LABELS: Record<number, string> = {
     6: 'Sat',
 };
 
-export default function AdminZonesCreate() {
+const VERTICAL_DEFAULT = ['daily_fresh', 'society_fresh'];
+
+interface AdminZonesCreateProps {
+    verticalOptions: Record<string, string>;
+}
+
+export default function AdminZonesCreate({ verticalOptions }: AdminZonesCreateProps) {
     const form = useForm({
         name: '',
         code: '',
@@ -20,6 +26,7 @@ export default function AdminZonesCreate() {
         city: '',
         state: '',
         is_active: true,
+        verticals: VERTICAL_DEFAULT as string[],
         delivery_charge: '',
         min_order_amount: '',
         pincodes: '' as string,
@@ -28,6 +35,13 @@ export default function AdminZonesCreate() {
         service_time_end: '',
         service_days: [] as number[],
     });
+
+    const toggleVertical = (value: string) => {
+        const next = form.data.verticals.includes(value)
+            ? form.data.verticals.filter((v) => v !== value)
+            : [...form.data.verticals, value];
+        form.setData('verticals', next);
+    };
 
     const toggleDay = (day: number) => {
         const next = form.data.service_days.includes(day)
@@ -109,6 +123,24 @@ export default function AdminZonesCreate() {
                                 onChange={(e) => form.setData('state', e.target.value)}
                             />
                             {form.errors.state && <p className="mt-1 text-sm text-red-600">{form.errors.state}</p>}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Business verticals</label>
+                        <p className="mt-0.5 text-xs text-gray-500">Which vertical(s) this zone serves</p>
+                        <div className="mt-2 flex flex-wrap gap-4">
+                            {Object.entries(verticalOptions).map(([value, label]) => (
+                                <label key={value} className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        className="h-4 w-4 rounded border-gray-300"
+                                        checked={form.data.verticals.includes(value)}
+                                        onChange={() => toggleVertical(value)}
+                                    />
+                                    <span className="text-sm text-gray-700">{label}</span>
+                                </label>
+                            ))}
                         </div>
                     </div>
 

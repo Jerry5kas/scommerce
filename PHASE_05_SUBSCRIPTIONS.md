@@ -8,6 +8,10 @@ Implement subscription-first ordering system with flexible scheduling, pause/res
 - Products marked as subscription-eligible exist
 - User addresses and zones are set up
 
+## Business Verticals
+**Subscriptions are Society Fresh only** (scheduled commerce). Subscription UI lives under Society Fresh. See [PHASE_NEW_UPDATE.md](PHASE_NEW_UPDATE.md).
+- [ ] Optional: add `vertical` (default `society_fresh`) to subscription tables for clarity and reporting
+
 ## Tasks
 
 ### 5.1 Subscription Plans

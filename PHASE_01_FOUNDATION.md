@@ -1,7 +1,7 @@
 # Phase 1: Foundation & Infrastructure Setup
 
 ## Objective
-Establish the core infrastructure, project structure, and foundational configurations for the FreshTick platform.
+Establish the core infrastructure, project structure, and foundational configurations for the FreshTick platform. The platform supports **two business verticals**: **Daily Fresh** (quick commerce) and **Society Fresh** (scheduled commerce). See [PHASE_NEW_UPDATE.md](PHASE_NEW_UPDATE.md).
 
 ## Prerequisites
 - Laravel 12 project initialized
@@ -126,6 +126,10 @@ Create organized directory structure:
 - [x] Document environment variables (`.env.example`)
 - [ ] Create API documentation structure
 
+### 1.15 Business Verticals (Two Models)
+- [x] Add config (`config/business.php`) and enum (`App\Enums\BusinessVertical`) for verticals: `daily_fresh`, `society_fresh`
+- [x] Use vertical constants across zones, catalog, and orders (Phase 3+)
+
 ## Deliverables
 - ✅ Fully configured Laravel 12 project
 - ✅ Database connection established
@@ -135,6 +139,7 @@ Create organized directory structure:
 - ✅ Environment configuration documented
 - ✅ Basic middleware structure
 - ✅ Queue system configured
+- ✅ Business vertical config/enum (1.15)
 
 ## Success Criteria
 - [ ] `php artisan serve` runs without errors
@@ -150,6 +155,7 @@ Create organized directory structure:
 - Follow Laravel 12 conventions
 - Use Inertia v2 features (deferred props, lazy loading)
 - Prepare for SEO from the start
+- **Business verticals**: Daily Fresh (quick commerce) and Society Fresh (scheduled commerce) — config/enum must be in place before Zone and Catalog vertical support (Phase 3–4).
 
 ## Next Phase
 Once Phase 1 is complete, proceed to **Phase 2: Authentication & User Management**

@@ -8,6 +8,13 @@ Implement shopping cart system, checkout flow, and order lifecycle management fo
 - Phase 5 completed (Subscriptions)
 - Products and subscriptions are available
 
+## Business Verticals
+Orders have a **vertical** (`daily_fresh` | `society_fresh`). Cart/checkout and delivery options branch by vertical. See [PHASE_NEW_UPDATE.md](PHASE_NEW_UPDATE.md).
+- [ ] Add `vertical` to orders table (required)
+- [ ] Cart: support items from both verticals; checkout per vertical or split (two delivery options when both present)
+- [ ] Order creation: set `order.vertical` from cart/checkout context
+- [ ] Delivery options and charges computed by vertical (quick vs scheduled)
+
 ## Tasks
 
 ### 6.1 Cart System

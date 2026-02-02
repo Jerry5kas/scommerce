@@ -8,6 +8,9 @@ Implement bottle tracking system to prevent asset loss in dairy logistics with i
 - Phase 8 completed (Delivery)
 - Products marked as bottle-required exist
 
+## Business Verticals
+**Bottle returns and deposit apply to Society Fresh** (scheduled commerce). Daily Fresh typically no bottle return. See [PHASE_NEW_UPDATE.md](PHASE_NEW_UPDATE.md).
+
 ## Tasks
 
 ### 9.1 Bottle Management

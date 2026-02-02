@@ -9,6 +9,11 @@ Implement delivery management system with route assignment, live GPS tracking, m
 - Orders are being created
 - Drivers are assigned to zones
 
+## Business Verticals
+Delivery and slot logic branch by order **vertical**: Daily Fresh (quick delivery) vs Society Fresh (scheduled slots). See [PHASE_NEW_UPDATE.md](PHASE_NEW_UPDATE.md).
+- [ ] Slot/assignment logic considers order.vertical (quick vs scheduled)
+- [ ] Optional: driver_type or assignment rules by vertical (quick riders vs route-based)
+
 ## Tasks
 
 ### 8.1 Delivery Management

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Enums\BusinessVertical;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,6 +25,10 @@ class StoreZoneRequest extends FormRequest
         if (is_string($boundary) && $boundary !== '') {
             $decoded = json_decode($boundary, true);
             $this->merge(['boundary_coordinates' => is_array($decoded) ? $decoded : null]);
+        }
+        $verticals = $this->input('verticals');
+        if (is_array($verticals)) {
+            $this->merge(['verticals' => array_values(array_intersect($verticals, BusinessVertical::values()))]);
         }
     }
 
@@ -49,6 +54,8 @@ class StoreZoneRequest extends FormRequest
             'service_days.*' => ['integer', 'min:0', 'max:6'],
             'service_time_start' => ['nullable', 'date_format:H:i'],
             'service_time_end' => ['nullable', 'date_format:H:i', 'after_or_equal:service_time_start'],
+            'verticals' => ['nullable', 'array'],
+            'verticals.*' => ['string', Rule::in(BusinessVertical::values())],
         ];
     }
 }

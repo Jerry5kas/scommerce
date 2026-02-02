@@ -1,11 +1,11 @@
 # Phase 4: Catalog & Product Management
 
 ## Objective
-Implement product catalog system with categories, collections, products, and zone-based visibility.
+Implement product catalog system with categories, collections, products, and zone-based visibility. Catalog is filtered by **business vertical** (Daily Fresh or Society Fresh) and zone. See [PHASE_NEW_UPDATE.md](PHASE_NEW_UPDATE.md).
 
 ## Prerequisites
 - Phase 3 completed (Zone management)
-- Zones are configured and active
+- Zones are configured and active (with verticals support from 3.16)
 
 ## Tasks
 
@@ -26,77 +26,53 @@ Implement product catalog system with categories, collections, products, and zon
   - [x] Relationships (products, collections)
   - [x] Scopes (active, ordered)
   - [x] Helper methods (productsCount; slug auto from name in creating)
+- [x] **Business verticals**: Migration to add `vertical` (string: `daily_fresh`, `society_fresh`, or `both`) to categories; Category model: fillable, scope `forVertical($vertical)`; Admin form: set vertical when built; Customer: filter by vertical
 
 ### 4.2 Collection Management (Hero Banners)
-- [ ] Create `collections` table migration
-  - [ ] `id` (primary key)
-  - [ ] `name` (string)
-  - [ ] `slug` (string, unique, indexed)
-  - [ ] `description` (text, nullable)
-  - [ ] `category_id` (foreign key, nullable)
-  - [ ] `banner_image` (string) - Hero banner image
-  - [ ] `banner_mobile_image` (string, nullable)
-  - [ ] `display_order` (integer, default: 0)
-  - [ ] `is_active` (boolean, default: true)
-  - [ ] `starts_at` (timestamp, nullable) - Campaign start
-  - [ ] `ends_at` (timestamp, nullable) - Campaign end
-  - [ ] `link_url` (string, nullable) - Optional link
-  - [ ] `meta_title` (string, nullable)
-  - [ ] `meta_description` (text, nullable)
-  - [ ] `timestamps`
-- [ ] Create `Collection` model
-  - [ ] Relationships (category, products)
-  - [ ] Scopes (active, current, ordered)
-  - [ ] Helper methods (isActive, etc.)
+- [x] Create `collections` table migration
+  - [x] `id` (primary key)
+  - [x] `name` (string)
+  - [x] `slug` (string, unique, indexed)
+  - [x] `description` (text, nullable)
+  - [x] `category_id` (foreign key, nullable)
+  - [x] `banner_image` (string) - Hero banner image
+  - [x] `banner_mobile_image` (string, nullable)
+  - [x] `display_order` (integer, default: 0)
+  - [x] `is_active` (boolean, default: true)
+  - [x] `starts_at` (timestamp, nullable) - Campaign start
+  - [x] `ends_at` (timestamp, nullable) - Campaign end
+  - [x] `link_url` (string, nullable) - Optional link
+  - [x] `meta_title` (string, nullable)
+  - [x] `meta_description` (text, nullable)
+  - [x] `timestamps`
+- [x] Create `Collection` model
+  - [x] Relationships (category, products)
+  - [x] Scopes (active, current, ordered)
+  - [x] Helper methods (isActive; slug auto from name in creating)
+- [x] **Business verticals**: Migration to add `vertical` to collections; Collection model: fillable, scope `forVertical($vertical)`; Admin form: set vertical when built; Customer: filter by vertical
 
 ### 4.3 Product Management
-- [ ] Create `products` table migration
-  - [ ] `id` (primary key)
-  - [ ] `name` (string)
-  - [ ] `slug` (string, unique, indexed)
-  - [ ] `sku` (string, unique, indexed)
-  - [ ] `description` (text, nullable)
-  - [ ] `short_description` (text, nullable)
-  - [ ] `category_id` (foreign key)
-  - [ ] `collection_id` (foreign key, nullable)
-  - [ ] `image` (string) - Primary image
-  - [ ] `images` (json, nullable) - Additional images
-  - [ ] `price` (decimal, 2 decimal places)
-  - [ ] `compare_at_price` (decimal, nullable) - MRP
-  - [ ] `cost_price` (decimal, nullable) - For admin
-  - [ ] `stock_quantity` (integer, default: 0)
-  - [ ] `is_in_stock` (boolean, default: true)
-  - [ ] `is_subscription_eligible` (boolean, default: false)
-  - [ ] `requires_bottle` (boolean, default: false)
-  - [ ] `bottle_deposit` (decimal, nullable) - If requires bottle
-  - [ ] `is_one_time_purchase` (boolean, default: true)
-  - [ ] `min_quantity` (integer, default: 1)
-  - [ ] `max_quantity` (integer, nullable)
-  - [ ] `unit` (string, default: 'piece') - e.g., 'litre', 'kg', 'piece'
-  - [ ] `weight` (decimal, nullable) - For shipping
-  - [ ] `display_order` (integer, default: 0)
-  - [ ] `is_active` (boolean, default: true)
-  - [ ] `meta_title` (string, nullable)
-  - [ ] `meta_description` (text, nullable)
-  - [ ] `timestamps`
-- [ ] Create `Product` model
-  - [ ] Relationships (category, collection, zones, subscriptions, orderItems)
-  - [ ] Scopes (active, inStock, subscriptionEligible, requiresBottle)
-  - [ ] Helper methods:
-    - [ ] `isAvailableInZone(zone)` - Check zone availability
-    - [ ] `getPriceForZone(zone)` - Zone-specific pricing (future)
-    - [ ] `canSubscribe()` - Check subscription eligibility
+- [x] Create `products` table migration
+  - [x] `id` (primary key)
+  - [x] `name`, `slug` (unique, indexed), `sku` (unique, indexed)
+  - [x] `description`, `short_description` (nullable)
+  - [x] `category_id` (foreign key), `collection_id` (nullable)
+  - [x] `image`, `images` (json, nullable)
+  - [x] `price`, `compare_at_price`, `cost_price` (nullable)
+  - [x] `stock_quantity`, `is_in_stock`, `is_subscription_eligible`, `requires_bottle`, `bottle_deposit`
+  - [x] `is_one_time_purchase`, `min_quantity`, `max_quantity`, `unit`, `weight`
+  - [x] `display_order`, `is_active`, `meta_title`, `meta_description`, `timestamps`
+- [x] Create `Product` model
+  - [x] Relationships (category, collection, zones via product_zones)
+  - [x] Scopes (active, inStock, subscriptionEligible, requiresBottle, ordered)
+  - [x] Helper methods: `isAvailableInZone(zone)`, `getPriceForZone(zone)`, `canSubscribe()`; slug auto from name
+- [x] **Business verticals**: Migration to add `vertical` to products; Product model: fillable, scope `forVertical($vertical)`; Admin form: set vertical when built; All catalog queries filter by vertical (and zone)
 
 ### 4.4 Product-Zone Availability
-- [ ] Create `product_zones` pivot table migration
-  - [ ] `product_id` (foreign key)
-  - [ ] `zone_id` (foreign key)
-  - [ ] `is_available` (boolean, default: true)
-  - [ ] `price_override` (decimal, nullable) - Zone-specific price
-  - [ ] `stock_quantity` (integer, nullable) - Zone-specific stock
-  - [ ] `timestamps`
-- [ ] Create `ProductZone` model (or use pivot)
-- [ ] Update `Product` model with zone relationship
+- [x] Create `product_zones` pivot table migration
+  - [x] `product_id`, `zone_id` (unique pair), `is_available`, `price_override`, `stock_quantity`, `timestamps`
+- [x] ~~Create `ProductZone` model~~ Use pivot with `withPivot`
+- [x] Update `Product` model with zones() BelongsToMany; Update `Zone` model with products() BelongsToMany
 
 ### 4.5 Product Variants (Optional - for future)
 - [ ] Create `product_variants` table migration (if needed)
@@ -111,21 +87,21 @@ Implement product catalog system with categories, collections, products, and zon
 
 ### 4.6 Catalog Controllers (Admin)
 - [ ] Create `Admin/CategoryController`
-  - [ ] `index()` - List categories
-  - [ ] `store(Request)` - Create category
+  - [ ] `index()` - List categories (filter by vertical)
+  - [ ] `store(Request)` - Create category (set vertical)
   - [ ] `update(Request, category)` - Update category
   - [ ] `destroy(category)` - Delete category
   - [ ] `toggleStatus(category)` - Toggle active status
 - [ ] Create `Admin/CollectionController`
-  - [ ] `index()` - List collections
-  - [ ] `store(Request)` - Create collection
+  - [ ] `index()` - List collections (filter by vertical)
+  - [ ] `store(Request)` - Create collection (set vertical)
   - [ ] `update(Request, collection)` - Update collection
   - [ ] `destroy(collection)` - Delete collection
   - [ ] `toggleStatus(collection)` - Toggle active status
 - [ ] Create `Admin/ProductController`
-  - [ ] `index()` - List products (with filters)
+  - [ ] `index()` - List products (filter by vertical and zone)
   - [ ] `show(product)` - Show product details
-  - [ ] `store(Request)` - Create product
+  - [ ] `store(Request)` - Create product (set vertical)
   - [ ] `update(Request, product)` - Update product
   - [ ] `destroy(product)` - Delete product
   - [ ] `toggleStatus(product)` - Toggle active status
@@ -137,25 +113,25 @@ Implement product catalog system with categories, collections, products, and zon
 
 ### 4.7 Catalog Controllers (Customer)
 - [ ] Create `CatalogController`
-  - [ ] `index()` - Home page with banners, categories, featured products
-  - [ ] `showCategory(category)` - Category page
+  - [ ] `index()` - Home page with banners, categories, featured products (filtered by vertical + zone)
+  - [ ] `showCategory(category)` - Category page (vertical + zone)
   - [ ] `showCollection(collection)` - Collection page
   - [ ] `showProduct(product)` - Product detail page
-  - [ ] `search(Request)` - Product search
+  - [ ] `search(Request)` - Product search (vertical + zone)
 - [ ] Create `ProductController` (customer)
-  - [ ] `index(Request)` - List products (filtered by zone)
+  - [ ] `index(Request)` - List products (filtered by vertical and zone)
   - [ ] `show(product)` - Product details
-  - [ ] `relatedProducts(product)` - Related products
-- [ ] Implement zone-based filtering in all queries
+  - [ ] `relatedProducts(product)` - Related products (same vertical + zone)
+- [ ] Implement vertical + zone-based filtering in all catalog queries
 
 ### 4.8 Catalog Service
 - [ ] Create `CatalogService` class
-  - [ ] `getProductsForZone(zone, filters)` - Get zone-available products
-  - [ ] `getFeaturedProducts(zone, limit)` - Featured products
-  - [ ] `getRelatedProducts(product, zone, limit)` - Related products
-  - [ ] `searchProducts(query, zone)` - Search products
-  - [ ] `getActiveBanners(zone)` - Active collection banners
-  - [ ] `getCategoriesWithProducts(zone)` - Categories with product counts
+  - [ ] `getProductsForZone(zone, vertical, filters)` - Get zone-available products for vertical
+  - [ ] `getFeaturedProducts(zone, vertical, limit)` - Featured products
+  - [ ] `getRelatedProducts(product, zone, vertical, limit)` - Related products
+  - [ ] `searchProducts(query, zone, vertical)` - Search products
+  - [ ] `getActiveBanners(zone, vertical)` - Active collection banners for vertical
+  - [ ] `getCategoriesWithProducts(zone, vertical)` - Categories with product counts
 
 ### 4.9 Free Sample System
 - [ ] Create `free_samples` table migration
@@ -176,39 +152,40 @@ Implement product catalog system with categories, collections, products, and zon
 
 ### 4.10 Frontend Catalog Pages
 - [ ] Create home page (`resources/js/Pages/Home.tsx`)
-  - [ ] Hero banners (collections)
-  - [ ] Categories grid
-  - [ ] Featured products
+  - [ ] **Daily Fresh** and **Society Fresh** entry points (tabs/sections or routes `/daily-fresh`, `/society-fresh`)
+  - [ ] Hero banners (collections filtered by selected vertical)
+  - [ ] Categories grid (by vertical)
+  - [ ] Featured products (by vertical + zone)
   - [ ] Free sample popup (conditional)
 - [ ] Create category page (`resources/js/Pages/Catalog/Category.tsx`)
-  - [ ] Category info
-  - [ ] Product grid/list
+  - [ ] Category info (vertical context)
+  - [ ] Product grid/list (vertical + zone)
   - [ ] Filters (price, availability)
   - [ ] Sorting
 - [ ] Create product detail page (`resources/js/Pages/Catalog/Product.tsx`)
   - [ ] Product images gallery
   - [ ] Product details
   - [ ] Price display
-  - [ ] Subscription option (if eligible)
+  - [ ] Subscription option (Society Fresh; if eligible)
   - [ ] Add to cart button
   - [ ] Free sample button (if eligible)
-  - [ ] Related products
-- [ ] Create product search page
-- [ ] Create collection/banner pages
+  - [ ] Related products (same vertical + zone)
+- [ ] Create product search page (vertical + zone)
+- [ ] Create collection/banner pages (vertical context)
 
 ### 4.11 Admin Catalog Management UI
 - [ ] Create category management pages
-  - [ ] Category list
-  - [ ] Category create/edit form
+  - [ ] Category list (filter by vertical)
+  - [ ] Category create/edit form (vertical selector)
   - [ ] Image upload
 - [ ] Create collection management pages
-  - [ ] Collection list
-  - [ ] Collection create/edit form
+  - [ ] Collection list (filter by vertical)
+  - [ ] Collection create/edit form (vertical selector)
   - [ ] Banner image upload
   - [ ] Campaign date picker
 - [ ] Create product management pages
-  - [ ] Product list (with filters)
-  - [ ] Product create/edit form
+  - [ ] Product list (filter by vertical and zone)
+  - [ ] Product create/edit form (vertical selector)
   - [ ] Image upload (multiple)
   - [ ] Zone availability management
   - [ ] Stock management
@@ -257,17 +234,20 @@ Implement product catalog system with categories, collections, products, and zon
 - ✅ Collection (banner) management system
 - ✅ Product management system
 - ✅ Zone-based product availability
-- ✅ Free sample system
-- ✅ Customer catalog UI
-- ✅ Admin catalog management UI
+- ✅ Vertical on categories, collections, products (migration + model scope `forVertical`); filter catalog by vertical when building controllers
+- [ ] Home: Daily Fresh and Society Fresh entry points (when home page is built)
+- ✅ Free sample system (when implemented)
+- ✅ Customer catalog UI (vertical-aware when implemented)
+- ✅ Admin catalog management UI (vertical filter/selector when implemented)
 - ✅ Image management system
 
 ## Success Criteria
 - [ ] Products can be created and managed
-- [ ] Products are filtered by zone
-- [ ] Collections display as banners on home page
+- [ ] Products are filtered by vertical and zone
+- [ ] Home has Daily Fresh and Society Fresh entry points
+- [ ] Collections display as banners (per vertical)
 - [ ] Free sample system works with abuse prevention
-- [ ] Product search works
+- [ ] Product search works (vertical + zone)
 - [ ] Images are optimized and served via CDN
 - [ ] Catalog is SEO-friendly
 
@@ -281,7 +261,9 @@ Implement product catalog system with categories, collections, products, and zon
 - `product_relations`
 
 ## Notes
-- All product queries must filter by zone
+- All product queries must filter by **vertical** (Daily Fresh / Society Fresh) and **zone**
+- Categories, collections, and products have a `vertical` field (`daily_fresh`, `society_fresh`, or `both`)
+- Home and catalog UI must support switching or selecting vertical (two entry points)
 - Images should be optimized before upload
 - Free sample eligibility checks device + phone hash
 - Product slugs should be SEO-friendly

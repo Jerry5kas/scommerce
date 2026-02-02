@@ -20,6 +20,9 @@ Implement OTP-based authentication system with device fingerprinting, user manag
 - Database configured
 - SMS gateway credentials (or mock service for development)
 
+## Business Verticals
+Authentication is **shared** across both verticals (Daily Fresh & Society Fresh). One user, one set of addresses; no vertical on users table. Optional: store last selected vertical in session for UX (e.g. default to Daily Fresh or Society Fresh on next visit). See [PHASE_NEW_UPDATE.md](PHASE_NEW_UPDATE.md).
+
 ## Tasks
 
 ### 2.1 User Model & Migration (customer & driver only; admin separate)
@@ -220,6 +223,7 @@ Implement OTP-based authentication system with device fingerprinting, user manag
 - Clean up expired OTPs via scheduled job
 - Free sample phone hash should be irreversible
 - Device fingerprint should be consistent across sessions
+- **Business verticals**: No vertical on user/address; same account works for Daily Fresh and Society Fresh. Optional: session key for last selected vertical.
 
 ## Remaining (optional / not started)
 - [ ] **OTP queue job** — Move OTP send to a queued job (2.2).

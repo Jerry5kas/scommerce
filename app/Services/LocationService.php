@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BusinessVertical;
 use App\Models\UserAddress;
 use App\Models\Zone;
 use App\Models\ZoneOverride;
@@ -126,6 +127,35 @@ class LocationService
         return Cache::remember(self::CACHE_KEY_SERVICEABLE_ZONES, self::CACHE_TTL_SECONDS, function () {
             return Zone::query()->active()->orderBy('name')->get();
         });
+    }
+
+    /**
+     * Return verticals supported by this zone. Empty array = both (backward compat).
+     *
+     * @return array<int, string>
+     */
+    public function getVerticalsForZone(Zone $zone): array
+    {
+        $v = $zone->verticals;
+        if ($v === null || ! is_array($v) || count($v) === 0) {
+            return BusinessVertical::values();
+        }
+        return array_values(array_intersect($v, BusinessVertical::values()));
+    }
+
+    /**
+     * Return verticals available at the given address (from zone). Empty = none serviceable.
+     *
+     * @param  UserAddress|array{pincode: string, latitude?: float|null, longitude?: float|null}  $address
+     * @return array<int, string>
+     */
+    public function getVerticalsForAddress(UserAddress|array $address, ?int $userId = null): array
+    {
+        $zone = $this->validateAddress($address, $userId);
+        if ($zone === null) {
+            return [];
+        }
+        return $this->getVerticalsForZone($zone);
     }
 
 }

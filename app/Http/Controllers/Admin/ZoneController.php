@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\BusinessVertical;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreZoneRequest;
 use App\Http\Requests\Admin\UpdateZoneRequest;
@@ -40,7 +41,9 @@ class ZoneController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('admin/zones/create');
+        return Inertia::render('admin/zones/create', [
+            'verticalOptions' => BusinessVertical::options(),
+        ]);
     }
 
     public function store(StoreZoneRequest $request): RedirectResponse
@@ -56,6 +59,7 @@ class ZoneController extends Controller
     {
         return Inertia::render('admin/zones/edit', [
             'zone' => $zone,
+            'verticalOptions' => BusinessVertical::options(),
         ]);
     }
 

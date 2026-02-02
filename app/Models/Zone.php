@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Enums\BusinessVertical;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Zone extends Model
 {
     use SoftDeletes;
+
     protected $fillable = [
         'name',
         'code',
@@ -19,6 +22,7 @@ class Zone extends Model
         'city',
         'state',
         'is_active',
+        'verticals',
         'delivery_charge',
         'min_order_amount',
         'service_days',
@@ -36,6 +40,7 @@ class Zone extends Model
             'boundary_coordinates' => 'array',
             'pincodes' => 'array',
             'service_days' => 'array',
+            'verticals' => 'array',
             'is_active' => 'boolean',
             'delivery_charge' => 'decimal:2',
             'min_order_amount' => 'decimal:2',
@@ -59,9 +64,40 @@ class Zone extends Model
         return $this->hasMany(ZoneOverride::class);
     }
 
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_zones')
+            ->withPivot(['is_available', 'price_override', 'stock_quantity'])
+            ->withTimestamps();
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeForDailyFresh(Builder $query): Builder
+    {
+        return $query->whereJsonContains('verticals', BusinessVertical::DailyFresh->value);
+    }
+
+    public function scopeForSocietyFresh(Builder $query): Builder
+    {
+        return $query->whereJsonContains('verticals', BusinessVertical::SocietyFresh->value);
+    }
+
+    public function scopeForVertical(Builder $query, string $vertical): Builder
+    {
+        return $query->whereJsonContains('verticals', $vertical);
+    }
+
+    public function supportsVertical(string $vertical): bool
+    {
+        $verticals = $this->verticals ?? [];
+        if (empty($verticals)) {
+            return true;
+        }
+        return in_array($vertical, $verticals, true);
     }
 
     public function isServiceable(string $pincode): bool

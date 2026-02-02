@@ -1,7 +1,7 @@
 # Phase 3: Location & Zone Management
 
 ## Objective
-Implement zone-based service availability system with driver assignment and location validation.
+Implement zone-based service availability system with driver assignment and location validation. Zones can serve **Daily Fresh** (quick commerce) and/or **Society Fresh** (scheduled commerce). See [PHASE_NEW_UPDATE.md](PHASE_NEW_UPDATE.md).
 
 ## Prerequisites
 - Phase 2 completed (User authentication)
@@ -37,6 +37,7 @@ Implement zone-based service availability system with driver assignment and loca
     - [x] `isWithinBoundary(lat, lng)` - Check if coordinates within boundary
     - [x] `isServiceableOnDay(day)` - Check if serviceable on day
     - [x] `isServiceableAtTime(time)` - Check if serviceable at time
+- [x] **Business verticals**: Add `verticals` (json array) to zones table (migration `200004_add_verticals_to_zones_table`); Zone model: fillable/casts, scopes `forDailyFresh()`, `forSocietyFresh()`, `forVertical()`, helper `supportsVertical()`; LocationService: `getVerticalsForZone()`, `getVerticalsForAddress()`; Admin zone form: vertical checkboxes
 
 ### 3.2 Driver Management
 - [x] Create `drivers` table migration
@@ -171,6 +172,13 @@ Implement zone-based service availability system with driver assignment and loca
 - [ ] Test zone override system
 - [ ] Feature tests for zone management
 
+### 3.16 Zone Verticals (Daily Fresh / Society Fresh)
+- [ ] Migration: add `verticals` (json array) to `zones` — which vertical(s) the zone serves; default both for backward compatibility
+- [ ] Zone model: add to fillable/casts; scopes `forDailyFresh()`, `forSocietyFresh()`; helper `supportsVertical(string $vertical)`
+- [ ] LocationService: method to return available vertical(s) for an address/zone (e.g. `getVerticalsForAddress()` or extend `validateAddress` response)
+- [ ] Admin zone create/edit form: multi-select or checkboxes for Daily Fresh, Society Fresh
+- [ ] Customer location/zone selection: show which vertical(s) are available at selected address (optional UX)
+
 ## Deliverables
 - ✅ Zone management system
 - ✅ Driver management system
@@ -180,6 +188,7 @@ Implement zone-based service availability system with driver assignment and loca
 - ✅ Admin zone/driver management UI
 - ✅ Customer zone selection UI
 - ✅ Zone override system (3.13)
+- ✅ Zone verticals support (3.16)
 
 ## Success Criteria
 - [x] Zones can be created and managed
@@ -200,6 +209,7 @@ Implement zone-based service availability system with driver assignment and loca
 - Zone assignment should be automatic on address creation
 - Drivers can be reassigned to different zones
 - Zone overrides should be logged for audit
+- **Business verticals**: Each zone declares which vertical(s) it serves (`daily_fresh`, `society_fresh`, or both). Required for catalog and order filtering (Phase 4+).
 
 ## Remaining (optional / not started)
 - [ ] **Google Maps Geocoding API** — Optional; set `GOOGLE_MAPS_API_KEY`, enable Geocoding API.

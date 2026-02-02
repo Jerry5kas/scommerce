@@ -12,6 +12,8 @@ const DAY_LABELS: Record<number, string> = {
     6: 'Sat',
 };
 
+const VERTICAL_DEFAULT = ['daily_fresh', 'society_fresh'];
+
 interface ZoneData {
     id: number;
     name: string;
@@ -20,6 +22,7 @@ interface ZoneData {
     state: string;
     description: string | null;
     is_active: boolean;
+    verticals?: string[] | null;
     pincodes?: string[] | null;
     boundary_coordinates?: [number, number][] | null;
     service_days?: number[] | null;
@@ -31,6 +34,7 @@ interface ZoneData {
 
 interface AdminZonesEditProps {
     zone: ZoneData;
+    verticalOptions: Record<string, string>;
 }
 
 function formatTime(d: string | null | undefined): string {
@@ -39,7 +43,7 @@ function formatTime(d: string | null | undefined): string {
     return match ? `${match[1]}:${match[2]}` : '';
 }
 
-export default function AdminZonesEdit({ zone }: AdminZonesEditProps) {
+export default function AdminZonesEdit({ zone, verticalOptions }: AdminZonesEditProps) {
     const form = useForm({
         name: zone.name,
         code: zone.code,
@@ -47,6 +51,7 @@ export default function AdminZonesEdit({ zone }: AdminZonesEditProps) {
         city: zone.city,
         state: zone.state,
         is_active: zone.is_active,
+        verticals: (zone.verticals && zone.verticals.length > 0 ? zone.verticals : VERTICAL_DEFAULT) as string[],
         pincodes: Array.isArray(zone.pincodes) ? zone.pincodes.join(', ') : '',
         boundary_coordinates: Array.isArray(zone.boundary_coordinates)
             ? JSON.stringify(zone.boundary_coordinates, null, 2)
@@ -57,6 +62,13 @@ export default function AdminZonesEdit({ zone }: AdminZonesEditProps) {
         delivery_charge: zone.delivery_charge != null ? String(zone.delivery_charge) : '',
         min_order_amount: zone.min_order_amount != null ? String(zone.min_order_amount) : '',
     });
+
+    const toggleVertical = (value: string) => {
+        const next = form.data.verticals.includes(value)
+            ? form.data.verticals.filter((v) => v !== value)
+            : [...form.data.verticals, value];
+        form.setData('verticals', next);
+    };
 
     const toggleDay = (day: number) => {
         const next = form.data.service_days.includes(day)
@@ -138,6 +150,24 @@ export default function AdminZonesEdit({ zone }: AdminZonesEditProps) {
                                 onChange={(e) => form.setData('state', e.target.value)}
                             />
                             {form.errors.state && <p className="mt-1 text-sm text-red-600">{form.errors.state}</p>}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Business verticals</label>
+                        <p className="mt-0.5 text-xs text-gray-500">Which vertical(s) this zone serves</p>
+                        <div className="mt-2 flex flex-wrap gap-4">
+                            {Object.entries(verticalOptions).map(([value, label]) => (
+                                <label key={value} className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        className="h-4 w-4 rounded border-gray-300"
+                                        checked={form.data.verticals.includes(value)}
+                                        onChange={() => toggleVertical(value)}
+                                    />
+                                    <span className="text-sm text-gray-700">{label}</span>
+                                </label>
+                            ))}
                         </div>
                     </div>
 

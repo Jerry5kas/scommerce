@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 
 class Category extends Model
 {
+    public const VERTICAL_BOTH = 'both';
+
     protected $fillable = [
         'name',
         'slug',
@@ -17,6 +19,7 @@ class Category extends Model
         'icon',
         'display_order',
         'is_active',
+        'vertical',
         'meta_title',
         'meta_description',
     ];
@@ -50,6 +53,13 @@ class Category extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('display_order')->orderBy('name');
+    }
+
+    public function scopeForVertical(Builder $query, string $vertical): Builder
+    {
+        return $query->where(function (Builder $q) use ($vertical) {
+            $q->where('vertical', $vertical)->orWhere('vertical', self::VERTICAL_BOTH);
+        });
     }
 
     public function productsCount(): int
