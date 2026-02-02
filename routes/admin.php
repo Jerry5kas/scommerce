@@ -7,8 +7,11 @@
 */
 
 use App\Http\Controllers\Admin\Auth\LoginController as AdminLoginController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\CollectionController as AdminCollectionController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DriverController as AdminDriverController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\ZoneController as AdminZoneController;
 use App\Http\Controllers\Admin\ZoneOverrideController as AdminZoneOverrideController;
@@ -41,5 +44,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('drivers', AdminDriverController::class)->names('drivers');
         Route::post('drivers/{driver}/assign-zone', [AdminDriverController::class, 'assignZone'])->name('drivers.assign-zone');
         Route::post('drivers/{driver}/toggle-status', [AdminDriverController::class, 'toggleStatus'])->name('drivers.toggle-status');
+
+        Route::resource('categories', AdminCategoryController::class)->names('categories');
+        Route::post('categories/{category}/toggle-status', [AdminCategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
+
+        Route::resource('collections', AdminCollectionController::class)->names('collections');
+        Route::post('collections/{collection}/toggle-status', [AdminCollectionController::class, 'toggleStatus'])->name('collections.toggle-status');
+
+        Route::resource('products', AdminProductController::class)->names('products');
+        Route::post('products/{product}/toggle-status', [AdminProductController::class, 'toggleStatus'])->name('products.toggle-status');
+        Route::get('products/{product}/zones', [AdminProductController::class, 'manageZones'])->name('products.manage-zones');
+        Route::put('products/{product}/zones', [AdminProductController::class, 'updateZones'])->name('products.update-zones');
     });
 });

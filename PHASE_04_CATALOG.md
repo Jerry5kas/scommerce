@@ -86,30 +86,31 @@ Implement product catalog system with categories, collections, products, and zon
   - [ ] `timestamps`
 
 ### 4.6 Catalog Controllers (Admin)
-- [ ] Create `Admin/CategoryController`
-  - [ ] `index()` - List categories (filter by vertical)
-  - [ ] `store(Request)` - Create category (set vertical)
-  - [ ] `update(Request, category)` - Update category
-  - [ ] `destroy(category)` - Delete category
-  - [ ] `toggleStatus(category)` - Toggle active status
-- [ ] Create `Admin/CollectionController`
-  - [ ] `index()` - List collections (filter by vertical)
-  - [ ] `store(Request)` - Create collection (set vertical)
-  - [ ] `update(Request, collection)` - Update collection
-  - [ ] `destroy(collection)` - Delete collection
-  - [ ] `toggleStatus(collection)` - Toggle active status
-- [ ] Create `Admin/ProductController`
-  - [ ] `index()` - List products (filter by vertical and zone)
-  - [ ] `show(product)` - Show product details
-  - [ ] `store(Request)` - Create product (set vertical)
-  - [ ] `update(Request, product)` - Update product
-  - [ ] `destroy(product)` - Delete product
-  - [ ] `toggleStatus(product)` - Toggle active status
-  - [ ] `manageZones(Request, product)` - Manage zone availability
-- [ ] Create Form Requests:
-  - [ ] `StoreCategoryRequest`, `UpdateCategoryRequest`
-  - [ ] `StoreCollectionRequest`, `UpdateCollectionRequest`
-  - [ ] `StoreProductRequest`, `UpdateProductRequest`
+- [x] Create `Admin/CategoryController`
+  - [x] `index()` - List categories (filter by vertical)
+  - [x] `store(Request)` - Create category (set vertical)
+  - [x] `update(Request, category)` - Update category
+  - [x] `destroy(category)` - Delete category
+  - [x] `toggleStatus(category)` - Toggle active status
+- [x] Create `Admin/CollectionController`
+  - [x] `index()` - List collections (filter by vertical)
+  - [x] `store(Request)` - Create collection (set vertical)
+  - [x] `update(Request, collection)` - Update collection
+  - [x] `destroy(collection)` - Delete collection
+  - [x] `toggleStatus(collection)` - Toggle active status
+- [x] Create `Admin/ProductController`
+  - [x] `index()` - List products (filter by vertical and zone)
+  - [x] `show(product)` - Show product details
+  - [x] `store(Request)` - Create product (set vertical)
+  - [x] `update(Request, product)` - Update product
+  - [x] `destroy(product)` - Delete product
+  - [x] `toggleStatus(product)` - Toggle active status
+  - [x] `manageZones(product)` / `updateZones(Request, product)` - Manage zone availability
+- [x] Create Form Requests:
+  - [x] `StoreCategoryRequest`, `UpdateCategoryRequest`
+  - [x] `StoreCollectionRequest`, `UpdateCollectionRequest`
+  - [x] `StoreProductRequest`, `UpdateProductRequest`
+  - [x] `ManageProductZonesRequest`
 
 ### 4.7 Catalog Controllers (Customer)
 - [ ] Create `CatalogController`
@@ -174,23 +175,19 @@ Implement product catalog system with categories, collections, products, and zon
 - [ ] Create collection/banner pages (vertical context)
 
 ### 4.11 Admin Catalog Management UI
-- [ ] Create category management pages
-  - [ ] Category list (filter by vertical)
-  - [ ] Category create/edit form (vertical selector)
-  - [ ] Image upload
-- [ ] Create collection management pages
-  - [ ] Collection list (filter by vertical)
-  - [ ] Collection create/edit form (vertical selector)
-  - [ ] Banner image upload
-  - [ ] Campaign date picker
-- [ ] Create product management pages
-  - [ ] Product list (filter by vertical and zone)
-  - [ ] Product create/edit form (vertical selector)
-  - [ ] Image upload (multiple)
-  - [ ] Zone availability management
-  - [ ] Stock management
-  - [ ] Subscription settings
-  - [ ] Bottle settings
+- [x] Create category management pages
+  - [x] Category list (filter by vertical)
+  - [x] Category create/edit form (vertical selector)
+  - [ ] Image upload (URL only for now)
+- [x] Create collection management pages
+  - [x] Collection list (filter by vertical)
+  - [x] Collection create/edit form (vertical selector)
+  - [x] Banner image URL, campaign date picker
+- [x] Create product management pages
+  - [x] Product list (filter by vertical and zone)
+  - [x] Product create/edit form (vertical selector)
+  - [x] Image URL; zone availability (manage-zones page)
+  - [x] Stock, subscription, bottle settings in form
 
 ### 4.12 Cross-sell & Upsell
 - [ ] Create `product_relations` table migration

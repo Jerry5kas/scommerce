@@ -5,6 +5,9 @@ import {
     ChevronRight,
     LogOut,
     MapPin,
+    FolderOpen,
+    Image,
+    Package,
     Truck,
     Users,
     type LucideIcon,
@@ -22,6 +25,9 @@ const navItems: NavItem[] = [
     { label: 'Users', href: '/admin/users', icon: Users },
     { label: 'Zones', href: '/admin/zones', icon: MapPin },
     { label: 'Drivers', href: '/admin/drivers', icon: Truck },
+    { label: 'Categories', href: '/admin/categories', icon: FolderOpen },
+    { label: 'Collections', href: '/admin/collections', icon: Image },
+    { label: 'Products', href: '/admin/products', icon: Package },
 ];
 
 interface AdminSidebarProps {
