@@ -108,7 +108,7 @@ const STORIES = [
     { id: 5, src: '/video/stories/8064134-hd_1080_1920_24fps.mp4', label: 'Daily fresh', views: '2.9K' },
 ] as const;
 
-const PRODUCTS_PER_VIEW = { mobile: 2, sm: 3, md: 4, lg: 4 };
+const PRODUCTS_PER_VIEW = { mobile: 2, sm: 3, md: 5, lg: 6 };
 const TESTIMONIALS_PER_VIEW = { mobile: 1, sm: 2, lg: 3 };
 const GAP_PX = 16; // gap-4
 const TESTIMONIAL_GAP_PX = 16;
@@ -245,164 +245,171 @@ export default function Home() {
     return (
         <UserLayout>
             <Head title="FreshTick - Fresh Dairy Delivered Daily" />
-            {/* Hero Carousel - bg image + black overlay (previous design), mobile responsive */}
+            {/* Hero Carousel - Mobile-first responsive design */}
             <section
-                className="relative min-h-[min(100vh,900px)] overflow-hidden pt-[7rem] lg:h-screen lg:min-h-0 lg:pt-[7rem]"
+                className="relative min-h-[100vh] overflow-hidden pt-[4.5rem] sm:pt-[4.75rem] lg:pt-[7rem] lg:h-screen lg:min-h-0"
                 aria-label="Hero carousel"
             >
-                    <div className="relative h-full min-h-[min(100vh,900px)] w-full lg:h-[calc(100vh-7rem)] lg:min-h-0">
-                        {carouselSlides.map((slide, index) => (
+                <div className="relative h-full min-h-[100vh] w-full overflow-hidden lg:h-[calc(100vh-7rem)] lg:min-h-0">
+                    {carouselSlides.map((slide, index) => (
+                        <div
+                            key={slide.id}
+                            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                                index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                            }`}
+                        >
+                            {/* Background image (full bleed) */}
                             <div
-                                key={slide.id}
-                                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                                    index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                                }`}
-                            >
-                                {/* Background image (full bleed) */}
-                                <div
-                                    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                                    style={{ backgroundImage: `url(${slide.image})` }}
-                                    aria-hidden
-                                />
-                                {/* Black overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-gray-900/90 via-gray-800/85 to-black/90" aria-hidden />
-                                {/* Subtle texture overlay */}
-                                <div
-                                    className="absolute inset-0 opacity-20"
-                                    style={{
-                                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                                    }}
-                                    aria-hidden
-                                />
+                                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                                style={{ backgroundImage: `url(${slide.image})` }}
+                                aria-hidden
+                            />
+                            {/* Black overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-gray-900/90 via-gray-800/85 to-black/90" aria-hidden />
+                            {/* Subtle texture overlay */}
+                            <div
+                                className="absolute inset-0 opacity-20"
+                                style={{
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                                }}
+                                aria-hidden
+                            />
 
-                                {/* Content - fills slide wrapper, vertically centered */}
-                                <div className="relative z-10 flex h-full min-h-0 flex-col justify-center overflow-y-auto pt-6 pb-24 lg:pt-0 lg:pb-0 lg:overflow-visible">
-                                    <div className="container mx-auto w-full flex-1 px-4 sm:px-6 lg:flex lg:flex-1 lg:items-stretch lg:min-h-0 lg:px-8">
-                                        <div className="flex flex-col items-center justify-center gap-4 py-6 sm:gap-6 lg:flex-row lg:min-h-0 lg:flex-1 lg:items-stretch lg:justify-between lg:gap-8 lg:py-0">
-                                            {/* Left Content - centered in column */}
-                                            <div className="flex w-full flex-shrink-0 flex-col justify-center text-center lg:w-2/5 lg:text-left">
-                                                {/* Branding Badge */}
-                                                <div className="mb-2 flex items-center justify-center gap-2 lg:justify-start">
-                                                    <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1 backdrop-blur-sm">
-                                                        <img
-                                                            src="/logo_new.png"
-                                                            alt="FreshTick"
-                                                            className="h-3.5 w-auto sm:h-4"
-                                                            loading="eager"
-                                                        />
-                                                        <span className="text-[10px] text-[var(--theme-primary-1)] font-semibold sm:text-xs">
-                                                            Fresh Daily
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <h1 className="mb-2 text-xl font-extrabold leading-tight text-white sm:text-2xl md:text-3xl lg:text-5xl xl:text-6xl">
-                                                    {slide.title}
-                                                    <br />
-                                                    <span className="bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent">
-                                                        {slide.subtitle}
+                            {/* Content Container - Mobile-first layout */}
+                            <div className="relative z-10 flex h-full min-h-0 flex-col justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-0">
+                                <div className="container mx-auto w-full max-w-7xl">
+                                    <div className="flex flex-col items-center gap-6 sm:gap-8 lg:flex-row lg:items-stretch lg:justify-between lg:gap-8">
+                                        {/* Left Content - Mobile centered, Desktop vertically centered and left-aligned */}
+                                        <div className="flex w-full flex-shrink-0 flex-col items-center justify-center text-center lg:w-2/5 lg:items-start lg:justify-center lg:text-left">
+                                            {/* Branding Badge */}
+                                            <div className="mb-3 flex items-center justify-center lg:justify-start">
+                                                <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 backdrop-blur-sm sm:px-3.5 sm:py-1.5">
+                                                    <img
+                                                        src="/logo_new.png"
+                                                        alt="FreshTick"
+                                                        className="h-3.5 w-auto sm:h-4"
+                                                        loading="eager"
+                                                    />
+                                                    <span className="text-[10px] text-[var(--theme-primary-1)] font-semibold sm:text-xs">
+                                                        Fresh Daily
                                                     </span>
-                                                </h1>
-                                                <p className="mb-4 text-sm leading-snug text-white/90 sm:text-base md:text-lg lg:text-xl">
-                                                    {slide.description}
-                                                </p>
-                                                <div className="mb-3 flex flex-wrap items-center justify-center gap-2 sm:flex-row sm:gap-3 lg:justify-start">
-                                                    <button className="group relative max-w-max overflow-hidden rounded-lg bg-white px-4 py-2 text-xs font-bold text-gray-800 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 sm:px-5 sm:py-2.5 sm:text-sm md:px-6 md:py-3 md:text-base">
-                                                        <span className="relative z-10">Subscribe Now</span>
-                                                        <div className="absolute inset-0 bg-gradient-to-r from-gray-100 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                                                    </button>
-                                                    <button className="max-w-max rounded-lg border-2 border-white/30 bg-white/10 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:border-white/50 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white sm:px-5 sm:py-2.5 sm:text-sm md:px-6 md:py-3 md:text-base">
-                                                        Check Area
-                                                    </button>
-                                                </div>
-                                                {/* Trust Badges - Compact */}
-                                                <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-                                                    {['Farm-fresh', 'Morning delivery', 'Pause anytime', 'No lock-in'].map(
-                                                        (badge) => (
-                                                            <div
-                                                                key={badge}
-                                                                className="flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white backdrop-blur-sm sm:text-xs"
-                                                            >
-                                                                <svg
-                                                                    className="h-2.5 w-2.5 text-white sm:h-3 sm:w-3"
-                                                                    fill="currentColor"
-                                                                    viewBox="0 0 20 20"
-                                                                >
-                                                                    <path
-                                                                        fillRule="evenodd"
-                                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                                        clipRule="evenodd"
-                                                                    />
-                                                                </svg>
-                                                                <span>{badge}</span>
-                                                            </div>
-                                                        ),
-                                                    )}
                                                 </div>
                                             </div>
-
-                                            {/* Right Visual - desktop: image full hero height; width unchanged */}
-                                            <div className="relative flex w-full flex-shrink-0 items-center justify-center lg:h-full lg:w-3/5 lg:min-h-0 lg:justify-end">
-                                                <div className="relative flex h-full w-full flex-col items-center justify-center lg:flex-row lg:justify-end">
-                                                    <div className="absolute -left-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-3xl sm:-left-8 sm:-top-8 sm:h-40 sm:w-40 lg:-left-12 lg:-top-12 lg:h-64 lg:w-64" />
-                                                    <div className="absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-white/10 blur-3xl sm:-bottom-8 sm:-right-8 sm:h-40 sm:w-40 lg:-bottom-12 lg:-right-12 lg:h-64 lg:w-64" />
-
-                                                    {/* Product image + edge bubbles (anchored to image) */}
-                                                    <div className="relative h-[240px] w-[280px] shrink-0 overflow-visible sm:h-[320px] sm:w-[320px] md:h-[380px] md:w-[340px] lg:h-full lg:min-h-[420px] lg:w-[85%] lg:max-w-[620px] xl:max-w-[720px]">
-                                                        <div className="relative h-full w-full overflow-hidden bg-white/10 shadow-2xl backdrop-blur-md hero-image-shape">
-                                                            <img
-                                                                src={slide.image}
-                                                                alt={slide.title}
-                                                                className="absolute inset-0 h-full w-full object-cover object-center"
-                                                                loading="lazy"
-                                                            />
-                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                                            
+                                            {/* Main Heading */}
+                                            <h1 className="mb-3 text-2xl font-extrabold leading-tight text-white sm:text-3xl sm:mb-4 md:text-4xl lg:text-5xl lg:mb-5 xl:text-6xl">
+                                                {slide.title}
+                                                <br />
+                                                <span className="bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent">
+                                                    {slide.subtitle}
+                                                </span>
+                                            </h1>
+                                            
+                                            {/* Description */}
+                                            <p className="mb-5 text-sm leading-relaxed text-white/90 sm:text-base sm:mb-6 md:text-lg lg:text-xl lg:mb-8">
+                                                {slide.description}
+                                            </p>
+                                            
+                                            {/* CTA Buttons - Mobile stacked, Desktop inline */}
+                                            <div className="mb-4 flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-3 lg:justify-start lg:mb-5">
+                                                <button className="max-w-max rounded-lg bg-[var(--theme-primary-1)] px-5 py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:ring-offset-gray-900 sm:w-auto sm:px-6 sm:py-3 sm:text-base">
+                                                    Subscribe Now
+                                                </button>
+                                                <button className="max-w-max rounded-lg border-2 border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:border-white/50 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white sm:w-auto sm:px-6 sm:py-3 sm:text-base">
+                                                    Check Area
+                                                </button>
+                                            </div>
+                                            
+                                            {/* Trust Badges - Mobile centered, Desktop left */}
+                                            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 lg:justify-start">
+                                                {['Farm-fresh', 'Morning delivery', 'Pause anytime', 'No lock-in'].map(
+                                                    (badge) => (
+                                                        <div
+                                                            key={badge}
+                                                            className="flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] text-white backdrop-blur-sm sm:px-3 sm:text-xs"
+                                                        >
+                                                            <svg
+                                                                className="h-2.5 w-2.5 shrink-0 text-white sm:h-3 sm:w-3"
+                                                                fill="currentColor"
+                                                                viewBox="0 0 20 20"
+                                                            >
+                                                                <path
+                                                                    fillRule="evenodd"
+                                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                                    clipRule="evenodd"
+                                                                />
+                                                            </svg>
+                                                            <span className="whitespace-nowrap">{badge}</span>
                                                         </div>
-                                                        {/* Bubbles at image edges only - larger on large screens */}
-                                                        <div className="absolute right-0 top-[28%] z-10 h-6 w-6 animate-float rounded-full bg-white/25 shadow-xl backdrop-blur-sm sm:right-0 sm:top-[28%] sm:h-8 sm:w-8 md:h-10 md:w-10 lg:h-20 lg:w-20 lg:top-[25%] xl:h-24 xl:w-24" aria-hidden />
-                                                        <div className="absolute bottom-[28%] left-0 z-10 h-6 w-6 animate-float-delayed rounded-full bg-white/25 shadow-xl backdrop-blur-sm sm:bottom-[28%] sm:left-0 sm:h-8 sm:w-8 md:h-10 md:w-10 lg:bottom-[25%] lg:h-20 lg:w-20 xl:h-24 xl:w-24" aria-hidden />
+                                                    ),
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Right Visual - Mobile centered, Desktop right-aligned */}
+                                        <div className="relative flex w-full flex-shrink-0 items-center justify-center lg:h-full lg:w-3/5 lg:min-h-0 lg:justify-end">
+                                            <div className="relative flex h-full w-full flex-col items-center justify-center lg:flex-row lg:justify-end">
+                                                {/* Decorative blur circles - Hidden on mobile, visible on desktop */}
+                                                <div className="absolute -left-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-3xl sm:-left-8 sm:-top-8 sm:h-40 sm:w-40 lg:-left-12 lg:-top-12 lg:h-64 lg:w-64" />
+                                                <div className="absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-white/10 blur-3xl sm:-bottom-8 sm:-right-8 sm:h-40 sm:w-40 lg:-bottom-12 lg:-right-12 lg:h-64 lg:w-64" />
+
+                                                {/* Product image container - Mobile responsive, Desktop original shape */}
+                                                <div className="relative h-[200px] w-full max-w-[280px] shrink-0 overflow-hidden sm:h-[280px] sm:max-w-[320px] md:h-[340px] md:max-w-[380px] lg:h-full lg:min-h-[420px] lg:w-[85%] lg:max-w-[620px] xl:max-w-[720px]">
+                                                    <div className="relative h-full w-full overflow-hidden bg-white/10 shadow-2xl backdrop-blur-md hero-image-shape">
+                                                        <img
+                                                            src={slide.image}
+                                                            alt={slide.title}
+                                                            className="h-full w-full object-cover object-center"
+                                                            loading="lazy"
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                                                     </div>
+                                                    {/* Decorative bubbles - Mobile hidden, Desktop at original positions */}
+                                                    <div className="absolute right-0 top-[28%] z-10 h-6 w-6 animate-float rounded-full bg-white/25 shadow-xl backdrop-blur-sm sm:right-0 sm:top-[28%] sm:h-8 sm:w-8 md:h-10 md:w-10 lg:h-20 lg:w-20 lg:top-[25%] xl:h-24 xl:w-24" aria-hidden />
+                                                    <div className="absolute bottom-[28%] left-0 z-10 h-6 w-6 animate-float-delayed rounded-full bg-white/25 shadow-xl backdrop-blur-sm sm:bottom-[28%] sm:left-0 sm:h-8 sm:w-8 md:h-10 md:w-10 lg:bottom-[25%] lg:h-20 lg:w-20 xl:h-24 xl:w-24" aria-hidden />
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    ))}
+                </div>
 
-                    {/* Carousel Controls */}
-                    <button
-                        onClick={prevSlide}
-                        className="absolute left-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-2 backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 sm:left-4 sm:p-3 lg:left-8"
-                        aria-label="Previous slide"
-                    >
-                        <ChevronLeft className="h-5 w-5 text-white sm:h-6 sm:w-6 lg:h-8 lg:w-8" strokeWidth={2.5} />
-                    </button>
+                {/* Carousel Controls - Mobile optimized */}
+                <button
+                    onClick={prevSlide}
+                    className="absolute left-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-2.5 backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 sm:left-4 sm:p-3 lg:left-8"
+                    aria-label="Previous slide"
+                >
+                    <ChevronLeft className="h-5 w-5 text-white sm:h-6 sm:w-6 lg:h-8 lg:w-8" strokeWidth={2.5} />
+                </button>
 
-                    <button
-                        onClick={nextSlide}
-                        className="absolute right-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-2 backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 sm:right-4 sm:p-3 lg:right-8"
-                        aria-label="Next slide"
-                    >
-                        <ChevronRight className="h-5 w-5 text-white sm:h-6 sm:w-6 lg:h-8 lg:w-8" strokeWidth={2.5} />
-                    </button>
+                <button
+                    onClick={nextSlide}
+                    className="absolute right-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-2.5 backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 sm:right-4 sm:p-3 lg:right-8"
+                    aria-label="Next slide"
+                >
+                    <ChevronRight className="h-5 w-5 text-white sm:h-6 sm:w-6 lg:h-8 lg:w-8" strokeWidth={2.5} />
+                </button>
 
-                    {/* Carousel Indicators */}
-                    <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 sm:bottom-8">
-                        {carouselSlides.map((_, index) => (
-                            <button
-                                key={index}
-                                onClick={() => goToSlide(index)}
-                                className={`h-1.5 rounded-full transition-all duration-300 active:scale-125 sm:h-2 ${
-                                    index === currentSlide
-                                        ? 'w-6 bg-white sm:w-8'
-                                        : 'w-1.5 bg-white/50 hover:bg-white/75 sm:w-2'
-                                }`}
-                                aria-label={`Go to slide ${index + 1}`}
-                            />
-                        ))}
-                    </div>
-                </section>
+                {/* Carousel Indicators - Mobile optimized */}
+                <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2 sm:bottom-8">
+                    {carouselSlides.map((_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => goToSlide(index)}
+                            className={`h-1.5 rounded-full transition-all duration-300 active:scale-125 sm:h-2 ${
+                                index === currentSlide
+                                    ? 'w-6 bg-white sm:w-8'
+                                    : 'w-1.5 bg-white/50 hover:bg-white/75 sm:w-2'
+                            }`}
+                            aria-label={`Go to slide ${index + 1}`}
+                        />
+                    ))}
+                </div>
+            </section>
 
                 {/* We deliver to – dark marquee, solid colors, larger size */}
                 <section className="marquee-dark overflow-hidden border-y border-white/10 py-5 sm:py-6 lg:py-7">
@@ -449,13 +456,13 @@ export default function Home() {
                 </section>
                
                 {/* Trending Product Categories */}
-                <section className="py-16 bg-white sm:py-20 lg:py-24" aria-labelledby="trending-categories-heading">
+                <section className="py-16 bg-gradient-to-b from-white to-gray-50/50 sm:py-20 lg:py-24" aria-labelledby="trending-categories-heading">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="mx-auto max-w-3xl text-center">
                             <h2 id="trending-categories-heading" className="mb-3 text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl">
                                 Trending Product Categories
                             </h2>
-                            <p className="text-lg text-gray-700 sm:text-xl">
+                            <p className="text-lg text-gray-600 sm:text-xl">
                                 Explore our most loved dairy categories
                             </p>
                         </div>
@@ -468,17 +475,21 @@ export default function Home() {
                                 { name: 'Ghee', image: '/images/categories/Ghee.png' },
                             ].map((category) => (
                                 <div key={category.name} className="group flex flex-col items-center">
-                                    <div className="relative w-full overflow-hidden rounded-2xl bg-gray-100 shadow-lg ring-1 ring-black/5 transition-all duration-300 group-hover:shadow-xl group-hover:ring-[var(--theme-primary-1)]/30">
-                                        <div className="aspect-square w-full">
+                                    <div className="relative w-full overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-gray-200/60 transition-all duration-500 group-hover:shadow-2xl group-hover:ring-[var(--theme-primary-1)]/40 group-hover:-translate-y-1">
+                                        <div className="aspect-square w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
                                             <img
                                                 src={category.image}
                                                 alt={category.name}
-                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                className="h-full w-full object-cover transition-all duration-500 group-hover:scale-110"
                                                 loading="lazy"
                                             />
+                                            {/* Gradient overlay on hover */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[var(--theme-primary-1)]/0 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-10" />
                                         </div>
+                                        {/* Shine effect on hover */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full transition-transform duration-700 group-hover:translate-x-full" />
                                     </div>
-                                    <h3 className="mt-4 text-center text-base font-bold text-gray-800 sm:text-lg">
+                                    <h3 className="mt-4 text-center text-base font-bold text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-lg">
                                         {category.name}
                                     </h3>
                                 </div>
@@ -488,18 +499,101 @@ export default function Home() {
                 </section>
 
                 {/* How Subscription Works Section */}
-                <section className="py-16 bg-gray-50 sm:py-20 lg:py-24" aria-labelledby="subscription-steps-heading">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <section className="relative overflow-hidden py-16 bg-gradient-to-b from-gray-50 to-gray-100 sm:py-20 lg:py-24" aria-labelledby="subscription-steps-heading">
+                    {/* Background decorative icons */}
+                    <div className="section-icon-bg absolute inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden>
+                        <img src="/images/icons/milk-bottle.png" alt="" className="absolute left-[2%] top-[12%] h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16" style={{ opacity: 0.05, transform: 'rotate(-18deg)' }} />
+                        <img src="/images/icons/farm.png" alt="" className="absolute right-[4%] top-[10%] h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14" style={{ opacity: 0.04, transform: 'rotate(14deg)' }} />
+                        <img src="/images/icons/animal.png" alt="" className="absolute bottom-[18%] left-[1%] h-10 w-10 sm:h-12 sm:w-12" style={{ opacity: 0.04, transform: 'rotate(10deg)' }} />
+                        <img src="/images/icons/milk-bottle%20(1).png" alt="" className="absolute bottom-[12%] right-[7%] h-12 w-12 sm:h-14 sm:w-14" style={{ opacity: 0.05, transform: 'rotate(-12deg)' }} />
+                        <img src="/images/icons/discount.png" alt="" className="absolute left-[18%] top-1/2 h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10" style={{ opacity: 0.03, transform: 'rotate(18deg)' }} />
+                        <img src="/images/icons/milk%20(1).png" alt="" className="absolute right-[20%] top-1/2 h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10" style={{ opacity: 0.04, transform: 'rotate(-10deg)' }} />
+                    </div>
+                    <style>{`
+                        @keyframes blob-bounce {
+                            0% {
+                                transform: translate(-100%, -100%) translate3d(0, 0, 0);
+                            }
+                            25% {
+                                transform: translate(-100%, -100%) translate3d(100%, 0, 0);
+                            }
+                            50% {
+                                transform: translate(-100%, -100%) translate3d(100%, 100%, 0);
+                            }
+                            75% {
+                                transform: translate(-100%, -100%) translate3d(0, 100%, 0);
+                            }
+                            100% {
+                                transform: translate(-100%, -100%) translate3d(0, 0, 0);
+                            }
+                        }
+                        .subscription-card {
+                            position: relative;
+                            border-radius: 14px;
+                            z-index: 1111;
+                            overflow: hidden;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+                            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                        }
+                        .subscription-card:hover {
+                            transform: translateY(-8px);
+                            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                        }
+                        .subscription-card-bg {
+                            position: absolute;
+                            top: 5px;
+                            left: 5px;
+                            right: 5px;
+                            bottom: 5px;
+                            z-index: 2;
+                            background: rgba(255, 255, 255, .95);
+                            backdrop-filter: blur(24px);
+                            border-radius: 10px;
+                            overflow: hidden;
+                            outline: 2px solid white;
+                            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                        }
+                        .subscription-card:hover .subscription-card-bg {
+                            box-shadow: 0 0 0 2px rgba(58, 154, 133, 0.3);
+                        }
+                        .subscription-card-blob {
+                            position: absolute;
+                            z-index: 1;
+                            top: 50%;
+                            left: 50%;
+                            width: 150px;
+                            height: 150px;
+                            border-radius: 50%;
+                            opacity: 1;
+                            filter: blur(12px);
+                            animation: blob-bounce 5s infinite ease;
+                            transition: opacity 0.5s ease;
+                        }
+                        .subscription-card:hover .subscription-card-blob {
+                            opacity: 0.8;
+                        }
+                        @media (max-width: 640px) {
+                            .subscription-card-blob {
+                                width: 100px;
+                                height: 100px;
+                            }
+                        }
+                    `}</style>
+                    <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="mx-auto max-w-3xl text-center">
                             <h2 id="subscription-steps-heading" className="mb-3 text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl">
                                 How Subscription Works
                             </h2>
-                            <p className="text-lg text-gray-700 sm:text-xl">
+                            <p className="text-lg text-gray-600 sm:text-xl">
                                 Simple steps to get fresh dairy delivered daily
                             </p>
                         </div>
 
-                        <div className="mx-auto mt-12 grid max-w-6xl grid-cols-2 gap-6 sm:gap-8 lg:flex lg:flex-row lg:items-stretch lg:justify-center lg:gap-2">
+                        <div className="mx-auto mt-12 grid max-w-6xl grid-cols-2 gap-6 sm:gap-8 lg:flex lg:flex-row lg:items-stretch lg:justify-center lg:gap-4">
                             {[
                                 {
                                     step: '1',
@@ -507,6 +601,7 @@ export default function Home() {
                                     description: 'Milk, curd, paneer, ghee',
                                     image: '/images/dairy-products.png',
                                     imageAlt: 'Dairy products',
+                                    blobColor: 'var(--theme-primary-1)',
                                 },
                                 {
                                     step: '2',
@@ -514,6 +609,7 @@ export default function Home() {
                                     description: 'Daily / Alternate days',
                                     image: '/images/calendar.png',
                                     imageAlt: 'Calendar schedule',
+                                    blobColor: 'var(--theme-secondary)',
                                 },
                                 {
                                     step: '3',
@@ -521,6 +617,7 @@ export default function Home() {
                                     description: 'Fresh before 7 AM',
                                     image: '/images/motorbike.png',
                                     imageAlt: 'Delivery',
+                                    blobColor: 'var(--theme-primary-1)',
                                 },
                                 {
                                     step: '4',
@@ -528,32 +625,36 @@ export default function Home() {
                                     description: 'Full control, no lock-in',
                                     image: '/images/pause.png',
                                     imageAlt: 'Pause or modify',
+                                    blobColor: 'var(--theme-secondary)',
                                 },
                             ].flatMap((item, index) => {
                                 const card = (
                                     <article
                                         key={`step-${index}`}
-                                        className="group relative flex h-full min-h-[260px] flex-col rounded-2xl border-2 border-[var(--theme-primary-1)]/20 bg-white p-6 shadow-sm transition-all duration-300 hover:border-[var(--theme-primary-1)]/40 hover:shadow-lg sm:min-h-[280px] sm:p-7 lg:min-h-[300px] lg:min-w-0 lg:flex-1 lg:basis-0"
+                                        className="subscription-card group h-full w-full min-h-[250px] sm:min-h-[280px] lg:min-h-[300px] lg:flex-1 lg:max-w-[200px]"
                                     >
-                                        <span className="absolute -top-3 left-6 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-xs font-bold text-white shadow-md sm:left-7 sm:h-8 sm:w-8 sm:text-sm" aria-hidden>
-                                            {item.step}
-                                        </span>
-                                        <div className="mb-4 flex flex-shrink-0 flex-col items-center pt-1">
-                                            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[var(--theme-primary-1)]/10 p-3 transition-colors group-hover:bg-[var(--theme-primary-1)]/20 sm:h-24 sm:w-24 sm:p-4">
-                                                <img
-                                                    src={item.image}
-                                                    alt={item.imageAlt}
-                                                    className="h-full w-full object-contain"
-                                                    loading="lazy"
-                                                />
+                                        <div
+                                            className="subscription-card-blob"
+                                            style={{ backgroundColor: item.blobColor }}
+                                        />
+                                        <div className="subscription-card-bg flex flex-col items-center justify-center p-4 sm:p-6">
+                                            <div className="mb-4 flex flex-shrink-0 flex-col items-center">
+                                                <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-[var(--theme-primary-1)]/10 p-3 transition-all duration-500 group-hover:scale-110 group-hover:bg-[var(--theme-primary-1)]/20 sm:h-28 sm:w-28 sm:p-4 lg:h-32 lg:w-32">
+                                                    <img
+                                                        src={item.image}
+                                                        alt={item.imageAlt}
+                                                        className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-110"
+                                                        loading="lazy"
+                                                    />
+                                                </div>
                                             </div>
+                                            <h3 className="mb-2 text-center text-sm font-bold text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
+                                                {item.title}
+                                            </h3>
+                                            <p className="mt-auto text-center text-[10px] text-gray-600 transition-colors duration-300 group-hover:text-gray-800 sm:text-xs">
+                                                {item.description}
+                                            </p>
                                         </div>
-                                        <h3 className="mb-2 text-center text-lg font-bold text-gray-800 sm:text-xl">
-                                            {item.title}
-                                        </h3>
-                                        <p className="mt-auto text-center text-sm text-gray-700 sm:text-base">
-                                            {item.description}
-                                        </p>
                                     </article>
                                 );
                                 const arrow = (
@@ -562,7 +663,7 @@ export default function Home() {
                                         className="hidden flex-shrink-0 items-center justify-center lg:flex"
                                         aria-hidden
                                     >
-                                        <svg className="h-6 w-6 text-[var(--theme-primary-1)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <svg className="h-6 w-6 text-[var(--theme-primary-1)] transition-all duration-300 hover:scale-125 hover:text-[var(--theme-primary-1-dark)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                         </svg>
                                     </div>
@@ -573,36 +674,36 @@ export default function Home() {
                     </div>
                 </section>
 
-                {/* Our Products – compact card slider, wishlist on image, full-width cards, clean slider */}
-                <section id="products" className="py-10 sm:py-12 lg:py-14" aria-labelledby="products-heading">
+                {/* Our Products – enhanced card slider with improved UI */}
+                <section id="products" className="py-16 bg-gradient-to-b from-white to-gray-50/30 sm:py-20 lg:py-24" aria-labelledby="products-heading">
                     <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div className="mb-6 text-center sm:mb-8">
-                            <h2 id="products-heading" className="mb-1.5 text-2xl font-bold text-gray-800 sm:text-3xl lg:text-4xl">
+                        <div className="mb-8 text-center sm:mb-10">
+                            <h2 id="products-heading" className="mb-2 text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl">
                                 Our Products
                             </h2>
-                            <p className="text-sm text-gray-600 sm:text-base">
+                            <p className="text-base text-gray-600 sm:text-lg">
                                 Fresh dairy delivered to your doorstep
                             </p>
                         </div>
 
-                        <div className="relative flex items-stretch gap-3 sm:gap-4">
+                        <div className="relative flex items-center gap-3 sm:gap-4">
                             <button
                                 type="button"
                                 onClick={goPrev}
                                 disabled={!canGoPrev}
                                 aria-label="Previous products"
-                                className={`z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:h-10 sm:w-10 ${
+                                className={`z-10 flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border-2 shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 hover:scale-110 active:scale-95 sm:h-12 sm:w-12 ${
                                     canGoPrev
-                                        ? 'border-[var(--theme-primary-1)]/40 bg-white text-[var(--theme-primary-1)] hover:bg-[var(--theme-primary-1)]/10'
+                                        ? 'border-[var(--theme-primary-1)]/50 bg-white text-[var(--theme-primary-1)] hover:border-[var(--theme-primary-1)] hover:bg-[var(--theme-primary-1)]/10 hover:shadow-lg'
                                         : 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300'
                                 }`}
                             >
-                                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
+                                <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.5} />
                             </button>
 
-                            <div ref={productSliderRef} className="min-w-0 flex-1 overflow-hidden">
+                            <div ref={productSliderRef} className="min-w-0 flex-1 overflow-x-hidden">
                                 <div
-                                    className="flex gap-3 transition-transform duration-300 ease-out sm:gap-4"
+                                    className="flex gap-4 transition-transform duration-500 ease-out sm:gap-5"
                                     style={{
                                         width: stepPx > 0 ? `${PRODUCTS.length * stepPx - GAP_PX}px` : undefined,
                                         transform: `translateX(-${productIndex * stepPx}px)`,
@@ -615,11 +716,11 @@ export default function Home() {
                                         return (
                                             <article
                                                 key={productId}
-                                                className="group flex w-full shrink-0 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-[var(--theme-primary-1)]/40 hover:shadow-md"
+                                                className="group flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-500 hover:border-[var(--theme-primary-1)]/50 hover:shadow-2xl"
                                                 style={{ width: stepPx > 0 ? `${stepPx - GAP_PX}px` : undefined }}
                                                 role="listitem"
                                             >
-                                                <div className="relative w-full aspect-square overflow-hidden bg-[var(--theme-secondary)]/10 sm:aspect-[4/3]">
+                                                <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 sm:aspect-[4/3]">
                                                     <ProductCardMedia
                                                         media={getMediaList(product)}
                                                         alt={`${product.name} ${product.variant}`}
@@ -627,10 +728,12 @@ export default function Home() {
                                                         currentIndexMap={cardMediaIndex}
                                                         onIndexChange={setCardMediaIndexForKey}
                                                         className="h-full w-full"
-                                                        imageClassName="group-hover:scale-105"
+                                                        imageClassName="transition-transform duration-500 group-hover:scale-110"
                                                     />
+                                                    {/* Gradient overlay on hover */}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--theme-primary-1)]/0 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-5" />
                                                     {product.bestSeller && (
-                                                        <span className="absolute left-1 top-1 rounded-full bg-[#cf992c] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white sm:left-1.5 sm:top-1.5 sm:px-2 sm:text-[10px]">
+                                                        <span className="absolute left-2 top-2 z-10 rounded-full bg-gradient-to-r from-[#cf992c] to-[#e6b047] px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white shadow-lg sm:left-2.5 sm:top-2.5 sm:px-2.5 sm:text-[10px]">
                                                             Best Seller
                                                         </span>
                                                     )}
@@ -642,32 +745,32 @@ export default function Home() {
                                                             toggleProductWishlist(productId);
                                                         }}
                                                         aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                                                        className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 shadow-sm transition-colors hover:bg-white sm:right-1.5 sm:top-1.5 sm:h-7 sm:w-7"
+                                                        className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white active:scale-95 sm:right-2.5 sm:top-2.5 sm:h-8 sm:w-8"
                                                     >
                                                         <Heart
-                                                            className={`h-3 w-3 sm:h-4 sm:w-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-500'}`}
+                                                            className={`h-4 w-4 transition-all duration-300 sm:h-5 sm:w-5 ${isWishlisted ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-500 group-hover:text-red-400'}`}
                                                             strokeWidth={2}
                                                         />
                                                     </button>
                                                 </div>
-                                                <div className="flex w-full flex-1 flex-col p-2 sm:p-2.5">
-                                                    <h3 className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 sm:text-sm">
+                                                <div className="flex w-full flex-1 flex-col p-3 sm:p-4">
+                                                    <h3 className="mb-1 line-clamp-2 text-sm font-bold text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
                                                         {product.name} {!product.isPlan && `- (${product.variant})`}
                                                     </h3>
                                                     {product.isPlan ? (
-                                                        <p className="mb-1 text-[10px] font-medium text-gray-600 sm:text-xs">
+                                                        <p className="mb-2 text-xs font-medium text-gray-600 sm:text-sm">
                                                             {product.variant}
                                                         </p>
                                                     ) : (
-                                                        <p className="mb-1 text-xs font-semibold text-[var(--theme-primary-1)] sm:text-sm">
+                                                        <p className="mb-2 text-sm font-bold text-[var(--theme-primary-1)] sm:text-base">
                                                             {product.price}/ Unit
                                                         </p>
                                                     )}
                                                     <button
                                                         type="button"
-                                                        className="mt-auto w-full rounded-md bg-[var(--theme-primary-1)] py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:py-2 sm:text-xs"
+                                                        className="mt-auto w-full rounded-lg bg-[var(--theme-primary-1)] py-2.5 text-center text-xs font-semibold text-white shadow-md transition-all duration-300 hover:scale-105 hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 active:scale-95 sm:py-3 sm:text-sm"
                                                     >
-                                                        {product.isPlan ? 'Subscribe' : 'Add'}
+                                                        {product.isPlan ? 'Subscribe' : 'Add to Cart'}
                                                     </button>
                                                 </div>
                                             </article>
@@ -681,23 +784,23 @@ export default function Home() {
                                 onClick={goNext}
                                 disabled={!canGoNext}
                                 aria-label="Next products"
-                                className={`z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:h-10 sm:w-10 ${
+                                className={`z-10 flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border-2 shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 hover:scale-110 active:scale-95 sm:h-12 sm:w-12 ${
                                     canGoNext
-                                        ? 'border-[var(--theme-primary-1)]/40 bg-white text-[var(--theme-primary-1)] hover:bg-[var(--theme-primary-1)]/10'
+                                        ? 'border-[var(--theme-primary-1)]/50 bg-white text-[var(--theme-primary-1)] hover:border-[var(--theme-primary-1)] hover:bg-[var(--theme-primary-1)]/10 hover:shadow-lg'
                                         : 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300'
                                 }`}
                             >
-                                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
+                                <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.5} />
                             </button>
                         </div>
                     </div>
                 </section>
 
-                {/* Why Choose Us – compact horizontal story strip */}
-                <section className="py-12 bg-gray-50/80 sm:py-14 lg:py-16" aria-labelledby="why-choose-heading">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="mb-8 text-center sm:mb-10">
-                            <h2 id="why-choose-heading" className="mb-2 text-2xl font-bold text-gray-800 sm:text-3xl lg:text-4xl">
+                {/* Why Choose Us – modern design with enhanced UI/UX */}
+                <section className="py-16 bg-gradient-to-b from-white via-gray-50/50 to-white sm:py-20 lg:py-24" aria-labelledby="why-choose-heading">
+                    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        <div className="mb-12 text-center sm:mb-14">
+                            <h2 id="why-choose-heading" className="mb-3 text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl">
                                 Why Choose Us
                             </h2>
                             <p className="text-base text-gray-600 sm:text-lg">
@@ -705,7 +808,7 @@ export default function Home() {
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 sm:gap-6 lg:grid-cols-8 lg:gap-4">
+                        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 lg:grid-cols-4 lg:gap-6">
                             {[
                                 { title: 'Sourced from local Kerala farms', image: '/images/why-choose-us/Sourced from local Kerala farms.png' },
                                 { title: 'No preservatives', image: '/images/why-choose-us/no-preservatives.png' },
@@ -715,28 +818,32 @@ export default function Home() {
                                 { title: 'Quality checked daily', image: '/images/why-choose-us/Quality checked daily.png' },
                                 { title: 'Cold-chain maintained', image: '/images/why-choose-us/Cold-chain maintained.png' },
                                 { title: 'Transparent pricing', image: '/images/why-choose-us/transparent-pricing.png' },
-                            ].map((item, index) => (
+                            ].map((item) => (
                                 <div
                                     key={item.title}
-                                    className="group flex flex-col items-center"
+                                    className="group relative flex flex-col items-center rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200/60 transition-all duration-500 hover:-translate-y-2 hover:shadow-xl hover:ring-[var(--theme-primary-1)]/30 sm:p-7"
                                 >
-                                    <span
-                                        className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--theme-primary-1)] sm:text-xs"
-                                        aria-hidden
-                                    >
-                                        {String(index + 1).padStart(2, '0')}
-                                    </span>
-                                    <div className="relative mb-2 flex h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[var(--theme-secondary)]/30 p-2.5 transition-colors group-hover:bg-[var(--theme-primary-1)]/15 sm:h-16 sm:w-16 sm:p-3">
+                                    {/* Decorative background element */}
+                                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--theme-primary-1)]/0 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-5" />
+                                    
+                                    {/* Icon container with modern design */}
+                                    <div className="relative mb-4 flex h-20 w-20 shrink-0 items-center justify-center overflow-visible rounded-2xl bg-gradient-to-br from-[var(--theme-primary-1)]/10 via-[var(--theme-primary-1)]/5 to-[var(--theme-secondary)]/10 p-4 shadow-lg transition-all duration-500 group-hover:scale-110 group-hover:bg-gradient-to-br group-hover:from-[var(--theme-primary-1)]/20 group-hover:via-[var(--theme-primary-1)]/10 group-hover:to-[var(--theme-primary-1)]/15 group-hover:shadow-xl sm:h-24 sm:w-24 sm:p-5">
+                                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/50 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
                                         <img
                                             src={item.image}
-                                            alt=""
-                                            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-110"
+                                            alt={item.title}
+                                            className="relative z-10 h-full w-full object-contain transition-transform duration-500 group-hover:scale-110"
                                             loading="lazy"
                                         />
                                     </div>
-                                    <p className="line-clamp-2 min-h-[2.5em] text-center text-xs font-medium text-gray-700 sm:text-sm">
+                                    
+                                    {/* Title with modern typography */}
+                                    <h3 className="line-clamp-2 min-h-[2.5em] text-center text-sm font-bold text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
                                         {item.title}
-                                    </p>
+                                    </h3>
+                                    
+                                    {/* Subtle accent line on hover */}
+                                    <div className="absolute bottom-0 left-1/2 h-1 w-0 -translate-x-1/2 rounded-full bg-[var(--theme-primary-1)] transition-all duration-500 group-hover:w-12" />
                                 </div>
                             ))}
                         </div>
@@ -1120,29 +1227,29 @@ export default function Home() {
                     </div>
                 </section>
 
-                {/* Support – two-col layout, max-w, white bg */}
-                <section className="py-8 bg-white sm:py-10 lg:py-12">
+                {/* Support – enhanced compact design */}
+                <section className="py-8 bg-gradient-to-b from-white to-gray-50/30 sm:py-10 lg:py-12">
                     <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 lg:items-start">
-                            {/* Col 1: Active Support GIF (cropped/compressed) + App CTA — matches right height */}
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 lg:items-stretch">
+                            {/* Col 1: Active Support GIF + App CTA */}
                             <div className="flex w-full flex-col gap-4">
-                                <div className="flex h-[160px] w-full max-w-full items-center justify-center overflow-hidden rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-[200px] lg:h-[220px]">
+                                <div className="group relative flex h-[160px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/10 to-[var(--theme-primary-1)]/5 shadow-md transition-all duration-500 hover:shadow-lg sm:h-[200px] lg:h-[220px]">
                                     <img
                                         src="/images/Active%20Support.gif"
-                                        alt=""
-                                        className="h-full max-h-full w-full max-w-full object-contain object-center p-3 sm:p-4"
+                                        alt="Mobile app support"
+                                        className="h-full max-h-full w-full max-w-full object-contain object-center p-3 transition-transform duration-500 group-hover:scale-105 sm:p-4"
                                         loading="lazy"
                                     />
                                 </div>
-                                <div className="shrink-0 rounded-lg bg-gradient-to-r from-[var(--theme-primary-1)] to-[var(--theme-primary-1-dark)] px-4 py-3 sm:px-5 sm:py-3.5">
-                                    <p className="text-xs font-semibold text-white/90 sm:text-sm">
+                                <div className="shrink-0 rounded-xl bg-gradient-to-r from-[var(--theme-primary-1)] to-[var(--theme-primary-1-dark)] p-4 shadow-lg sm:p-5">
+                                    <p className="text-xs font-semibold text-white/95 sm:text-sm">
                                         Manage subscriptions from your phone — pause, increase, decrease anytime.
                                     </p>
-                                    <div className="mt-2 flex flex-wrap gap-2">
-                                        <a href="/login" className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-[var(--theme-primary-1)] transition-colors hover:bg-white/95 sm:px-4 sm:py-2">
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        <a href="/login" className="rounded-lg bg-white px-4 py-2 text-xs font-semibold text-[var(--theme-primary-1)] shadow-sm transition-all duration-300 hover:scale-105 hover:bg-white/95 hover:shadow-md active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm">
                                             Get Started
                                         </a>
-                                        <a href="/login" className="rounded-lg border border-white/80 bg-transparent px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/10 sm:px-4 sm:py-2">
+                                        <a href="/login" className="rounded-lg border-2 border-white/80 bg-transparent px-4 py-2 text-xs font-semibold text-white transition-all duration-300 hover:border-white hover:bg-white/10 hover:scale-105 active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm">
                                             Subscribe Now
                                         </a>
                                     </div>
@@ -1150,56 +1257,61 @@ export default function Home() {
                             </div>
 
                             {/* Col 2: Support contact card */}
-                            <div className="flex flex-col overflow-hidden rounded-lg border border-gray-200/80 bg-white shadow-sm">
-                            <h2 className="border-b border-gray-100 px-4 py-3 text-lg font-bold text-gray-900 sm:px-5 sm:py-3.5 sm:text-xl">
-                                Support
-                            </h2>
-                            <div className="divide-y divide-gray-100">
-                                <a href="tel:7736121233" className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50/80 sm:px-5 sm:py-3">
-                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/15 text-[var(--theme-primary-1)]">
-                                        <Phone className="h-4 w-4" strokeWidth={2} />
-                                    </span>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-gray-900">Call Us</p>
-                                        <p className="text-xs text-gray-600">7736121233</p>
-                                    </div>
-                                    <ExternalLink className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} aria-hidden />
-                                </a>
-                                <a href="https://wa.me/917736121233" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50/80 sm:px-5 sm:py-3">
-                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/15 text-[var(--theme-primary-1)]">
-                                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-                                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                                        </svg>
-                                    </span>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-gray-900">Chat With Us</p>
-                                        <p className="text-xs text-gray-600">7736121233</p>
-                                    </div>
-                                    <ExternalLink className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} aria-hidden />
-                                </a>
-                                <a href="mailto:support@freshtick.in" className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-gray-50/80 sm:px-5 sm:py-3">
-                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/15 text-[var(--theme-primary-1)]">
-                                        <Mail className="h-4 w-4" strokeWidth={2} />
-                                    </span>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-gray-900">Email Us</p>
-                                        <p className="text-xs text-gray-600">support@freshtick.in</p>
-                                    </div>
-                                    <ExternalLink className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} aria-hidden />
-                                </a>
-                                <div className="flex items-center gap-3 px-4 py-2.5 sm:px-5 sm:py-3">
-                                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/15 text-[var(--theme-primary-1)]">
-                                        <MapPin className="h-4 w-4" strokeWidth={2} />
-                                    </span>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-gray-900">Address</p>
-                                        <p className="text-xs leading-snug text-gray-600">
-                                            Door No: VI / 404K, 2nd floor Karakattu Building, Nayarambalam PO, Nayarambalam, Puduvypin, Kochi, Kerala, India, 682509
-                                        </p>
+                            <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition-all duration-300 hover:shadow-lg">
+                                <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 py-3 sm:px-5 sm:py-3.5">
+                                    <h2 className="text-lg font-bold text-gray-900 sm:text-xl">
+                                        Support
+                                    </h2>
+                                    <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">
+                                        We're here to help you
+                                    </p>
+                                </div>
+                                <div className="divide-y divide-gray-100">
+                                    <a href="tel:7736121233" className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5">
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/20 to-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-[var(--theme-primary-1)]/30 group-hover:to-[var(--theme-primary-1)]/20 sm:h-10 sm:w-10">
+                                            <Phone className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">Call Us</p>
+                                            <p className="text-xs text-gray-600 sm:text-sm">7736121233</p>
+                                        </div>
+                                        <ExternalLink className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--theme-primary-1)] sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
+                                    </a>
+                                    <a href="https://wa.me/917736121233" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5">
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#25D366]/20 to-[#25D366]/10 text-[#25D366] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-[#25D366]/30 group-hover:to-[#25D366]/20 sm:h-10 sm:w-10">
+                                            <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                                            </svg>
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[#25D366] sm:text-base">Chat With Us</p>
+                                            <p className="text-xs text-gray-600 sm:text-sm">7736121233</p>
+                                        </div>
+                                        <ExternalLink className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[#25D366] sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
+                                    </a>
+                                    <a href="mailto:support@freshtick.in" className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5">
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/20 to-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-[var(--theme-primary-1)]/30 group-hover:to-[var(--theme-primary-1)]/20 sm:h-10 sm:w-10">
+                                            <Mail className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">Email Us</p>
+                                            <p className="text-xs text-gray-600 sm:text-sm">support@freshtick.in</p>
+                                        </div>
+                                        <ExternalLink className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--theme-primary-1)] sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
+                                    </a>
+                                    <div className="flex items-start gap-3 px-4 py-3 sm:px-5 sm:py-3.5">
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/20 to-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] shadow-sm sm:h-10 sm:w-10">
+                                            <MapPin className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-gray-900 sm:text-base">Address</p>
+                                            <p className="mt-0.5 text-xs leading-relaxed text-gray-600 sm:text-sm">
+                                                Door No: VI / 404K, 2nd floor Karakattu Building, Nayarambalam PO, Nayarambalam, Puduvypin, Kochi, Kerala, India, 682509
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
                         </div>
                     </div>
                 </section>

@@ -30,7 +30,7 @@ export default function Header({ showMarquee, isScrolled }: HeaderProps) {
     return (
         <>
             <header
-                className={`fixed left-0 right-0 z-40 border-b transition-all duration-300 ease-out ${
+                className={`fixed left-0 right-0 z-[1200] border-b transition-all duration-300 ease-out ${
                     showMarquee ? 'top-10' : 'top-0'
                 } ${
                     isScrolled
