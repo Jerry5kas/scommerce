@@ -3,6 +3,18 @@
 ## Objective
 Implement OTP-based authentication system with device fingerprinting, user management, and address handling.
 
+## Auth Model (Clean Split)
+
+| Realm | Table | Model | Login | Guard |
+|-------|--------|--------|--------|--------|
+| **Admin** | `admin_users` | `Admin` | Email + password | `admin` |
+| **Customer & Driver** | `users` | `User` | Phone OTP only | `web` |
+
+- **One model for “user” auth:** Single `users` table + single `User` model for customer and driver. OTP-only (phone). Role: `customer` \| `driver`.
+- **Admin:** Separate `admin_users` + email/password (already implemented). No OTP.
+- **Precise plan and execution order:** See [PHASE_02_AUTHENTICATION_PLAN.md](PHASE_02_AUTHENTICATION_PLAN.md).
+- **Audit (plan vs phase doc):** See [PHASE_02_AUDIT.md](PHASE_02_AUDIT.md).
+
 ## Prerequisites
 - Phase 1 completed
 - Database configured
@@ -10,49 +22,45 @@ Implement OTP-based authentication system with device fingerprinting, user manag
 
 ## Tasks
 
-### 2.1 User Model & Migration
-- [ ] Create `users` table migration
-  - [ ] `id` (primary key)
-  - [ ] `phone` (unique, indexed)
-  - [ ] `name` (nullable, can be set later)
-  - [ ] `email` (nullable)
-  - [ ] `device_fingerprint` (string, nullable)
-  - [ ] `device_fingerprint_hash` (string, indexed)
-  - [ ] `preferred_language` (string, default: 'en')
-  - [ ] `communication_consent` (boolean, default: false)
-  - [ ] `free_sample_used` (boolean, default: false)
-  - [ ] `free_sample_phone_hash` (string, nullable, indexed)
-  - [ ] `role` (enum: 'customer', 'admin', 'driver')
-  - [ ] `is_active` (boolean, default: true)
-  - [ ] `last_login_at` (timestamp, nullable)
-  - [ ] `timestamps`
-- [ ] Create `User` model
-  - [ ] Fillable attributes
-  - [ ] Hidden attributes
-  - [ ] Casts (dates, booleans)
-  - [ ] Relationships (addresses, subscriptions, orders, wallet)
-  - [ ] Scopes (active, byRole)
-  - [ ] Helper methods (hasUsedFreeSample, canUseFreeSample)
+### 2.1 User Model & Migration (customer & driver only; admin separate)
+- [x] Alter `users` table (new migration) for Phase 2
+  - [x] `phone` (required, unique) – already exists; ensure not nullable for OTP
+  - [x] `name` (nullable)
+  - [x] `email` (nullable)
+  - [x] `password` (nullable – OTP-only for customer/driver)
+  - [x] `device_fingerprint_hash` (string, nullable, indexed)
+  - [x] `preferred_language` (string, default: 'en')
+  - [x] `communication_consent` (boolean, default: false)
+  - [x] `free_sample_used` (boolean, default: false)
+  - [x] `role` (enum: 'customer', 'driver' – no admin; admin in admin_users)
+  - [x] `is_active` (boolean, default: true)
+  - [x] `last_login_at` (timestamp, nullable)
+  - [x] timestamps (existing)
+- [x] Create `User` model
+  - [x] Fillable, hidden, casts
+  - [x] Relationships (addresses; later: subscriptions, orders, wallet)
+  - [x] Scopes (active, byRole)
+  - [x] Helper methods (isCustomer, isDriver, hasUsedFreeSample)
 
 ### 2.2 OTP System
-- [ ] Create `otps` table migration
-  - [ ] `id` (primary key)
-  - [ ] `phone` (string, indexed)
-  - [ ] `otp` (string, 6 digits)
-  - [ ] `expires_at` (timestamp)
-  - [ ] `verified_at` (timestamp, nullable)
-  - [ ] `attempts` (integer, default: 0)
-  - [ ] `ip_address` (string, nullable)
-  - [ ] `device_info` (text, nullable)
-  - [ ] `timestamps`
-- [ ] Create `Otp` model
-- [ ] Create `OtpService` class
-  - [ ] `generateOtp(phone, ip, deviceInfo)` - Generate and send OTP
-  - [ ] `verifyOtp(phone, otp)` - Verify OTP
-  - [ ] `checkRateLimit(phone, ip)` - Prevent abuse
-  - [ ] `cleanupExpiredOtps()` - Cleanup job
+- [x] Create `otps` table migration
+  - [x] `id` (primary key)
+  - [x] `phone` (string, indexed)
+  - [x] `otp` (string, 6 digits)
+  - [x] `expires_at` (timestamp)
+  - [x] `verified_at` (timestamp, nullable)
+  - [x] `attempts` (integer, default: 0)
+  - [x] `ip_address` (string, nullable)
+  - [x] `device_info` (text, nullable)
+  - [x] `timestamps`
+- [x] Create `Otp` model
+- [x] Create `OtpService` class
+  - [x] `generateOtp(phone, ip, deviceInfo)` - Generate and send OTP
+  - [x] `verifyOtp(phone, otp)` - Verify OTP
+  - [x] `checkRateLimit(phone, ip)` - Prevent abuse
+  - [x] `cleanupExpiredOtps()` - Cleanup job (scheduled daily)
 - [ ] Create OTP generation job (queue-based)
-- [ ] Integrate SMS gateway (or mock for development)
+- [x] Integrate SMS gateway (or mock for development) – log in dev
 
 ### 2.3 Device Fingerprinting
 - [ ] Create `device_fingerprints` table migration (optional, for tracking)
@@ -70,52 +78,51 @@ Implement OTP-based authentication system with device fingerprinting, user manag
   - [ ] `validateFingerprint(user, fingerprint)` - Validate
 
 ### 2.4 Authentication Controllers
-- [ ] Create `AuthController`
-  - [ ] `sendOtp(Request)` - Send OTP to phone
-  - [ ] `verifyOtp(Request)` - Verify OTP and login
-  - [ ] `logout()` - Logout user
-- [ ] Create Form Requests:
-  - [ ] `SendOtpRequest` - Validate phone number
-  - [ ] `VerifyOtpRequest` - Validate OTP
-- [ ] Implement rate limiting on OTP endpoints
-- [ ] Store device fingerprint on login
+- [x] Create `AuthController`
+  - [x] `sendOtp(Request)` - Send OTP to phone
+  - [x] `verifyOtp(Request)` - Verify OTP and login
+  - [x] `logout()` - Logout user
+- [x] Create Form Requests:
+  - [x] `SendOtpRequest` - Validate phone number
+  - [x] `VerifyOtpRequest` - Validate OTP
+- [x] Implement rate limiting on OTP endpoints (throttle + OtpService)
+- [ ] Store device fingerprint on login (column exists; optional)
 
 ### 2.5 User Address Management
-- [ ] Create `user_addresses` table migration
-  - [ ] `id` (primary key)
-  - [ ] `user_id` (foreign key, indexed)
-  - [ ] `type` (enum: 'home', 'work', 'other')
-  - [ ] `label` (string, e.g., "Home", "Office")
-  - [ ] `address_line_1` (string)
-  - [ ] `address_line_2` (string, nullable)
-  - [ ] `landmark` (string, nullable)
-  - [ ] `city` (string)
-  - [ ] `state` (string)
-  - [ ] `pincode` (string)
-  - [ ] `latitude` (decimal, nullable)
-  - [ ] `longitude` (decimal, nullable)
-  - [ ] `zone_id` (foreign key, nullable - Phase 3)
-  - [ ] `is_default` (boolean, default: false)
-  - [ ] `is_active` (boolean, default: true)
-  - [ ] `timestamps`
-- [ ] Create `UserAddress` model
-  - [ ] Relationships (user, zone)
-  - [ ] Scopes (active, default)
-- [ ] Create `UserAddressController`
-  - [ ] `index()` - List user addresses
-  - [ ] `store(Request)` - Create address
-  - [ ] `update(Request, address)` - Update address
-  - [ ] `destroy(address)` - Delete address
-  - [ ] `setDefault(address)` - Set as default
-- [ ] Create Form Request: `StoreUserAddressRequest`, `UpdateUserAddressRequest`
+- [x] Create `user_addresses` table migration
+  - [x] `id` (primary key)
+  - [x] `user_id` (foreign key, indexed)
+  - [x] `type` (enum: 'home', 'work', 'other')
+  - [x] `label` (string, e.g., "Home", "Office")
+  - [x] `address_line_1` (string)
+  - [x] `address_line_2` (string, nullable)
+  - [x] `landmark` (string, nullable)
+  - [x] `city` (string)
+  - [x] `state` (string)
+  - [x] `pincode` (string)
+  - [x] `latitude` (decimal, nullable)
+  - [x] `longitude` (decimal, nullable)
+  - [x] `zone_id` (foreign key, nullable - Phase 3)
+  - [x] `is_default` (boolean, default: false)
+  - [x] `is_active` (boolean, default: true)
+  - [x] `timestamps`
+- [x] Create `UserAddress` model
+  - [x] Relationships (user; zone – Phase 3)
+  - [x] Scopes (active, default)
+- [x] Create `UserAddressController`
+  - [x] `index()` - List user addresses
+  - [x] `store(Request)` - Create address
+  - [x] `update(Request, address)` - Update address
+  - [x] `destroy(address)` - Delete address (soft: is_active=false)
+  - [x] `setDefault(address)` - Set as default
+- [x] Create Form Request: `StoreUserAddressRequest`, `UpdateUserAddressRequest`
 
 ### 2.6 User Profile Management
-- [ ] Create `UserController` (customer-facing)
-  - [ ] `show()` - Show profile
-  - [ ] `update(Request)` - Update profile
-  - [ ] `updateLanguage(Request)` - Update preferred language
-  - [ ] `updateCommunicationConsent(Request)` - Update consent
-- [ ] Create Form Requests for profile updates
+- [x] Create `UserController` (customer-facing)
+  - [x] `show()` - Show profile
+  - [x] `update(Request)` - Update profile (name, email, preferred_language, communication_consent)
+  - [x] Language/consent via single update endpoint
+- [x] Create Form Requests for profile updates (`UpdateProfileRequest`)
 
 ### 2.7 RBAC Foundation
 - [ ] Create `roles` table migration (if multi-role needed)
@@ -130,30 +137,30 @@ Implement OTP-based authentication system with device fingerprinting, user manag
 - [ ] Create base `UserPolicy`
 
 ### 2.8 Authentication Middleware
-- [ ] Create `EnsureUserIsAuthenticated` middleware (if custom needed)
-- [ ] Create `EnsureUserHasLocation` middleware (for Phase 3)
-- [ ] Configure middleware in `bootstrap/app.php`
+- [x] Create `EnsureUserIsAuthenticated` middleware (if custom needed) – use Laravel `auth`
+- [x] Create `EnsureUserHasLocation` middleware (for Phase 3)
+- [x] Configure middleware in `bootstrap/app.php`
 
 ### 2.9 Frontend Authentication
-- [ ] Create login page (`resources/js/Pages/Auth/Login.tsx`)
-  - [ ] Phone number input
-  - [ ] OTP input (conditional)
-  - [ ] Language selector
-  - [ ] Communication consent checkbox
-  - [ ] Error handling
-- [ ] Create OTP verification component
-- [ ] Set up authentication state management
-- [ ] Create protected route wrapper
-- [ ] Handle authentication redirects
+- [x] Create login page (`resources/js/Pages/Auth/Login.tsx`)
+  - [x] Phone number input
+  - [x] OTP input (conditional)
+  - [x] Language selector (en, ml, hi)
+  - [x] Communication consent checkbox
+  - [x] Error handling (validation + rate limit)
+- [x] Create OTP verification component (in login page)
+- [x] Set up authentication state management (Inertia auth.user)
+- [x] Protected routes use Laravel `auth` middleware
+- [x] Handle authentication redirects
 
 ### 2.10 User Address Frontend
-- [ ] Create address list page
-- [ ] Create add/edit address form
-- [ ] Integrate location picker (Google Maps or similar)
-- [ ] Zone validation UI (Phase 3 integration)
+- [x] Create address list page (`profile/addresses.tsx`)
+- [x] Create add/edit address form (inline edit, set default, delete)
+- [ ] Integrate location picker (Google Maps or similar; optional) — For Google Maps: set `GOOGLE_MAPS_API_KEY` in `.env`, enable Geocoding API; address form already has lat/lng fields for manual entry
+- [x] Zone validation UI (Phase 3: pincode check, auto-assign zone on address)
 
 ### 2.11 Abuse Prevention
-- [ ] Implement OTP rate limiting (per phone, per IP)
+- [x] Implement OTP rate limiting (per phone, per IP) – OtpService + throttle
 - [ ] Implement device + phone hash locking for free samples
 - [ ] Create `AbusePreventionService`
   - [ ] `checkOtpAbuse(phone, ip)`
@@ -161,11 +168,18 @@ Implement OTP-based authentication system with device fingerprinting, user manag
 - [ ] Log suspicious activities
 
 ### 2.12 Database Seeders
-- [ ] Create `UserSeeder` (test users)
-- [ ] Create `AdminSeeder` (admin users)
-- [ ] Create test OTPs (development only)
+- [x] Create `UserSeeder` (test users)
+- [x] Create `AdminSeeder` (admin users)
+- [ ] Create test OTPs (development only; optional — use log or fixed OTP in dev)
 
-### 2.13 Testing
+### 2.13 Admin User Management (customers & drivers)
+- [x] Create `Admin/UserController` — index (filter by role), show, edit, update
+- [x] Create admin route: list/show/edit users, update user address
+- [x] Admin UI: users list (`admin/users`), user show, user edit (user details + inline address edit)
+- [x] Form Requests: `UpdateUserRequest`, `UpdateUserAddressRequest`
+- [x] Sidebar: "Users" link to customers & drivers
+
+### 2.14 Testing
 - [ ] Test OTP generation and sending
 - [ ] Test OTP verification
 - [ ] Test device fingerprinting
@@ -184,13 +198,13 @@ Implement OTP-based authentication system with device fingerprinting, user manag
 - ✅ Frontend authentication UI
 
 ## Success Criteria
-- [ ] Users can register/login with OTP
-- [ ] Device fingerprint is stored and validated
-- [ ] Users can manage addresses
-- [ ] Free sample abuse is prevented
-- [ ] OTP rate limiting works
-- [ ] Communication consent is mandatory
-- [ ] Preferred language is stored
+- [x] Users can register/login with OTP
+- [ ] Device fingerprint is stored and validated (optional)
+- [x] Users can manage addresses (address CRUD + profile/addresses UI)
+- [ ] Free sample abuse is prevented (optional)
+- [x] OTP rate limiting works
+- [x] Communication consent is mandatory
+- [x] Preferred language is stored
 
 ## Database Tables Created
 - `users`
@@ -207,6 +221,14 @@ Implement OTP-based authentication system with device fingerprinting, user manag
 - Free sample phone hash should be irreversible
 - Device fingerprint should be consistent across sessions
 
+## Remaining (optional / not started)
+- [ ] **OTP queue job** — Move OTP send to a queued job (2.2).
+- [ ] **Device fingerprinting** (2.3) — Optional: `device_fingerprints` table, `DeviceFingerprintService`, store/validate on login.
+- [ ] **Store device fingerprint on login** (2.4) — Optional; column exists on users.
+- [ ] **RBAC** (2.7) — Optional: roles/permissions tables, policies, if multi-role needed.
+- [ ] **Abuse prevention** (2.11) — Device + phone hash for free samples, `AbusePreventionService`, log suspicious activities.
+- [ ] **Location picker** (2.10) — Optional: Google Maps; lat/lng fields exist for manual entry.
+- [ ] **Test OTPs seeder** (2.12) — Dev only; optional (e.g. fixed OTP or log).
+- [ ] **Testing** (2.13) — OTP generation/verification, device fingerprint, address CRUD, free sample abuse, rate limiting, auth flow feature tests.
 ## Next Phase
 Once Phase 2 is complete, proceed to **Phase 3: Location & Zone Management**
-

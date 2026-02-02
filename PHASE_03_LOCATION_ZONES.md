@@ -10,169 +10,155 @@ Implement zone-based service availability system with driver assignment and loca
 ## Tasks
 
 ### 3.1 Zone Management
-- [ ] Create `zones` table migration
-  - [ ] `id` (primary key)
-  - [ ] `name` (string, unique)
-  - [ ] `code` (string, unique, indexed)
-  - [ ] `description` (text, nullable)
-  - [ ] `boundary_coordinates` (json, nullable) - Polygon coordinates
-  - [ ] `pincodes` (json, nullable) - Array of serviceable pincodes
-  - [ ] `city` (string)
-  - [ ] `state` (string)
-  - [ ] `is_active` (boolean, default: true)
-  - [ ] `delivery_charge` (decimal, nullable)
-  - [ ] `min_order_amount` (decimal, nullable)
-  - [ ] `service_days` (json) - Days of week serviceable
-  - [ ] `service_time_start` (time, nullable)
-  - [ ] `service_time_end` (time, nullable)
-  - [ ] `created_by` (foreign key to users, nullable)
-  - [ ] `timestamps`
-- [ ] Create `Zone` model
-  - [ ] Fillable attributes
-  - [ ] Casts (json fields, dates)
-  - [ ] Relationships (drivers, addresses, orders)
-  - [ ] Scopes (active)
-  - [ ] Helper methods:
-    - [ ] `isServiceable(pincode)` - Check if pincode is serviceable
-    - [ ] `isWithinBoundary(lat, lng)` - Check if coordinates within boundary
-    - [ ] `isServiceableOnDay(day)` - Check if serviceable on day
-    - [ ] `isServiceableAtTime(time)` - Check if serviceable at time
+- [x] Create `zones` table migration
+  - [x] `id` (primary key)
+  - [x] `name` (string, unique)
+  - [x] `code` (string, unique, indexed)
+  - [x] `description` (text, nullable)
+  - [x] `boundary_coordinates` (json, nullable) - Polygon coordinates
+  - [x] `pincodes` (json, nullable) - Array of serviceable pincodes
+  - [x] `city` (string)
+  - [x] `state` (string)
+  - [x] `is_active` (boolean, default: true)
+  - [x] `delivery_charge` (decimal, nullable)
+  - [x] `min_order_amount` (decimal, nullable)
+  - [x] `service_days` (json) - Days of week serviceable
+  - [x] `service_time_start` (time, nullable)
+  - [x] `service_time_end` (time, nullable)
+  - [x] `created_by` (foreign key to users, nullable)
+  - [x] `timestamps`
+- [x] Create `Zone` model
+  - [x] Fillable attributes
+  - [x] Casts (json fields, dates)
+  - [x] Relationships (drivers, addresses; orders deferred)
+  - [x] Scopes (active)
+  - [x] Helper methods:
+    - [x] `isServiceable(pincode)` - Check if pincode is serviceable
+    - [x] `isWithinBoundary(lat, lng)` - Check if coordinates within boundary
+    - [x] `isServiceableOnDay(day)` - Check if serviceable on day
+    - [x] `isServiceableAtTime(time)` - Check if serviceable at time
 
 ### 3.2 Driver Management
-- [ ] Create `drivers` table migration
-  - [ ] `id` (primary key)
-  - [ ] `user_id` (foreign key to users, unique)
-  - [ ] `employee_id` (string, unique, indexed)
-  - [ ] `zone_id` (foreign key, nullable - can be reassigned)
-  - [ ] `vehicle_number` (string, nullable)
-  - [ ] `vehicle_type` (string, nullable)
-  - [ ] `license_number` (string, nullable)
-  - [ ] `phone` (string, indexed)
-  - [ ] `is_active` (boolean, default: true)
-  - [ ] `current_latitude` (decimal, nullable)
-  - [ ] `current_longitude` (decimal, nullable)
-  - [ ] `last_location_update` (timestamp, nullable)
-  - [ ] `is_online` (boolean, default: false)
-  - [ ] `timestamps`
-- [ ] Create `Driver` model
-  - [ ] Relationships (user, zone, deliveries)
-  - [ ] Scopes (active, online, byZone)
-  - [ ] Helper methods:
-    - [ ] `updateLocation(lat, lng)` - Update GPS location
-    - [ ] `goOnline()` / `goOffline()` - Status management
+- [x] Create `drivers` table migration
+  - [x] `id` (primary key)
+  - [x] `user_id` (foreign key to users, unique)
+  - [x] `employee_id` (string, unique, indexed)
+  - [x] `zone_id` (foreign key, nullable - can be reassigned)
+  - [x] `vehicle_number` (string, nullable)
+  - [x] `vehicle_type` (string, nullable)
+  - [x] `license_number` (string, nullable)
+  - [x] `phone` (string, indexed)
+  - [x] `is_active` (boolean, default: true)
+  - [x] `current_latitude` (decimal, nullable)
+  - [x] `current_longitude` (decimal, nullable)
+  - [x] `last_location_update` (timestamp, nullable)
+  - [x] `is_online` (boolean, default: false)
+  - [x] `timestamps`
+- [x] Create `Driver` model
+  - [x] Relationships (user, zone; deliveries deferred)
+  - [x] Scopes (active, online, byZone)
+  - [x] Helper methods:
+    - [x] `updateLocation(lat, lng)` - Update GPS location
+    - [x] `goOnline()` / `goOffline()` - Status management
 
 ### 3.3 Zone-Driver Assignment
-- [ ] Create `zone_drivers` pivot table migration (if many-to-many)
-  - [ ] `zone_id` (foreign key)
-  - [ ] `driver_id` (foreign key)
-  - [ ] `assigned_at` (timestamp)
-  - [ ] `assigned_by` (foreign key to users)
-  - [ ] `is_primary` (boolean, default: false)
-  - [ ] `timestamps`
-- [ ] Or use direct `zone_id` in drivers table (one-to-many)
+- [x] Use direct `zone_id` in drivers table (one-to-many) — no pivot table
+- [x] ~~Create `zone_drivers` pivot table (if many-to-many)~~ N/A
 
 ### 3.4 Location Validation Service
-- [ ] Create `LocationService` class
-  - [ ] `validateAddress(address)` - Validate address against zones
-  - [ ] `findZoneByPincode(pincode)` - Find zone by pincode
-  - [ ] `findZoneByCoordinates(lat, lng)` - Find zone by coordinates
-  - [ ] `isAddressServiceable(address)` - Check if address is serviceable
-  - [ ] `getServiceableZones()` - Get all active zones
-- [ ] Integrate with Google Maps Geocoding API (optional)
-- [ ] Cache zone lookups for performance
+- [x] Create `LocationService` class
+  - [x] `validateAddress(address)` - Validate address against zones
+  - [x] `findZoneByPincode(pincode)` - Find zone by pincode
+  - [x] `findZoneByCoordinates(lat, lng)` - Find zone by coordinates
+  - [x] `isAddressServiceable(address)` - Check if address is serviceable
+  - [x] `getServiceableZones()` - Get all active zones
+- [ ] Integrate with Google Maps Geocoding API (optional; set `GOOGLE_MAPS_API_KEY` in `.env` and enable Geocoding API)
+- [x] Cache zone lookups for performance (`LocationService`: pincode, coords, serviceable zones; 1h TTL)
 
 ### 3.5 Zone Controllers (Admin)
-- [ ] Create `Admin/ZoneController`
-  - [ ] `index()` - List all zones
-  - [ ] `show(zone)` - Show zone details
-  - [ ] `store(Request)` - Create zone
-  - [ ] `update(Request, zone)` - Update zone
-  - [ ] `destroy(zone)` - Delete zone (soft delete)
-  - [ ] `toggleStatus(zone)` - Enable/disable zone
-- [ ] Create Form Requests:
-  - [ ] `StoreZoneRequest`
-  - [ ] `UpdateZoneRequest`
+- [x] Create `Admin/ZoneController`
+  - [x] `index()` - List all zones
+  - [x] `show(zone)` - Show zone details
+  - [x] `store(Request)` - Create zone
+  - [x] `update(Request, zone)` - Update zone
+  - [x] `destroy(zone)` - Delete zone (soft delete)
+  - [x] `toggleStatus(zone)` - Enable/disable zone
+- [x] Create Form Requests:
+  - [x] `StoreZoneRequest`
+  - [x] `UpdateZoneRequest`
 
 ### 3.6 Driver Controllers (Admin)
-- [ ] Create `Admin/DriverController`
-  - [ ] `index()` - List all drivers
-  - [ ] `show(driver)` - Show driver details
-  - [ ] `store(Request)` - Create driver
-  - [ ] `update(Request, driver)` - Update driver
-  - [ ] `destroy(driver)` - Delete driver
-  - [ ] `assignZone(Request, driver)` - Assign/reassign zone
-  - [ ] `toggleStatus(driver)` - Activate/deactivate
-- [ ] Create Form Requests:
-  - [ ] `StoreDriverRequest`
-  - [ ] `UpdateDriverRequest`
-  - [ ] `AssignZoneRequest`
+- [x] Create `Admin/DriverController`
+  - [x] `index()` - List all drivers
+  - [x] `show(driver)` - Show driver details
+  - [x] `store(Request)` - Create driver
+  - [x] `update(Request, driver)` - Update driver
+  - [x] `destroy(driver)` - Delete driver
+  - [x] `assignZone(Request, driver)` - Assign/reassign zone
+  - [x] `toggleStatus(driver)` - Activate/deactivate
+- [x] Create Form Requests:
+  - [x] `StoreDriverRequest`
+  - [x] `UpdateDriverRequest`
+  - [x] `AssignZoneRequest`
 
 ### 3.7 Zone API (Customer)
-- [ ] Create `ZoneController` (customer-facing)
-  - [ ] `index()` - List active zones
-  - [ ] `checkServiceability(Request)` - Check if address is serviceable
-  - [ ] `getZoneByPincode(pincode)` - Get zone by pincode
-- [ ] Create Form Request: `CheckServiceabilityRequest`
+- [x] Create `ZoneController` (customer-facing)
+  - [x] `index()` - List active zones
+  - [x] `checkServiceability(Request)` - Check if address is serviceable
+  - [x] `getZoneByPincode(pincode)` - Get zone by pincode
+- [x] Create Form Request: `CheckServiceabilityRequest`
 
 ### 3.8 Address-Zone Linking
-- [ ] Update `UserAddress` model
-  - [ ] Add `zone_id` relationship
-  - [ ] Add `autoAssignZone()` method
-- [ ] Update address creation/update to auto-assign zone
-- [ ] Create job to retroactively assign zones to existing addresses
+- [x] Update `UserAddress` model
+  - [x] Add `zone_id` relationship
+  - [x] Add `autoAssignZone()` method
+- [x] Update address creation/update to auto-assign zone
+- [x] Create job to retroactively assign zones to existing addresses
 
 ### 3.9 Location Selection Middleware
-- [ ] Enhance `EnsureUserHasLocation` middleware
-  - [ ] Check if user has default address
-  - [ ] Check if address is in serviceable zone
-  - [ ] Redirect to location selection if needed
-- [ ] Create location selection page
+- [x] Enhance `EnsureUserHasLocation` middleware
+  - [x] Check if user has default address
+  - [x] Check if address is in serviceable zone
+  - [x] Redirect to location selection if needed
+- [x] Create location selection page
 
 ### 3.10 Frontend Zone Selection
-- [ ] Create zone selection page (`resources/js/Pages/Location/Select.tsx`)
-  - [ ] List of serviceable zones
-  - [ ] Search by pincode
+- [x] Create zone selection page (`resources/js/Pages/Location/Select.tsx`)
+  - [x] List of serviceable zones
+  - [x] Search by pincode
   - [ ] Map view (optional)
-  - [ ] Zone selection
-- [ ] Create address form with zone validation
-  - [ ] Real-time pincode validation
-  - [ ] Zone assignment feedback
-  - [ ] Serviceability indicator
+  - [x] Zone selection
+- [x] Create address form with zone validation
+  - [x] Real-time pincode validation
+  - [x] Zone assignment feedback
+  - [x] Serviceability indicator
 
 ### 3.11 Admin Zone Management UI
-- [ ] Create zone list page (admin)
-- [ ] Create zone create/edit form
-  - [ ] Zone details
-  - [ ] Pincode management
-  - [ ] Boundary coordinates (map picker)
-  - [ ] Service hours configuration
-- [ ] Create zone status toggle
+- [x] Create zone list page (admin)
+- [x] Create zone create/edit form
+  - [x] Zone details
+  - [x] Pincode management (textarea → comma/newline → JSON array)
+  - [x] Boundary coordinates (textarea JSON array of [lat, lng]; map picker optional)
+  - [x] Service hours configuration (service_time_start/end, service_days checkboxes)
+- [x] Create zone status toggle
 
 ### 3.12 Admin Driver Management UI
-- [ ] Create driver list page (admin)
-- [ ] Create driver create/edit form
-- [ ] Create zone assignment interface
-- [ ] Create driver status management
+- [x] Create driver list page (admin)
+- [x] Create driver create/edit form
+- [x] Create zone assignment interface
+- [x] Create driver status management
 
 ### 3.13 Zone Override System (Admin)
-- [ ] Create `zone_overrides` table migration
-  - [ ] `id` (primary key)
-  - [ ] `zone_id` (foreign key)
-  - [ ] `user_id` (foreign key, nullable) - Specific user override
-  - [ ] `address_id` (foreign key, nullable) - Specific address override
-  - [ ] `reason` (text)
-  - [ ] `overridden_by` (foreign key to users)
-  - [ ] `expires_at` (timestamp, nullable)
-  - [ ] `is_active` (boolean, default: true)
-  - [ ] `timestamps`
-- [ ] Create `ZoneOverride` model
-- [ ] Update `LocationService` to check overrides
-- [ ] Create admin interface for overrides
+- [x] Create `zone_overrides` table migration
+  - [x] `id`, `zone_id`, `user_id` (nullable), `address_id` (nullable), `reason`, `overridden_by` (admin_users), `expires_at`, `is_active`, `timestamps`
+- [x] Create `ZoneOverride` model
+- [x] Update `LocationService` to check overrides (`validateAddress` accepts optional `$userId`; `resolveOverrideZone`)
+- [x] Create admin interface for overrides (zone show: list + add; create/edit override pages)
 
 ### 3.14 Database Seeders
-- [ ] Create `ZoneSeeder` (test zones)
-- [ ] Create `DriverSeeder` (test drivers)
-- [ ] Assign drivers to zones
+- [x] Create `ZoneSeeder` (test zones)
+- [x] Create `DriverSeeder` (test drivers)
+- [x] Assign drivers to zones
 
 ### 3.15 Testing
 - [ ] Test zone CRUD operations
@@ -193,20 +179,19 @@ Implement zone-based service availability system with driver assignment and loca
 - ✅ Address-zone auto-linking
 - ✅ Admin zone/driver management UI
 - ✅ Customer zone selection UI
-- ✅ Zone override system
+- ✅ Zone override system (3.13)
 
 ## Success Criteria
-- [ ] Zones can be created and managed
-- [ ] Drivers can be assigned to zones
-- [ ] Addresses are automatically assigned to zones
-- [ ] Serviceability is checked before catalog access
-- [ ] Zone overrides work for emergency cases
-- [ ] Location selection is mandatory before browsing
+- [x] Zones can be created and managed
+- [x] Drivers can be assigned to zones
+- [x] Addresses are automatically assigned to zones
+- [x] Serviceability is checked before catalog access
+- [x] Zone overrides work for emergency cases (3.13)
+- [x] Location selection is mandatory before browsing
 
 ## Database Tables Created
 - `zones`
 - `drivers`
-- `zone_drivers` (if many-to-many)
 - `zone_overrides`
 
 ## Notes
@@ -215,6 +200,11 @@ Implement zone-based service availability system with driver assignment and loca
 - Zone assignment should be automatic on address creation
 - Drivers can be reassigned to different zones
 - Zone overrides should be logged for audit
+
+## Remaining (optional / not started)
+- [ ] **Google Maps Geocoding API** — Optional; set `GOOGLE_MAPS_API_KEY`, enable Geocoding API.
+- [ ] **Map view** on zone selection (optional).
+- [ ] **Testing** (3.15) — Zone/driver CRUD, location validation, pincode/coords lookup, serviceability, overrides, feature tests.
 
 ## Next Phase
 Once Phase 3 is complete, proceed to **Phase 4: Catalog & Product Management**

@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Menu, X, MapPin, User, ShoppingCart, Heart, ChevronRight, Home, Package, Repeat } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -15,6 +15,7 @@ interface HeaderProps {
 
 export default function Header({ showMarquee, isScrolled }: HeaderProps) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const authUser = (usePage().props as { auth?: { user?: unknown } }).auth?.user;
 
     useEffect(() => {
         if (!mobileMenuOpen) return;
@@ -89,9 +90,9 @@ export default function Header({ showMarquee, isScrolled }: HeaderProps) {
                             </div>
 
                             <Link
-                                href="/login"
+                                href={authUser ? '/profile' : '/login'}
                                 className="flex h-8 w-8 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-[var(--theme-primary-1)]/10 hover:text-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:h-9 sm:w-9"
-                                aria-label="Login"
+                                aria-label={authUser ? 'Profile' : 'Login'}
                             >
                                 <User className="h-4 w-4" strokeWidth={2} />
                             </Link>
@@ -195,12 +196,12 @@ export default function Header({ showMarquee, isScrolled }: HeaderProps) {
                         </button>
                         <div className="mt-2 flex items-center gap-2">
                             <Link
-                                href="/login"
+                                href={authUser ? '/profile' : '/login'}
                                 className="flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--theme-primary-1)]"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 <User className="h-4 w-4" strokeWidth={2} />
-                                Login
+                                {authUser ? 'Profile' : 'Login'}
                             </Link>
                             <button type="button" className="flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--theme-primary-1)]">
                                 <Heart className="h-4 w-4" strokeWidth={2} />

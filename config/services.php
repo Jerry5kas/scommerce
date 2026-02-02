@@ -35,4 +35,37 @@ return [
         ],
     ],
 
+    'gtm' => [
+        'id' => env('GTM_ID'),
+    ],
+
+    'meta_pixel' => [
+        'id' => env('META_PIXEL_ID'),
+    ],
+
+    'google_ads' => [
+        'id' => env('GOOGLE_ADS_ID'),
+    ],
+
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'),
+        'msg91_key' => env('MSG91_AUTH_KEY'),
+        'twilio_sid' => env('TWILIO_SID'),
+        'twilio_token' => env('TWILIO_AUTH_TOKEN'),
+    ],
+
+    'whatsapp' => [
+        'api_url' => env('WHATSAPP_API_URL'),
+        'token' => env('WHATSAPP_TOKEN'),
+    ],
+
+    'firebase' => [
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+    ],
+
+    'payment' => [
+        'razorpay_key' => env('RAZORPAY_KEY_ID'),
+        'razorpay_secret' => env('RAZORPAY_KEY_SECRET'),
+    ],
+
 ];

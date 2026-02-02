@@ -4,24 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\SendOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
+use App\Models\User;
+use App\Services\OtpService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AuthController extends Controller
 {
-    private const OTP_CACHE_PREFIX = 'otp:';
-
-    private const OTP_TTL_MINUTES = 5;
+    public function __construct(
+        private OtpService $otpService
+    ) {}
 
     public function showLoginForm(): Response
     {
+        $messages = session('errors')?->getBag('default')->getMessages() ?? [];
+        $errors = collect($messages)->map(fn (array $msgs): string => $msgs[0] ?? '')->all();
+
         return Inertia::render('auth/login', [
             'otp_sent' => session('otp_sent'),
             'phone' => session('phone'),
             'message' => session('message'),
-            'errors' => session('errors')?->getMessages() ?? [],
+            'errors' => $errors,
         ]);
     }
 
@@ -29,20 +37,21 @@ class AuthController extends Controller
     {
         $phone = $request->validated('phone');
         $language = $request->validated('language');
+        $consent = $request->boolean('consent');
+        $ip = $request->ip();
+        $deviceInfo = OtpService::getDeviceInfoFromRequest($request);
 
-        $otp = (string) random_int(100000, 999999);
-        Cache::put(self::OTP_CACHE_PREFIX.$phone, $otp, now()->addMinutes(self::OTP_TTL_MINUTES));
+        $otpRecord = $this->otpService->generateOtp($phone, $ip, $deviceInfo);
 
-        // TODO: Integrate SMS gateway (Twilio, MSG91, Firebase, etc.) to send OTP.
-        // For development, log OTP (remove in production).
         if (config('app.debug')) {
-            logger()->info('OTP for '.$phone.': '.$otp);
+            logger()->info('OTP for '.$phone.': '.$otpRecord->otp);
         }
 
         return back()->with([
             'otp_sent' => true,
             'phone' => $phone,
             'language' => $language,
+            'consent' => $consent,
             'message' => 'OTP sent to your phone.',
         ]);
     }
@@ -51,20 +60,41 @@ class AuthController extends Controller
     {
         $phone = $request->validated('phone');
         $otp = $request->validated('otp');
+        $language = $request->get('language', 'en');
+        $consent = $request->boolean('consent', false);
 
-        $cached = Cache::get(self::OTP_CACHE_PREFIX.$phone);
-
-        if ($cached === null || $cached !== $otp) {
-            return back()->withErrors(['otp' => 'Invalid or expired OTP.'])->withInput($request->only('phone'));
+        if (! $this->otpService->verifyOtp($phone, $otp)) {
+            throw ValidationException::withMessages([
+                'otp' => ['Invalid or expired OTP. Please try again.'],
+            ])->redirectTo($request->url());
         }
 
-        Cache::forget(self::OTP_CACHE_PREFIX.$phone);
+        $user = User::query()->firstOrCreate(
+            ['phone' => $phone],
+            [
+                'role' => User::ROLE_CUSTOMER,
+                'preferred_language' => $language,
+                'communication_consent' => $consent,
+                'password' => Hash::make(Str::random(32)),
+            ]
+        );
 
-        // TODO: Create or find user by phone and log in (e.g. session or Sanctum).
-        // For now, simulate login by storing in session.
-        $request->session()->put('auth.phone', $phone);
-        $request->session()->put('auth.verified_at', now()->toIso8601String());
+        $user->update([
+            'last_login_at' => now(),
+        ]);
+
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
 
         return redirect()->intended(route('home'))->with('success', 'Logged in successfully.');
+    }
+
+    public function logout(): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        return redirect()->route('home');
     }
 }

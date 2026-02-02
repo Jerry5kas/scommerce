@@ -26,19 +26,38 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'phone' => null,
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => \App\Models\User::ROLE_CUSTOMER,
+            'preferred_language' => 'en',
+            'communication_consent' => false,
+            'is_active' => true,
+            'free_sample_used' => false,
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function customer(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => \App\Models\User::ROLE_CUSTOMER,
+            'phone' => '9'.fake()->numerify('##########'),
+        ]);
+    }
+
+    public function driver(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => \App\Models\User::ROLE_DRIVER,
+            'phone' => '9'.fake()->numerify('##########'),
         ]);
     }
 }

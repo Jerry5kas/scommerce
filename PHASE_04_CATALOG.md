@@ -10,22 +10,22 @@ Implement product catalog system with categories, collections, products, and zon
 ## Tasks
 
 ### 4.1 Category Management
-- [ ] Create `categories` table migration
-  - [ ] `id` (primary key)
-  - [ ] `name` (string)
-  - [ ] `slug` (string, unique, indexed)
-  - [ ] `description` (text, nullable)
-  - [ ] `image` (string, nullable) - Image URL
-  - [ ] `icon` (string, nullable) - Icon class or URL
-  - [ ] `display_order` (integer, default: 0)
-  - [ ] `is_active` (boolean, default: true)
-  - [ ] `meta_title` (string, nullable) - SEO
-  - [ ] `meta_description` (text, nullable) - SEO
-  - [ ] `timestamps`
-- [ ] Create `Category` model
-  - [ ] Relationships (products, collections)
-  - [ ] Scopes (active, ordered)
-  - [ ] Helper methods (productCount, etc.)
+- [x] Create `categories` table migration
+  - [x] `id` (primary key)
+  - [x] `name` (string)
+  - [x] `slug` (string, unique, indexed)
+  - [x] `description` (text, nullable)
+  - [x] `image` (string, nullable) - Image URL
+  - [x] `icon` (string, nullable) - Icon class or URL
+  - [x] `display_order` (integer, default: 0)
+  - [x] `is_active` (boolean, default: true)
+  - [x] `meta_title` (string, nullable) - SEO
+  - [x] `meta_description` (text, nullable) - SEO
+  - [x] `timestamps`
+- [x] Create `Category` model
+  - [x] Relationships (products, collections)
+  - [x] Scopes (active, ordered)
+  - [x] Helper methods (productsCount; slug auto from name in creating)
 
 ### 4.2 Collection Management (Hero Banners)
 - [ ] Create `collections` table migration

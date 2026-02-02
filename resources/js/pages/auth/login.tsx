@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import type { SharedData } from '@/types';
 
 const LANGUAGES = [
-    { value: 'english', label: 'English' },
-    { value: 'malayalam', label: 'Malayalam' },
-    { value: 'hindi', label: 'Hindi' },
+    { value: 'en', label: 'English' },
+    { value: 'ml', label: 'Malayalam' },
+    { value: 'hi', label: 'Hindi' },
 ] as const;
 
 type Language = (typeof LANGUAGES)[number]['value'];
@@ -14,7 +14,7 @@ interface LoginPageProps {
     otp_sent?: boolean;
     phone?: string;
     message?: string;
-    errors?: Record<string, string[]>;
+    errors?: Record<string, string | string[]>;
 }
 
 export default function Login({ phone: initialPhone, message, errors: serverErrors }: LoginPageProps) {
@@ -33,13 +33,15 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
 
     const sendOtpForm = useForm({
         phone: initialPhone ?? '',
-        language: 'english' as Language,
+        language: 'en' as Language,
         consent: false,
     });
 
     const verifyOtpForm = useForm({
         phone: initialPhone ?? '',
         otp: '',
+        language: sendOtpForm.data.language,
+        consent: sendOtpForm.data.consent,
     });
 
     useEffect(() => {
@@ -54,7 +56,15 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
         e.preventDefault();
         sendOtpForm.post('/auth/send-otp', {
             preserveScroll: true,
-            onSuccess: () => setStep('otp'),
+            onSuccess: () => {
+                setStep('otp');
+                verifyOtpForm.setData((prev) => ({
+                    ...prev,
+                    phone: sendOtpForm.data.phone,
+                    language: sendOtpForm.data.language,
+                    consent: sendOtpForm.data.consent,
+                }));
+            },
         });
     };
 
@@ -166,9 +176,9 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                                 autoComplete="tel-national"
                                             />
                                         </div>
-                                        {(sendOtpForm.errors.phone || serverErrors?.phone?.[0]) && (
+                                        {(sendOtpForm.errors.phone || (Array.isArray(serverErrors?.phone) ? serverErrors.phone[0] : serverErrors?.phone)) && (
                                             <p className="mt-1 text-sm text-red-600">
-                                                {sendOtpForm.errors.phone || serverErrors?.phone?.[0]}
+                                                {sendOtpForm.errors.phone || (Array.isArray(serverErrors?.phone) ? serverErrors.phone[0] : serverErrors?.phone)}
                                             </p>
                                         )}
                                     </div>
@@ -206,9 +216,9 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                                 </button>
                                             ))}
                                         </div>
-                                        {(sendOtpForm.errors.language || serverErrors?.language?.[0]) && (
+                                        {(sendOtpForm.errors.language || (Array.isArray(serverErrors?.language) ? serverErrors.language[0] : serverErrors?.language)) && (
                                             <p className="mt-1 text-sm text-red-600">
-                                                {sendOtpForm.errors.language || serverErrors?.language?.[0]}
+                                                {sendOtpForm.errors.language || (Array.isArray(serverErrors?.language) ? serverErrors.language[0] : serverErrors?.language)}
                                             </p>
                                         )}
                                     </div>
@@ -226,9 +236,9 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                                 WhatsApp & RCS.
                                             </span>
                                         </label>
-                                        {(sendOtpForm.errors.consent || serverErrors?.consent?.[0]) && (
+                                        {(sendOtpForm.errors.consent || (Array.isArray(serverErrors?.consent) ? serverErrors.consent[0] : serverErrors?.consent)) && (
                                             <p className="mt-1 text-sm text-red-600">
-                                                {sendOtpForm.errors.consent || serverErrors?.consent?.[0]}
+                                                {sendOtpForm.errors.consent || (Array.isArray(serverErrors?.consent) ? serverErrors.consent[0] : serverErrors?.consent)}
                                             </p>
                                         )}
                                     </div>
@@ -244,6 +254,8 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                             ) : (
                                 <form onSubmit={handleVerifyOtp} className="space-y-5">
                                     <input type="hidden" name="phone" value={verifyOtpForm.data.phone} />
+                                    <input type="hidden" name="language" value={verifyOtpForm.data.language} />
+                                    <input type="hidden" name="consent" value={verifyOtpForm.data.consent ? '1' : '0'} />
                                     <div>
                                         <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
                                             Enter 6-digit OTP
@@ -265,9 +277,9 @@ export default function Login({ phone: initialPhone, message, errors: serverErro
                                             autoComplete="one-time-code"
                                             autoFocus
                                         />
-                                        {(verifyOtpForm.errors.otp || serverErrors?.otp?.[0]) && (
+                                        {(verifyOtpForm.errors.otp || (Array.isArray(serverErrors?.otp) ? serverErrors.otp[0] : serverErrors?.otp)) && (
                                             <p className="mt-1 text-sm text-red-600">
-                                                {verifyOtpForm.errors.otp || serverErrors?.otp?.[0]}
+                                                {verifyOtpForm.errors.otp || (Array.isArray(serverErrors?.otp) ? serverErrors.otp[0] : serverErrors?.otp)}
                                             </p>
                                         )}
                                     </div>

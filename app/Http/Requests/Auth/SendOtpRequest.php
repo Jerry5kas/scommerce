@@ -18,7 +18,7 @@ class SendOtpRequest extends FormRequest
     {
         return [
             'phone' => ['required', 'string', 'regex:/^[6-9]\d{9}$/'],
-            'language' => ['required', 'string', 'in:malayalam,english,hindi'],
+            'language' => ['required', 'string', 'in:en,hi,ml'],
             'consent' => ['required', 'accepted'],
         ];
     }

@@ -17,6 +17,14 @@
     --theme-primary-1-dark: #3a9a85; /* hover/darker variant */
 }
 
+/* Admin theme: dark-primary (darker #46ae97), white, accent */
+:root {
+    --admin-dark-primary: #2e7d6e;
+    --admin-dark-primary-hover: #266b5e;
+    --admin-accent: #cf992c;
+    --admin-accent-hover: #b88626;
+}
+
 @keyframes marquee {
     0% {
         transform: translateX(0);

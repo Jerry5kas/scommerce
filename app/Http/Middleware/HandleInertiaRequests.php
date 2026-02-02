@@ -41,8 +41,12 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'admin' => $request->user('admin'),
             ],
             'theme' => ThemeSetting::getTheme(),
+            'flash' => [
+                'message' => session('message'),
+            ],
         ];
     }
 }
