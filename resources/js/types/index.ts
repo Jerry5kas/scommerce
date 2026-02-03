@@ -13,5 +13,6 @@ export type SharedData = {
     name: string;
     auth: Auth;
     theme: AppTheme;
+    csrf_token?: string;
     [key: string]: unknown;
 };

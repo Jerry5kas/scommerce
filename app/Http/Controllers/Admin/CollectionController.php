@@ -86,16 +86,32 @@ class CollectionController extends Controller
     {
         $data = $request->validated();
 
-        // Handle banner image upload - delete old image if new one is uploaded
+        // Banner image: file upload or URL from frontend ImageKit upload
         if ($request->hasFile('banner_image_file')) {
-            $this->deleteOldImage($collection->banner_image);
+            $this->deleteOldImage($collection->banner_image, false);
             $data['banner_image'] = $this->handleImageUpload(null, $request->file('banner_image_file'), 'collections');
+        } elseif ($request->filled('banner_image')) {
+            $newUrl = $request->input('banner_image');
+            if ($newUrl !== $collection->banner_image) {
+                if ($collection->banner_image) {
+                    $this->deleteOldImage($collection->banner_image, false);
+                }
+                $data['banner_image'] = $newUrl;
+            }
         }
 
-        // Handle mobile banner image upload
+        // Banner mobile image: file upload or URL from frontend ImageKit upload
         if ($request->hasFile('banner_mobile_image_file')) {
-            $this->deleteOldImage($collection->banner_mobile_image);
+            $this->deleteOldImage($collection->banner_mobile_image, false);
             $data['banner_mobile_image'] = $this->handleImageUpload(null, $request->file('banner_mobile_image_file'), 'collections');
+        } elseif ($request->filled('banner_mobile_image')) {
+            $newUrl = $request->input('banner_mobile_image');
+            if ($newUrl !== $collection->banner_mobile_image) {
+                if ($collection->banner_mobile_image) {
+                    $this->deleteOldImage($collection->banner_mobile_image, false);
+                }
+                $data['banner_mobile_image'] = $newUrl;
+            }
         }
 
         unset($data['banner_image_file'], $data['banner_mobile_image_file']);

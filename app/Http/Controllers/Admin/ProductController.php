@@ -110,10 +110,18 @@ class ProductController extends Controller
     {
         $data = $request->validated();
 
-        // Handle main image upload - delete old image if new one is uploaded
+        // Main image: file upload or URL from frontend ImageKit upload
         if ($request->hasFile('image_file')) {
-            $this->deleteOldImage($product->image);
+            $this->deleteOldImage($product->image, false);
             $data['image'] = $this->handleImageUpload(null, $request->file('image_file'), 'products');
+        } elseif ($request->filled('image')) {
+            $newUrl = $request->input('image');
+            if ($newUrl !== $product->image) {
+                if ($product->image) {
+                    $this->deleteOldImage($product->image, false);
+                }
+                $data['image'] = $newUrl;
+            }
         }
 
         // Handle multiple images upload

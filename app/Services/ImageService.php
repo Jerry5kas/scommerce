@@ -290,8 +290,11 @@ class ImageService
             return false;
         }
 
-        // First, try to find fileId from database (most reliable)
-        $imagekitFile = ImagekitFile::where('url', $url)->first();
+        // First, try to find fileId from database (exact URL or base URL without query params)
+        $baseUrl = explode('?', $url)[0];
+        $imagekitFile = ImagekitFile::where('url', $url)
+            ->orWhere('url', $baseUrl)
+            ->first();
 
         if ($imagekitFile !== null) {
             Log::debug('Found file in database, deleting by fileId', [

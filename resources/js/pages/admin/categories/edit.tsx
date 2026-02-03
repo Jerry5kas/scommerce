@@ -1,7 +1,8 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { useState, useRef } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
+import type { SharedData } from '@/types';
 
 interface CategoryData {
     id: number;
@@ -23,6 +24,7 @@ interface AdminCategoriesEditProps {
 }
 
 export default function AdminCategoriesEdit({ category, verticalOptions }: AdminCategoriesEditProps) {
+    const { csrf_token: csrfToken } = (usePage().props as unknown as SharedData) ?? {};
     const [imagePreview, setImagePreview] = useState<string | null>(category.image ?? null);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -128,19 +130,26 @@ export default function AdminCategoriesEdit({ category, verticalOptions }: Admin
                             uploadFormData.append('folder', 'categories');
                             
                             try {
-                                // Get CSRF token from Inertia
-                                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                                // Use CSRF token from Inertia shared props (current request); fallback to meta/cookie
+                                const token = csrfToken
+                                    || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                                     || document.querySelector('input[name="_token"]')?.getAttribute('value')
                                     || '';
-                                
+                                const xsrfCookie = document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1];
+                                const headers: Record<string, string> = {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json',
+                                };
+                                if (token) {
+                                    headers['X-CSRF-TOKEN'] = token;
+                                } else if (xsrfCookie) {
+                                    headers['X-XSRF-TOKEN'] = xsrfCookie.replace(/^"(.*)"$/, '$1');
+                                }
+
                                 // Upload file to ImageKit via separate endpoint
                                 const uploadResponse = await fetch('/admin/files/upload', {
                                     method: 'POST',
-                                    headers: {
-                                        'X-CSRF-TOKEN': csrfToken,
-                                        'X-Requested-With': 'XMLHttpRequest',
-                                        'Accept': 'application/json',
-                                    },
+                                    headers,
                                     credentials: 'same-origin',
                                     body: uploadFormData,
                                 });

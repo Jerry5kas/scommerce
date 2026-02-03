@@ -96,8 +96,7 @@ class CategoryController extends Controller
 
             $oldImageUrl = $category->image;
             if ($oldImageUrl) {
-                \Log::debug('Deleting old image from ImageKit', ['old_url' => $oldImageUrl]);
-                $this->deleteOldImage($oldImageUrl);
+                $this->deleteOldImage($oldImageUrl, false);
             }
 
             try {
@@ -139,8 +138,7 @@ class CategoryController extends Controller
 
                 // Delete old image from ImageKit if it exists and is an ImageKit URL
                 if ($oldImageUrl) {
-                    \Log::debug('Deleting old image from ImageKit', ['old_url' => $oldImageUrl]);
-                    $this->deleteOldImage($oldImageUrl);
+                    $this->deleteOldImage($oldImageUrl, false);
                 }
 
                 $data['image'] = $newUrl;

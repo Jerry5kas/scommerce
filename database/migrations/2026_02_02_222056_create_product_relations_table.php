@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('product_relations')) {
+            return;
+        }
+
         Schema::create('product_relations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
@@ -22,7 +26,7 @@ return new class extends Migration
             $table->index('product_id');
             $table->index('related_product_id');
             $table->index('relation_type');
-            $table->unique(['product_id', 'related_product_id', 'relation_type']);
+            $table->unique(['product_id', 'related_product_id', 'relation_type'], 'product_relations_unique');
         });
     }
 
