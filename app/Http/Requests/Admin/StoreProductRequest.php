@@ -36,9 +36,12 @@ class StoreProductRequest extends FormRequest
             'short_description' => ['nullable', 'string', 'max:500'],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'collection_id' => ['nullable', 'integer', 'exists:collections,id'],
-            'image' => ['required', 'string', 'max:500'],
+            'image' => ['nullable', 'string', 'max:500'],
+            'image_file' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:10240'],
             'images' => ['nullable', 'array'],
             'images.*' => ['string', 'max:500'],
+            'image_files' => ['nullable', 'array', 'max:10'],
+            'image_files.*' => ['file', 'mimes:jpeg,jpg,png,gif,webp', 'max:10240'],
             'price' => ['required', 'numeric', 'min:0'],
             'compare_at_price' => ['nullable', 'numeric', 'min:0'],
             'cost_price' => ['nullable', 'numeric', 'min:0'],
@@ -58,5 +61,12 @@ class StoreProductRequest extends FormRequest
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
         ];
+
+        // Require either image or image_file
+        if (! $this->has('image') && ! $this->hasFile('image_file')) {
+            $rules['image'] = ['required', 'string', 'max:500'];
+        }
+
+        return $rules;
     }
 }

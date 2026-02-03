@@ -25,6 +25,15 @@ class EnsureUserHasLocation
             ->first();
 
         if ($defaultAddress === null || $defaultAddress->zone_id === null) {
+            // Development bypass: if in debug mode and address exists, try to auto-assign zone
+            if (config('app.debug') && $defaultAddress !== null && $defaultAddress->zone_id === null) {
+                $defaultAddress->autoAssignZone();
+                $defaultAddress->refresh();
+                if ($defaultAddress->zone_id !== null) {
+                    return $next($request);
+                }
+            }
+
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Please set a delivery location.'], 422);
             }

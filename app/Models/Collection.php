@@ -60,6 +60,7 @@ class Collection extends Model
     public function scopeCurrent(Builder $query): Builder
     {
         $now = now();
+
         return $query->where(function (Builder $q) use ($now) {
             $q->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
         })->where(function (Builder $q) use ($now) {
@@ -90,6 +91,7 @@ class Collection extends Model
         if ($this->ends_at !== null && $this->ends_at->isPast()) {
             return false;
         }
+
         return true;
     }
 

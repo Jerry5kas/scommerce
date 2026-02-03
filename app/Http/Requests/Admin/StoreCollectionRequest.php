@@ -21,13 +21,15 @@ class StoreCollectionRequest extends FormRequest
     {
         $verticals = array_merge(BusinessVertical::values(), [Collection::VERTICAL_BOTH]);
 
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255', 'unique:collections,name'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:collections,slug'],
             'description' => ['nullable', 'string', 'max:2000'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
-            'banner_image' => ['required', 'string', 'max:500'],
+            'banner_image' => ['nullable', 'string', 'max:500'],
+            'banner_image_file' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:10240'],
             'banner_mobile_image' => ['nullable', 'string', 'max:500'],
+            'banner_mobile_image_file' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:10240'],
             'display_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['sometimes', 'boolean'],
             'vertical' => ['nullable', 'string', Rule::in($verticals)],
@@ -37,6 +39,13 @@ class StoreCollectionRequest extends FormRequest
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
         ];
+
+        // Require either banner_image or banner_image_file
+        if (! $this->has('banner_image') && ! $this->hasFile('banner_image_file')) {
+            $rules['banner_image'] = ['required', 'string', 'max:500'];
+        }
+
+        return $rules;
     }
 
     protected function prepareForValidation(): void

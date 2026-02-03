@@ -97,6 +97,7 @@ class Zone extends Model
         if (empty($verticals)) {
             return true;
         }
+
         return in_array($vertical, $verticals, true);
     }
 
@@ -161,7 +162,7 @@ class Zone extends Model
     }
 
     /**
-     * @param int|string $day 0-6 (Sunday-Saturday) or day name
+     * @param  int|string  $day  0-6 (Sunday-Saturday) or day name
      */
     public function isServiceableOnDay($day): bool
     {

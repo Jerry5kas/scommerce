@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CollectionController as AdminCollectionController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DriverController as AdminDriverController;
+use App\Http\Controllers\Admin\FileUploadController as AdminFileUploadController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\ZoneController as AdminZoneController;
@@ -55,5 +56,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('products/{product}/toggle-status', [AdminProductController::class, 'toggleStatus'])->name('products.toggle-status');
         Route::get('products/{product}/zones', [AdminProductController::class, 'manageZones'])->name('products.manage-zones');
         Route::put('products/{product}/zones', [AdminProductController::class, 'updateZones'])->name('products.update-zones');
+
+        // File upload routes
+        Route::post('files/upload', [AdminFileUploadController::class, 'upload'])->name('files.upload');
+        Route::post('files/upload-multiple', [AdminFileUploadController::class, 'uploadMultiple'])->name('files.upload-multiple');
+        Route::delete('files/delete', [AdminFileUploadController::class, 'delete'])->name('files.delete');
+        Route::delete('files/delete-by-url', [AdminFileUploadController::class, 'deleteByUrl'])->name('files.delete-by-url');
+        Route::get('files/transform', [AdminFileUploadController::class, 'getTransformedUrl'])->name('files.transform');
     });
 });

@@ -15,10 +15,11 @@ interface ZoneData {
 }
 
 interface LocationSelectPageProps {
-    zones: ZoneData[];
+    zones?: ZoneData[];
+    message?: string;
 }
 
-export default function LocationSelect({ zones }: LocationSelectPageProps) {
+export default function LocationSelect({ zones = [] }: LocationSelectPageProps) {
     const { theme } = (usePage().props as unknown as SharedData) ?? {};
     const [pincode, setPincode] = useState('');
     const [checkResult, setCheckResult] = useState<{ serviceable: boolean; zone?: ZoneData } | null>(null);

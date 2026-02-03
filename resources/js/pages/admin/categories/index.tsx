@@ -6,6 +6,7 @@ interface CategoryData {
     id: number;
     name: string;
     slug: string;
+    image: string | null;
     vertical: string;
     is_active: boolean;
     products_count: number;
@@ -60,6 +61,7 @@ export default function AdminCategoriesIndex({ categories, verticalOptions, filt
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Image</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Slug</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Vertical</th>
@@ -71,13 +73,27 @@ export default function AdminCategoriesIndex({ categories, verticalOptions, filt
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {categories.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-500">
+                                    <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-500">
                                         No categories yet. Create one to get started.
                                     </td>
                                 </tr>
                             ) : (
                                 categories.map((cat) => (
                                     <tr key={cat.id}>
+                                        <td className="whitespace-nowrap px-4 py-3">
+                                            {cat.image ? (
+                                                <img
+                                                    src={cat.image}
+                                                    alt={cat.name}
+                                                    className="h-12 w-12 rounded-lg object-cover border border-gray-200"
+                                                    loading="lazy"
+                                                />
+                                            ) : (
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-gray-100 text-xs text-gray-400">
+                                                    No image
+                                                </div>
+                                            )}
+                                        </td>
                                         <td className="whitespace-nowrap px-4 py-3">
                                             <Link
                                                 href={'/admin/categories/' + cat.id}

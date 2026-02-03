@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CheckServiceabilityRequest;
 use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,7 +16,17 @@ class ZoneController extends Controller
 
     public function index(): Response
     {
-        $zones = $this->locationService->getServiceableZones();
+        $zones = $this->locationService->getServiceableZones()->map(function ($zone) {
+            return [
+                'id' => $zone->id,
+                'name' => $zone->name,
+                'code' => $zone->code,
+                'city' => $zone->city,
+                'state' => $zone->state,
+                'delivery_charge' => $zone->delivery_charge,
+                'min_order_amount' => $zone->min_order_amount,
+            ];
+        });
 
         return Inertia::render('location/select', [
             'zones' => $zones,

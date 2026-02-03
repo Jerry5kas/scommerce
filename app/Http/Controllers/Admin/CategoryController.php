@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Category;
+use App\Traits\HandlesImageUploads;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class CategoryController extends Controller
 {
+    use HandlesImageUploads;
+
     public function index(Request $request): Response
     {
         $query = Category::query()->ordered();
@@ -41,7 +44,16 @@ class CategoryController extends Controller
 
     public function store(StoreCategoryRequest $request): RedirectResponse
     {
-        Category::query()->create($request->validated());
+        $data = $request->validated();
+
+        // Handle image upload
+        if ($request->hasFile('image_file')) {
+            $data['image'] = $this->handleImageUpload(null, $request->file('image_file'), 'categories');
+        }
+
+        unset($data['image_file']);
+
+        Category::query()->create($data);
 
         return redirect()->route('admin.categories.index')->with('message', 'Category created.');
     }
@@ -66,7 +78,90 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
     {
-        $category->update($request->validated());
+        $data = $request->validated();
+
+        // Log for debugging
+        \Log::debug('Category update request', [
+            'has_image_file' => $request->hasFile('image_file'),
+            'image_file_size' => $request->hasFile('image_file') ? $request->file('image_file')->getSize() : null,
+            'image_url' => $request->input('image'),
+            'current_image' => $category->image,
+            'category_id' => $category->id,
+        ]);
+
+        // Handle image update: Option B - Delete old image from ImageKit, then use new URL
+        if ($request->hasFile('image_file')) {
+            // Direct file upload (fallback if needed)
+            \Log::debug('Processing image file upload for category update');
+
+            $oldImageUrl = $category->image;
+            if ($oldImageUrl) {
+                \Log::debug('Deleting old image from ImageKit', ['old_url' => $oldImageUrl]);
+                $this->deleteOldImage($oldImageUrl);
+            }
+
+            try {
+                $newImageUrl = $this->handleImageUpload(null, $request->file('image_file'), 'categories');
+                if ($newImageUrl) {
+                    $data['image'] = $newImageUrl;
+                    \Log::debug('New image uploaded successfully', [
+                        'new_image_url' => $newImageUrl,
+                        'old_image_url' => $oldImageUrl,
+                    ]);
+                } else {
+                    \Log::error('Image upload returned null URL');
+                    throw new \RuntimeException('Failed to upload image to ImageKit.');
+                }
+            } catch (\Exception $e) {
+                \Log::error('Image upload failed', [
+                    'error' => $e->getMessage(),
+                    'category_id' => $category->id,
+                ]);
+                throw $e;
+            }
+        } elseif ($request->filled('image')) {
+            // Image URL provided (from separate upload endpoint)
+            $newUrl = $request->input('image');
+            $oldImageUrl = $category->image;
+
+            \Log::debug('Image URL provided in request', [
+                'new_url' => $newUrl,
+                'old_url' => $oldImageUrl,
+                'urls_match' => $newUrl === $oldImageUrl,
+            ]);
+
+            // Always update if URL is provided and different (or if old is null)
+            if ($newUrl !== $oldImageUrl) {
+                \Log::debug('Updating category with new image URL', [
+                    'old_url' => $oldImageUrl,
+                    'new_url' => $newUrl,
+                ]);
+
+                // Delete old image from ImageKit if it exists and is an ImageKit URL
+                if ($oldImageUrl) {
+                    \Log::debug('Deleting old image from ImageKit', ['old_url' => $oldImageUrl]);
+                    $this->deleteOldImage($oldImageUrl);
+                }
+
+                $data['image'] = $newUrl;
+                \Log::debug('Image URL set in data array', ['image' => $data['image']]);
+            } else {
+                \Log::debug('URLs match, skipping update');
+            }
+        } else {
+            \Log::debug('No image file or URL provided, keeping existing image');
+        }
+        // If neither file nor URL is provided, keep existing image (don't update it)
+
+        unset($data['image_file']);
+
+        // Step 3: Update database with new image URL
+        $category->update($data);
+
+        \Log::debug('Category updated successfully', [
+            'category_id' => $category->id,
+            'new_image' => $category->fresh()->image,
+        ]);
 
         return redirect()->route('admin.categories.index')->with('message', 'Category updated.');
     }

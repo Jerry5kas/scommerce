@@ -63,7 +63,12 @@ class AuthController extends Controller
         $language = $request->get('language', 'en');
         $consent = $request->boolean('consent', false);
 
-        if (! $this->otpService->verifyOtp($phone, $otp)) {
+        // Development bypass: allow OTP "000000" in debug mode
+        $isValidOtp = config('app.debug') && $otp === '000000'
+            ? true
+            : $this->otpService->verifyOtp($phone, $otp);
+
+        if (! $isValidOtp) {
             throw ValidationException::withMessages([
                 'otp' => ['Invalid or expired OTP. Please try again.'],
             ])->redirectTo($request->url());

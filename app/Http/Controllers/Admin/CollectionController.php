@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCollectionRequest;
 use App\Http\Requests\Admin\UpdateCollectionRequest;
 use App\Models\Collection;
+use App\Traits\HandlesImageUploads;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class CollectionController extends Controller
 {
+    use HandlesImageUploads;
+
     public function index(Request $request): Response
     {
         $query = Collection::query()->with('category:id,name,slug')->ordered();
@@ -42,7 +45,21 @@ class CollectionController extends Controller
 
     public function store(StoreCollectionRequest $request): RedirectResponse
     {
-        Collection::query()->create($request->validated());
+        $data = $request->validated();
+
+        // Handle banner image upload
+        if ($request->hasFile('banner_image_file')) {
+            $data['banner_image'] = $this->handleImageUpload(null, $request->file('banner_image_file'), 'collections');
+        }
+
+        // Handle mobile banner image upload
+        if ($request->hasFile('banner_mobile_image_file')) {
+            $data['banner_mobile_image'] = $this->handleImageUpload(null, $request->file('banner_mobile_image_file'), 'collections');
+        }
+
+        unset($data['banner_image_file'], $data['banner_mobile_image_file']);
+
+        Collection::query()->create($data);
 
         return redirect()->route('admin.collections.index')->with('message', 'Collection created.');
     }
@@ -67,7 +84,23 @@ class CollectionController extends Controller
 
     public function update(UpdateCollectionRequest $request, Collection $collection): RedirectResponse
     {
-        $collection->update($request->validated());
+        $data = $request->validated();
+
+        // Handle banner image upload - delete old image if new one is uploaded
+        if ($request->hasFile('banner_image_file')) {
+            $this->deleteOldImage($collection->banner_image);
+            $data['banner_image'] = $this->handleImageUpload(null, $request->file('banner_image_file'), 'collections');
+        }
+
+        // Handle mobile banner image upload
+        if ($request->hasFile('banner_mobile_image_file')) {
+            $this->deleteOldImage($collection->banner_mobile_image);
+            $data['banner_mobile_image'] = $this->handleImageUpload(null, $request->file('banner_mobile_image_file'), 'collections');
+        }
+
+        unset($data['banner_image_file'], $data['banner_mobile_image_file']);
+
+        $collection->update($data);
 
         return redirect()->route('admin.collections.index')->with('message', 'Collection updated.');
     }

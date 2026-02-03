@@ -101,7 +101,7 @@ class LocationService
 
     public function findZoneByCoordinates(float $lat, float $lng): ?Zone
     {
-        $key = sprintf(self::CACHE_KEY_ZONE_COORDS, number_format($lat, 5) . '_' . number_format($lng, 5));
+        $key = sprintf(self::CACHE_KEY_ZONE_COORDS, number_format($lat, 5).'_'.number_format($lng, 5));
 
         return Cache::remember($key, self::CACHE_TTL_SECONDS, function () use ($lat, $lng) {
             return Zone::query()
@@ -140,6 +140,7 @@ class LocationService
         if ($v === null || ! is_array($v) || count($v) === 0) {
             return BusinessVertical::values();
         }
+
         return array_values(array_intersect($v, BusinessVertical::values()));
     }
 
@@ -155,7 +156,7 @@ class LocationService
         if ($zone === null) {
             return [];
         }
+
         return $this->getVerticalsForZone($zone);
     }
-
 }

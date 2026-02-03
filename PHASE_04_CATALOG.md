@@ -75,15 +75,16 @@ Implement product catalog system with categories, collections, products, and zon
 - [x] Update `Product` model with zones() BelongsToMany; Update `Zone` model with products() BelongsToMany
 
 ### 4.5 Product Variants (Optional - for future)
-- [ ] Create `product_variants` table migration (if needed)
-  - [ ] `id` (primary key)
-  - [ ] `product_id` (foreign key)
-  - [ ] `name` (string) - e.g., "500ml", "1L"
-  - [ ] `sku` (string, unique)
-  - [ ] `price` (decimal)
-  - [ ] `stock_quantity` (integer)
-  - [ ] `is_active` (boolean, default: true)
-  - [ ] `timestamps`
+- [x] Create `product_variants` table migration (if needed)
+  - [x] `id` (primary key)
+  - [x] `product_id` (foreign key)
+  - [x] `name` (string) - e.g., "500ml", "1L"
+  - [x] `sku` (string, unique)
+  - [x] `price` (decimal)
+  - [x] `stock_quantity` (integer)
+  - [x] `is_active` (boolean, default: true)
+  - [x] `timestamps`
+- [x] Create `ProductVariant` model with relationships
 
 ### 4.6 Catalog Controllers (Admin)
 - [x] Create `Admin/CategoryController`
@@ -113,72 +114,72 @@ Implement product catalog system with categories, collections, products, and zon
   - [x] `ManageProductZonesRequest`
 
 ### 4.7 Catalog Controllers (Customer)
-- [ ] Create `CatalogController`
-  - [ ] `index()` - Home page with banners, categories, featured products (filtered by vertical + zone)
-  - [ ] `showCategory(category)` - Category page (vertical + zone)
-  - [ ] `showCollection(collection)` - Collection page
-  - [ ] `showProduct(product)` - Product detail page
-  - [ ] `search(Request)` - Product search (vertical + zone)
-- [ ] Create `ProductController` (customer)
-  - [ ] `index(Request)` - List products (filtered by vertical and zone)
-  - [ ] `show(product)` - Product details
-  - [ ] `relatedProducts(product)` - Related products (same vertical + zone)
-- [ ] Implement vertical + zone-based filtering in all catalog queries
+- [x] Create `CatalogController`
+  - [x] `index()` - Home page with banners, categories, featured products (filtered by vertical + zone)
+  - [x] `showCategory(category)` - Category page (vertical + zone)
+  - [x] `showCollection(collection)` - Collection page
+  - [x] `showProduct(product)` - Product detail page
+  - [x] `search(Request)` - Product search (vertical + zone)
+- [x] Create `ProductController` (customer)
+  - [x] `index(Request)` - List products (filtered by vertical and zone)
+  - [x] `show(product)` - Product details
+  - [x] `relatedProducts(product)` - Related products (same vertical + zone)
+- [x] Implement vertical + zone-based filtering in all catalog queries
 
 ### 4.8 Catalog Service
-- [ ] Create `CatalogService` class
-  - [ ] `getProductsForZone(zone, vertical, filters)` - Get zone-available products for vertical
-  - [ ] `getFeaturedProducts(zone, vertical, limit)` - Featured products
-  - [ ] `getRelatedProducts(product, zone, vertical, limit)` - Related products
-  - [ ] `searchProducts(query, zone, vertical)` - Search products
-  - [ ] `getActiveBanners(zone, vertical)` - Active collection banners for vertical
-  - [ ] `getCategoriesWithProducts(zone, vertical)` - Categories with product counts
+- [x] Create `CatalogService` class
+  - [x] `getProductsForZone(zone, vertical, filters)` - Get zone-available products for vertical
+  - [x] `getFeaturedProducts(zone, vertical, limit)` - Featured products
+  - [x] `getRelatedProducts(product, zone, vertical, limit)` - Related products
+  - [x] `searchProducts(query, zone, vertical)` - Search products
+  - [x] `getActiveBanners(zone, vertical)` - Active collection banners for vertical
+  - [x] `getCategoriesWithProducts(zone, vertical)` - Categories with product counts
 
 ### 4.9 Free Sample System
-- [ ] Create `free_samples` table migration
-  - [ ] `id` (primary key)
-  - [ ] `product_id` (foreign key)
-  - [ ] `user_id` (foreign key, nullable) - If user-specific
-  - [ ] `phone_hash` (string, indexed) - Hashed phone
-  - [ ] `device_hash` (string, indexed) - Hashed device
-  - [ ] `claimed_at` (timestamp)
-  - [ ] `is_used` (boolean, default: false)
-  - [ ] `timestamps`
-- [ ] Create `FreeSample` model
-- [ ] Create `FreeSampleService`
-  - [ ] `checkEligibility(user, product)` - Check if eligible
-  - [ ] `claimSample(user, product)` - Claim free sample
-  - [ ] `markAsUsed(sample)` - Mark as used in order
-- [ ] Integrate with product display (show "Try Free" button)
+- [x] Create `free_samples` table migration
+  - [x] `id` (primary key)
+  - [x] `product_id` (foreign key)
+  - [x] `user_id` (foreign key, nullable) - If user-specific
+  - [x] `phone_hash` (string, indexed) - Hashed phone
+  - [x] `device_hash` (string, indexed) - Hashed device
+  - [x] `claimed_at` (timestamp)
+  - [x] `is_used` (boolean, default: false)
+  - [x] `timestamps`
+- [x] Create `FreeSample` model
+- [x] Create `FreeSampleService`
+  - [x] `checkEligibility(user, product)` - Check if eligible
+  - [x] `claimSample(user, product)` - Claim free sample
+  - [x] `markAsUsed(sample)` - Mark as used in order
+- [x] Integrate with product display (show "Try Free" button)
 
 ### 4.10 Frontend Catalog Pages
-- [ ] Create home page (`resources/js/Pages/Home.tsx`)
-  - [ ] **Daily Fresh** and **Society Fresh** entry points (tabs/sections or routes `/daily-fresh`, `/society-fresh`)
-  - [ ] Hero banners (collections filtered by selected vertical)
-  - [ ] Categories grid (by vertical)
-  - [ ] Featured products (by vertical + zone)
-  - [ ] Free sample popup (conditional)
-- [ ] Create category page (`resources/js/Pages/Catalog/Category.tsx`)
-  - [ ] Category info (vertical context)
-  - [ ] Product grid/list (vertical + zone)
-  - [ ] Filters (price, availability)
-  - [ ] Sorting
-- [ ] Create product detail page (`resources/js/Pages/Catalog/Product.tsx`)
-  - [ ] Product images gallery
-  - [ ] Product details
-  - [ ] Price display
-  - [ ] Subscription option (Society Fresh; if eligible)
-  - [ ] Add to cart button
-  - [ ] Free sample button (if eligible)
-  - [ ] Related products (same vertical + zone)
-- [ ] Create product search page (vertical + zone)
-- [ ] Create collection/banner pages (vertical context)
+- [x] Create home page (`resources/js/pages/catalog/home.tsx`)
+  - [x] **Daily Fresh** and **Society Fresh** entry points (tabs/sections or routes `/daily-fresh`, `/society-fresh`)
+  - [x] Hero banners (collections filtered by selected vertical)
+  - [x] Categories grid (by vertical)
+  - [x] Featured products (by vertical + zone)
+  - [x] Free sample popup (conditional)
+- [x] Create category page (`resources/js/pages/catalog/category.tsx`)
+  - [x] Category info (vertical context)
+  - [x] Product grid/list (vertical + zone)
+  - [x] Filters (price, availability)
+  - [x] Sorting
+- [x] Create product detail page (`resources/js/pages/catalog/product.tsx`)
+  - [x] Product images gallery
+  - [x] Product details
+  - [x] Price display
+  - [x] Subscription option (Society Fresh; if eligible)
+  - [x] Add to cart button
+  - [x] Free sample button (if eligible)
+  - [x] Related products (same vertical + zone)
+- [x] Create product search page (`resources/js/pages/catalog/search.tsx`) (vertical + zone)
+- [x] Create collection/banner pages (`resources/js/pages/catalog/collection.tsx`) (vertical context)
 
 ### 4.11 Admin Catalog Management UI
 - [x] Create category management pages
   - [x] Category list (filter by vertical)
   - [x] Category create/edit form (vertical selector)
-  - [ ] Image upload (URL only for now)
+  - [x] Image upload (URL only for now - already implemented in admin forms)
 - [x] Create collection management pages
   - [x] Collection list (filter by vertical)
   - [x] Collection create/edit form (vertical selector)
@@ -190,41 +191,50 @@ Implement product catalog system with categories, collections, products, and zon
   - [x] Stock, subscription, bottle settings in form
 
 ### 4.12 Cross-sell & Upsell
-- [ ] Create `product_relations` table migration
-  - [ ] `id` (primary key)
-  - [ ] `product_id` (foreign key)
-  - [ ] `related_product_id` (foreign key)
-  - [ ] `relation_type` (enum: 'cross_sell', 'upsell', 'bundle')
-  - [ ] `display_order` (integer, default: 0)
-  - [ ] `timestamps`
-- [ ] Create `ProductRelation` model
-- [ ] Update product detail page to show related products
+- [x] Create `product_relations` table migration
+  - [x] `id` (primary key)
+  - [x] `product_id` (foreign key)
+  - [x] `related_product_id` (foreign key)
+  - [x] `relation_type` (enum: 'cross_sell', 'upsell', 'bundle')
+  - [x] `display_order` (integer, default: 0)
+  - [x] `timestamps`
+- [x] Create `ProductRelation` model
+- [x] Update product detail page to show related products (cross-sell and upsell)
 
 ### 4.13 Image Management
-- [ ] Set up object storage integration (S3, DigitalOcean Spaces, etc.)
-- [ ] Create `ImageService` class
-  - [ ] `uploadImage(file, folder)` - Upload to storage
-  - [ ] `deleteImage(path)` - Delete from storage
-  - [ ] `resizeImage(path, dimensions)` - Resize images
-- [ ] Configure image optimization
-- [ ] Set up CDN for images
+- [x] Set up object storage integration (ImageKit) - Fully integrated
+- [x] Create `ImageService` class
+  - [x] `uploadImage(file, folder)` - Upload to ImageKit
+  - [x] `uploadMultiple(files, folder)` - Upload multiple files
+  - [x] `deleteImage(fileId)` - Delete from ImageKit
+  - [x] `deleteImageByUrl(url)` - Delete by URL
+  - [x] `resizeImage(url, dimensions)` - Resize with ImageKit transformations
+  - [x] `getCompressedUrl(url, quality)` - Get compressed image URL
+  - [x] `getThumbnailUrl(url, width, height)` - Get thumbnail URL
+  - [x] `getTransformedUrl(url, transformations)` - Get transformed URL
+  - [x] `getImageUrl(path)` - Get full CDN URL
+- [x] Configure image optimization (ImageKit automatic compression)
+- [x] Set up CDN for images (ImageKit CDN enabled)
+- [x] File upload controller endpoints (admin)
+- [x] Integration with all CRUD operations (Category, Collection, Product)
+- [x] Support for all file types (images, videos, PDFs, documents)
 
 ### 4.14 Database Seeders
-- [ ] Create `CategorySeeder` (sample categories)
-- [ ] Create `CollectionSeeder` (sample collections/banners)
-- [ ] Create `ProductSeeder` (sample products)
-- [ ] Assign products to zones
-- [ ] Create `FreeSampleSeeder` (test data)
+- [x] Create `CategorySeeder` (sample categories)
+- [x] Create `CollectionSeeder` (sample collections/banners)
+- [x] Create `ProductSeeder` (sample products)
+- [x] Assign products to zones
+- [x] Create `FreeSampleSeeder` (test data)
 
 ### 4.15 Testing
-- [ ] Test category CRUD operations
-- [ ] Test collection CRUD operations
-- [ ] Test product CRUD operations
-- [ ] Test zone-based product filtering
-- [ ] Test free sample eligibility
-- [ ] Test product search
-- [ ] Test related products
-- [ ] Feature tests for catalog pages
+- [x] Test category CRUD operations (CatalogTest)
+- [x] Test collection CRUD operations (CatalogTest)
+- [x] Test product CRUD operations (ProductTest)
+- [x] Test zone-based product filtering (CatalogTest)
+- [x] Test free sample eligibility (FreeSampleTest)
+- [x] Test product search (CatalogTest)
+- [x] Test related products (ProductTest)
+- [x] Feature tests for catalog pages (CatalogTest, ProductTest, FreeSampleTest)
 
 ## Deliverables
 - ✅ Category management system
@@ -245,7 +255,7 @@ Implement product catalog system with categories, collections, products, and zon
 - [ ] Collections display as banners (per vertical)
 - [ ] Free sample system works with abuse prevention
 - [ ] Product search works (vertical + zone)
-- [ ] Images are optimized and served via CDN
+- [x] Images are optimized and served via CDN (ImageKit)
 - [ ] Catalog is SEO-friendly
 
 ## Database Tables Created

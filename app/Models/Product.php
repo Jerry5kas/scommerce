@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Product extends Model
@@ -83,6 +84,23 @@ class Product extends Model
             ->withTimestamps();
     }
 
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function relations(): HasMany
+    {
+        return $this->hasMany(ProductRelation::class);
+    }
+
+    public function relatedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_relations', 'product_id', 'related_product_id')
+            ->withPivot(['relation_type', 'display_order'])
+            ->withTimestamps();
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
@@ -121,6 +139,7 @@ class Product extends Model
         if ($pivot === null) {
             return false;
         }
+
         return (bool) $pivot->pivot->is_available;
     }
 
@@ -132,6 +151,7 @@ class Product extends Model
                 return (float) $pivot->pivot->price_override;
             }
         }
+
         return (float) $this->price;
     }
 

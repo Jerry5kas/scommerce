@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Product;
 use App\Models\Zone;
+use App\Traits\HandlesImageUploads;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,6 +17,8 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
+    use HandlesImageUploads;
+
     public function index(Request $request): Response
     {
         $query = Product::query()
@@ -58,7 +61,24 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request): RedirectResponse
     {
-        Product::query()->create($request->validated());
+        $data = $request->validated();
+
+        // Handle main image upload
+        if ($request->hasFile('image_file')) {
+            $data['image'] = $this->handleImageUpload(null, $request->file('image_file'), 'products');
+        }
+
+        // Handle multiple images upload
+        if ($request->hasFile('image_files')) {
+            $uploadedUrls = $this->handleMultipleImageUploads(null, $request->file('image_files'), 'products');
+            // Merge with existing images array if any
+            $existingImages = $data['images'] ?? [];
+            $data['images'] = array_merge($existingImages, $uploadedUrls);
+        }
+
+        unset($data['image_file'], $data['image_files']);
+
+        Product::query()->create($data);
 
         return redirect()->route('admin.products.index')->with('message', 'Product created.');
     }
@@ -88,7 +108,25 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
-        $product->update($request->validated());
+        $data = $request->validated();
+
+        // Handle main image upload - delete old image if new one is uploaded
+        if ($request->hasFile('image_file')) {
+            $this->deleteOldImage($product->image);
+            $data['image'] = $this->handleImageUpload(null, $request->file('image_file'), 'products');
+        }
+
+        // Handle multiple images upload
+        if ($request->hasFile('image_files')) {
+            $uploadedUrls = $this->handleMultipleImageUploads(null, $request->file('image_files'), 'products');
+            // Merge with existing images array if any
+            $existingImages = $data['images'] ?? $product->images ?? [];
+            $data['images'] = array_merge($existingImages, $uploadedUrls);
+        }
+
+        unset($data['image_file'], $data['image_files']);
+
+        $product->update($data);
 
         return redirect()->route('admin.products.index')->with('message', 'Product updated.');
     }

@@ -68,6 +68,7 @@ class UserAddressController extends Controller
         }
         $request->user()->addresses()->update(['is_default' => false]);
         $address->update(['is_default' => true]);
+        $address->autoAssignZone();
 
         return redirect()->route('profile.addresses')->with('message', 'Default address updated.');
     }

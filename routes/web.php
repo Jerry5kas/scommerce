@@ -7,6 +7,8 @@
 */
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ZoneController;
@@ -18,13 +20,22 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware('location')->group(function () {
-    Route::get('/products', function () {
-        return Inertia::render('products');
-    })->name('products');
+    // Catalog home
+    Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.home');
 
-    Route::get('/products/{id}', function (string $id) {
-        return Inertia::render('product-detail', ['id' => $id]);
-    })->name('products.show');
+    // Catalog routes
+    Route::get('/catalog/search', [CatalogController::class, 'search'])->name('catalog.search');
+    Route::get('/categories/{category:slug}', [CatalogController::class, 'showCategory'])->name('catalog.category');
+    Route::get('/collections/{collection:slug}', [CatalogController::class, 'showCollection'])->name('catalog.collection');
+    Route::get('/products/{product:slug}', [CatalogController::class, 'showProduct'])->name('catalog.product');
+
+    // Product routes
+    Route::get('/products', [ProductController::class, 'index'])->name('products');
+    Route::get('/products/{product}/related', [ProductController::class, 'relatedProducts'])->name('products.related');
+
+    // Free sample routes
+    Route::post('/products/{product}/free-sample/claim', [\App\Http\Controllers\FreeSampleController::class, 'claim'])->name('products.free-sample.claim');
+    Route::get('/products/{product}/free-sample/check', [\App\Http\Controllers\FreeSampleController::class, 'checkEligibility'])->name('products.free-sample.check');
 
     Route::get('/cart', function () {
         return Inertia::render('cart');
