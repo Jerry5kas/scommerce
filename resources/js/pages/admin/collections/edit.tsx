@@ -144,7 +144,7 @@ export default function AdminCollectionsEdit({ collection, verticalOptions, cate
                             </label>
                         </div>
                         <div className="relative"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">Or enter URL</span></div></div>
-                        <input type="text" placeholder="https://..." className="mt-3 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.banner_image} onChange={(e) => { form.setData('banner_image', e.target.value); setBannerImagePreview(e.target.value || collection.banner_image ?? null); if (e.target.value) setBannerImageFile(null); }} disabled={!!bannerImageFile} />
+                        <input type="text" placeholder="https://..." className="mt-3 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.banner_image} onChange={(e) => { form.setData('banner_image', e.target.value); setBannerImagePreview(e.target.value || (collection.banner_image ?? null)); if (e.target.value) setBannerImageFile(null); }} disabled={!!bannerImageFile} />
                         {form.errors.banner_image && <p className="mt-1 text-sm text-red-600">{form.errors.banner_image}</p>}
                     </div>
                     <div>
@@ -163,7 +163,7 @@ export default function AdminCollectionsEdit({ collection, verticalOptions, cate
                             </label>
                         </div>
                         <div className="relative"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">Or enter URL</span></div></div>
-                        <input type="text" placeholder="https://..." className="mt-3 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.banner_mobile_image} onChange={(e) => { form.setData('banner_mobile_image', e.target.value); setBannerMobileImagePreview(e.target.value || collection.banner_mobile_image ?? null); if (e.target.value) setBannerMobileImageFile(null); }} disabled={!!bannerMobileImageFile} />
+                        <input type="text" placeholder="https://..." className="mt-3 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.banner_mobile_image} onChange={(e) => { form.setData('banner_mobile_image', e.target.value); setBannerMobileImagePreview(e.target.value || (collection.banner_mobile_image ?? null)); if (e.target.value) setBannerMobileImageFile(null); }} disabled={!!bannerMobileImageFile} />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Vertical</label>

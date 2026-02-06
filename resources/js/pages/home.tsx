@@ -454,6 +454,115 @@ export default function Home() {
                         </div>
                     </div>
                 </section>
+
+                {/* Shop by Vertical - Daily Fresh & Society Fresh Entry Points */}
+                <section className="py-12 bg-gradient-to-b from-gray-900 to-gray-800 sm:py-16 lg:py-20" aria-labelledby="shop-verticals-heading">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="mx-auto max-w-3xl text-center mb-8 sm:mb-12">
+                            <h2 id="shop-verticals-heading" className="mb-3 text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
+                                How would you like to shop?
+                            </h2>
+                            <p className="text-base text-white/70 sm:text-lg">
+                                Choose your preferred shopping experience
+                            </p>
+                        </div>
+                        <div className="mx-auto max-w-4xl grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
+                            {/* Daily Fresh Card */}
+                            <a
+                                href="/catalog?vertical=daily_fresh"
+                                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl sm:p-8"
+                            >
+                                <div className="absolute inset-0 bg-[url('/images/pattern-dots.svg')] opacity-10" />
+                                <div className="relative z-10">
+                                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm sm:h-16 sm:w-16">
+                                        <svg className="h-8 w-8 text-white sm:h-9 sm:w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="mb-2 text-xl font-bold text-white sm:text-2xl">
+                                        Daily Fresh
+                                    </h3>
+                                    <p className="mb-4 text-sm text-white/80 sm:text-base">
+                                        Fresh milk, curd & dairy delivered every morning to your doorstep. No commitment, order what you need.
+                                    </p>
+                                    <ul className="mb-6 space-y-2 text-sm text-white/70">
+                                        <li className="flex items-center gap-2">
+                                            <svg className="h-4 w-4 shrink-0 text-emerald-200" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            Order anytime, no subscription
+                                        </li>
+                                        <li className="flex items-center gap-2">
+                                            <svg className="h-4 w-4 shrink-0 text-emerald-200" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            Morning delivery before 7 AM
+                                        </li>
+                                        <li className="flex items-center gap-2">
+                                            <svg className="h-4 w-4 shrink-0 text-emerald-200" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            Farm-fresh quality guaranteed
+                                        </li>
+                                    </ul>
+                                    <span className="inline-flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-colors group-hover:bg-white/30">
+                                        Shop Daily Fresh
+                                        <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                        </svg>
+                                    </span>
+                                </div>
+                            </a>
+
+                            {/* Society Fresh Card */}
+                            <a
+                                href="/catalog?vertical=society_fresh"
+                                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl sm:p-8"
+                            >
+                                <div className="absolute inset-0 bg-[url('/images/pattern-dots.svg')] opacity-10" />
+                                <div className="relative z-10">
+                                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm sm:h-16 sm:w-16">
+                                        <svg className="h-8 w-8 text-white sm:h-9 sm:w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5.5l-1.5-.5M6.75 7.364V3h-3v18m3-13.636l10.5-3.819" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="mb-2 text-xl font-bold text-white sm:text-2xl">
+                                        Society Fresh
+                                    </h3>
+                                    <p className="mb-4 text-sm text-white/80 sm:text-base">
+                                        Subscribe for daily delivery to your society. Save more with bulk plans and never run out of essentials.
+                                    </p>
+                                    <ul className="mb-6 space-y-2 text-sm text-white/70">
+                                        <li className="flex items-center gap-2">
+                                            <svg className="h-4 w-4 shrink-0 text-amber-200" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            Up to 50% off with subscriptions
+                                        </li>
+                                        <li className="flex items-center gap-2">
+                                            <svg className="h-4 w-4 shrink-0 text-amber-200" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            Pause/resume anytime
+                                        </li>
+                                        <li className="flex items-center gap-2">
+                                            <svg className="h-4 w-4 shrink-0 text-amber-200" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            </svg>
+                                            Vacation hold & WhatsApp alerts
+                                        </li>
+                                    </ul>
+                                    <span className="inline-flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-colors group-hover:bg-white/30">
+                                        Shop Society Fresh
+                                        <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                        </svg>
+                                    </span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </section>
                
                 {/* Trending Product Categories */}
                 <section className="py-16 bg-gradient-to-b from-white to-gray-50/50 sm:py-20 lg:py-24" aria-labelledby="trending-categories-heading">

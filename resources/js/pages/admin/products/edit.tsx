@@ -185,7 +185,7 @@ export default function AdminProductsEdit({ product, verticalOptions, categories
                             </label>
                         </div>
                         <div className="relative"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">Or enter URL</span></div></div>
-                        <input type="text" placeholder="https://..." className="mt-3 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.image} onChange={(e) => { form.setData('image', e.target.value); setImagePreview(e.target.value || product.image ?? null); if (e.target.value) setImageFile(null); }} disabled={!!imageFile} />
+                        <input type="text" placeholder="https://..." className="mt-3 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.image} onChange={(e) => { form.setData('image', e.target.value); setImagePreview(e.target.value || (product.image ?? null)); if (e.target.value) setImageFile(null); }} disabled={!!imageFile} />
                         {form.errors.image && <p className="mt-1 text-sm text-red-600">{form.errors.image}</p>}
                     </div>
                     <div className="grid gap-4 sm:grid-cols-3">

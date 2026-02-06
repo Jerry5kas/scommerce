@@ -7,10 +7,22 @@
 */
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BannerController;
+use App\Http\Controllers\BottleController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\CouponController;
+use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\LoyaltyController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReferralController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\UserAddressController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WalletController;
 use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -37,9 +49,14 @@ Route::middleware('location')->group(function () {
     Route::post('/products/{product}/free-sample/claim', [\App\Http\Controllers\FreeSampleController::class, 'claim'])->name('products.free-sample.claim');
     Route::get('/products/{product}/free-sample/check', [\App\Http\Controllers\FreeSampleController::class, 'checkEligibility'])->name('products.free-sample.check');
 
-    Route::get('/cart', function () {
-        return Inertia::render('cart');
-    })->name('cart');
+    // Cart routes (works for both guests and authenticated users)
+    Route::get('/cart', [CartController::class, 'show'])->name('cart.show');
+    Route::get('/cart/data', [CartController::class, 'index'])->name('cart.index');
+    Route::get('/cart/mini', [CartController::class, 'miniCart'])->name('cart.mini');
+    Route::post('/cart/add', [CartController::class, 'addItem'])->name('cart.add');
+    Route::put('/cart/items/{cartItem}', [CartController::class, 'updateItem'])->name('cart.update');
+    Route::delete('/cart/items/{cartItem}', [CartController::class, 'removeItem'])->name('cart.remove');
+    Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
     Route::get('/subscription', function () {
         return Inertia::render('subscription', ['planId' => request()->query('plan')]);
@@ -85,4 +102,83 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/addresses/{address}', [UserAddressController::class, 'update'])->name('profile.addresses.update');
     Route::delete('/profile/addresses/{address}', [UserAddressController::class, 'destroy'])->name('profile.addresses.destroy');
     Route::post('/profile/addresses/{address}/default', [UserAddressController::class, 'setDefault'])->name('profile.addresses.set-default');
+
+    // Subscription routes
+    Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::get('/subscriptions/create', [SubscriptionController::class, 'create'])->name('subscriptions.create');
+    Route::post('/subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
+    Route::get('/subscriptions/{subscription}/edit', [SubscriptionController::class, 'edit'])->name('subscriptions.edit');
+    Route::put('/subscriptions/{subscription}', [SubscriptionController::class, 'update'])->name('subscriptions.update');
+    Route::post('/subscriptions/{subscription}/pause', [SubscriptionController::class, 'pause'])->name('subscriptions.pause');
+    Route::post('/subscriptions/{subscription}/resume', [SubscriptionController::class, 'resume'])->name('subscriptions.resume');
+    Route::post('/subscriptions/{subscription}/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+    Route::post('/subscriptions/{subscription}/vacation', [SubscriptionController::class, 'setVacation'])->name('subscriptions.vacation');
+    Route::delete('/subscriptions/{subscription}/vacation', [SubscriptionController::class, 'clearVacation'])->name('subscriptions.vacation.clear');
+    Route::get('/subscriptions/{subscription}/schedule', [SubscriptionController::class, 'getSchedule'])->name('subscriptions.schedule');
+
+    // Order routes
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/checkout', [OrderController::class, 'create'])->name('checkout');
+    Route::post('/checkout', [OrderController::class, 'store'])->name('checkout.store');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::get('/orders/{order}/track', [OrderController::class, 'track'])->name('orders.track');
+    Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('orders.reorder');
+
+    // Wallet routes
+    Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
+    Route::get('/wallet/recharge', [WalletController::class, 'rechargeForm'])->name('wallet.recharge');
+    Route::post('/wallet/recharge', [WalletController::class, 'recharge'])->name('wallet.recharge.store');
+    Route::get('/wallet/transactions', [WalletController::class, 'transactions'])->name('wallet.transactions');
+    Route::get('/wallet/balance', [WalletController::class, 'balance'])->name('wallet.balance');
+    Route::get('/wallet/auto-recharge', [WalletController::class, 'autoRechargeSettings'])->name('wallet.auto-recharge');
+    Route::post('/wallet/auto-recharge', [WalletController::class, 'setAutoRecharge'])->name('wallet.auto-recharge.store');
+    Route::post('/wallet/low-balance-threshold', [WalletController::class, 'setLowBalanceThreshold'])->name('wallet.low-balance-threshold');
+
+    // Delivery routes
+    Route::get('/deliveries', [DeliveryController::class, 'index'])->name('deliveries.index');
+    Route::get('/deliveries/{delivery}', [DeliveryController::class, 'show'])->name('deliveries.show');
+    Route::get('/deliveries/{delivery}/track', [DeliveryController::class, 'track'])->name('deliveries.track');
+    Route::get('/deliveries/{delivery}/status', [DeliveryController::class, 'getStatus'])->name('deliveries.status');
+    Route::get('/deliveries/{delivery}/live-tracking', [DeliveryController::class, 'liveTracking'])->name('deliveries.live-tracking');
+
+    // Bottle routes
+    Route::get('/bottles', [BottleController::class, 'index'])->name('bottles.index');
+    Route::get('/bottles/balance', [BottleController::class, 'getBalance'])->name('bottles.balance');
+    Route::get('/bottles/history', [BottleController::class, 'history'])->name('bottles.history');
+    Route::get('/bottles/{bottle}', [BottleController::class, 'show'])->name('bottles.show');
+
+    // Loyalty routes
+    Route::get('/loyalty', [LoyaltyController::class, 'index'])->name('loyalty.index');
+    Route::get('/loyalty/balance', [LoyaltyController::class, 'balance'])->name('loyalty.balance');
+    Route::get('/loyalty/transactions', [LoyaltyController::class, 'transactions'])->name('loyalty.transactions');
+    Route::post('/loyalty/convert', [LoyaltyController::class, 'convertToWallet'])->name('loyalty.convert');
+
+    // Referral routes
+    Route::get('/referrals', [ReferralController::class, 'index'])->name('referrals.index');
+    Route::get('/referrals/stats', [ReferralController::class, 'stats'])->name('referrals.stats');
+    Route::get('/referrals/list', [ReferralController::class, 'referrals'])->name('referrals.list');
+    Route::post('/referrals/apply', [ReferralController::class, 'applyCode'])->name('referrals.apply');
+    Route::post('/referrals/validate', [ReferralController::class, 'validateCode'])->name('referrals.validate');
+
+    // Coupon routes
+    Route::post('/coupons/validate', [CouponController::class, 'validate'])->name('coupons.validate');
+    Route::post('/coupons/apply', [CouponController::class, 'apply'])->name('coupons.apply');
+    Route::delete('/coupons/remove', [CouponController::class, 'remove'])->name('coupons.remove');
+
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/register-device', [NotificationController::class, 'registerDevice'])->name('notifications.register-device');
+    Route::post('/notifications/unregister-device', [NotificationController::class, 'unregisterDevice'])->name('notifications.unregister-device');
 });
+
+// Public banner endpoint
+Route::get('/banners', [BannerController::class, 'index'])->name('banners.index');
+
+// Tracking API (works for both authenticated and anonymous users)
+Route::post('/track', [TrackingController::class, 'track'])->name('tracking.track');
+Route::post('/track/pageview', [TrackingController::class, 'pageView'])->name('tracking.pageview');

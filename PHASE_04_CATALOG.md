@@ -227,14 +227,15 @@ Implement product catalog system with categories, collections, products, and zon
 - [x] Create `FreeSampleSeeder` (test data)
 
 ### 4.15 Testing
-- [x] Test category CRUD operations (CatalogTest)
-- [x] Test collection CRUD operations (CatalogTest)
-- [x] Test product CRUD operations (ProductTest)
-- [x] Test zone-based product filtering (CatalogTest)
-- [x] Test free sample eligibility (FreeSampleTest)
-- [x] Test product search (CatalogTest)
-- [x] Test related products (ProductTest)
-- [x] Feature tests for catalog pages (CatalogTest, ProductTest, FreeSampleTest)
+> **Deferred**: Testing will be done after all modules are complete.
+- [ ] Test category CRUD operations (CatalogTest)
+- [ ] Test collection CRUD operations (CatalogTest)
+- [ ] Test product CRUD operations (ProductTest)
+- [ ] Test zone-based product filtering (CatalogTest)
+- [ ] Test free sample eligibility (FreeSampleTest)
+- [ ] Test product search (CatalogTest)
+- [ ] Test related products (ProductTest)
+- [ ] Feature tests for catalog pages (CatalogTest, ProductTest, FreeSampleTest)
 
 ## Deliverables
 - ✅ Category management system
@@ -242,21 +243,21 @@ Implement product catalog system with categories, collections, products, and zon
 - ✅ Product management system
 - ✅ Zone-based product availability
 - ✅ Vertical on categories, collections, products (migration + model scope `forVertical`); filter catalog by vertical when building controllers
-- [ ] Home: Daily Fresh and Society Fresh entry points (when home page is built)
+- ✅ Home: Daily Fresh and Society Fresh entry points
 - ✅ Free sample system (when implemented)
 - ✅ Customer catalog UI (vertical-aware when implemented)
 - ✅ Admin catalog management UI (vertical filter/selector when implemented)
 - ✅ Image management system
 
 ## Success Criteria
-- [ ] Products can be created and managed
-- [ ] Products are filtered by vertical and zone
-- [ ] Home has Daily Fresh and Society Fresh entry points
-- [ ] Collections display as banners (per vertical)
-- [ ] Free sample system works with abuse prevention
-- [ ] Product search works (vertical + zone)
+- [x] Products can be created and managed
+- [x] Products are filtered by vertical and zone
+- [x] Home has Daily Fresh and Society Fresh entry points
+- [x] Collections display as banners (per vertical)
+- [x] Free sample system works with abuse prevention
+- [x] Product search works (vertical + zone)
 - [x] Images are optimized and served via CDN (ImageKit)
-- [ ] Catalog is SEO-friendly
+- [x] Catalog is SEO-friendly (meta titles/descriptions on models)
 
 ## Database Tables Created
 - `categories`

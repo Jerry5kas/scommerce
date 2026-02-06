@@ -162,6 +162,7 @@ Implement zone-based service availability system with driver assignment and loca
 - [x] Assign drivers to zones
 
 ### 3.15 Testing
+> **Deferred**: Testing will be done after all modules are complete.
 - [ ] Test zone CRUD operations
 - [ ] Test driver CRUD operations
 - [ ] Test zone-driver assignment
@@ -173,10 +174,10 @@ Implement zone-based service availability system with driver assignment and loca
 - [ ] Feature tests for zone management
 
 ### 3.16 Zone Verticals (Daily Fresh / Society Fresh)
-- [ ] Migration: add `verticals` (json array) to `zones` — which vertical(s) the zone serves; default both for backward compatibility
-- [ ] Zone model: add to fillable/casts; scopes `forDailyFresh()`, `forSocietyFresh()`; helper `supportsVertical(string $vertical)`
-- [ ] LocationService: method to return available vertical(s) for an address/zone (e.g. `getVerticalsForAddress()` or extend `validateAddress` response)
-- [ ] Admin zone create/edit form: multi-select or checkboxes for Daily Fresh, Society Fresh
+- [x] Migration: add `verticals` (json array) to `zones` — which vertical(s) the zone serves; default both for backward compatibility
+- [x] Zone model: add to fillable/casts; scopes `forDailyFresh()`, `forSocietyFresh()`; helper `supportsVertical(string $vertical)`
+- [x] LocationService: method to return available vertical(s) for an address/zone (e.g. `getVerticalsForAddress()` or extend `validateAddress` response)
+- [x] Admin zone create/edit form: multi-select or checkboxes for Daily Fresh, Society Fresh
 - [ ] Customer location/zone selection: show which vertical(s) are available at selected address (optional UX)
 
 ## Deliverables
@@ -211,10 +212,11 @@ Implement zone-based service availability system with driver assignment and loca
 - Zone overrides should be logged for audit
 - **Business verticals**: Each zone declares which vertical(s) it serves (`daily_fresh`, `society_fresh`, or both). Required for catalog and order filtering (Phase 4+).
 
-## Remaining (optional / not started)
+## Remaining (optional / deferred)
 - [ ] **Google Maps Geocoding API** — Optional; set `GOOGLE_MAPS_API_KEY`, enable Geocoding API.
 - [ ] **Map view** on zone selection (optional).
-- [ ] **Testing** (3.15) — Zone/driver CRUD, location validation, pincode/coords lookup, serviceability, overrides, feature tests.
+- [ ] **Testing** (3.15) — Deferred until all modules are complete.
+- [ ] **Verticals UX** — Show available verticals on customer location selection (optional).
 
 ## Next Phase
 Once Phase 3 is complete, proceed to **Phase 4: Catalog & Product Management**
