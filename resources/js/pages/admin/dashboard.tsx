@@ -43,62 +43,62 @@ import {
 } from 'recharts';
 
 interface DashboardStats {
-    totalOrders: number;
-    cancelOrders: number;
-    totalActiveSubscriptions: number;
-    totalInactiveSubscriptions: number;
-    totalNewSubscriptions: number;
-    openTickets: number;
-    avgOrderValue: number;
-    totalRevenue: number;
-    totalRefund: number;
-    morningOrders: {
+    totalOrders?: number;
+    cancelOrders?: number;
+    totalActiveSubscriptions?: number;
+    totalInactiveSubscriptions?: number;
+    totalNewSubscriptions?: number;
+    openTickets?: number;
+    avgOrderValue?: number;
+    totalRevenue?: number;
+    totalRefund?: number;
+    morningOrders?: {
         delivered: number;
         total: number;
     };
-    eveningOrders: {
+    eveningOrders?: {
         delivered: number;
         total: number;
     };
-    bottleCollection: {
+    bottleCollection?: {
         collected: number;
         pending: number;
     };
-    cashCollection: {
+    cashCollection?: {
         request: number;
         collected: number;
         accepted: number;
     };
-    revenueData: Array<{
+    revenueData?: Array<{
         date: string;
         revenue: number;
         refund: number;
     }>;
-    refundAmount: {
+    refundAmount?: {
         totalAmount: number;
         requestedAmount: number;
         refundedAmount: number;
         cancelRefundAmount: number;
     };
-    pendingRefunds: Array<{
+    pendingRefunds?: Array<{
         id: number;
         customerName: string;
         hubName: string;
         refundAmount: number;
     }>;
-    lowWalletCustomers: Array<{
+    lowWalletCustomers?: Array<{
         id: number;
         customerName: string;
         hubName: string;
         tomorrowLedgerBalance: number;
         tomorrowOrderValue: number;
     }>;
-    subscriptionsEnds: Array<{
+    subscriptionsEnds?: Array<{
         id: number;
         customerName: string;
         endDate: string;
     }>;
-    latestRecharges: Array<{
+    latestRecharges?: Array<{
         id: number;
         dateTime: string;
         customerName: string;
@@ -107,7 +107,7 @@ interface DashboardStats {
         amount: number;
         type: string;
     }>;
-    riders: Array<{
+    riders?: Array<{
         id: number;
         code: string;
         phone: string;
@@ -145,7 +145,7 @@ export default function AdminDashboard({
 }: AdminDashboardPageProps) {
     const [selectedHubId, setSelectedHubId] = useState<number | null>(selectedHub);
     const [selectedDateRange, setSelectedDateRange] = useState(dateRange);
-    const [avgOrderValue, setAvgOrderValue] = useState(stats.avgOrderValue);
+    const [avgOrderValue, setAvgOrderValue] = useState(stats.avgOrderValue ?? 0);
     const [chartHeight, setChartHeight] = useState(160);
     const chartContainerRef = useRef<HTMLDivElement>(null);
 
@@ -164,11 +164,13 @@ export default function AdminDashboard({
         return () => window.removeEventListener('resize', updateChartHeight);
     }, []);
 
-    const formatCurrency = (amount: number): string => {
-        return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const formatCurrency = (amount: number | undefined | null): string => {
+        const value = amount ?? 0;
+        return `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
-    const formatDate = (dateString: string): string => {
+    const formatDate = (dateString: string | undefined | null): string => {
+        if (!dateString) return 'N/A';
         const date = new Date(dateString);
         return date.toLocaleDateString('en-IN', {
             day: '2-digit',
@@ -177,7 +179,8 @@ export default function AdminDashboard({
         });
     };
 
-    const formatDateTime = (dateString: string): string => {
+    const formatDateTime = (dateString: string | undefined | null): string => {
+        if (!dateString) return 'N/A';
         const date = new Date(dateString);
         return date.toLocaleString('en-IN', {
             day: '2-digit',
@@ -274,37 +277,37 @@ export default function AdminDashboard({
                 <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-6">
                     <MetricCard
                         icon={Package}
-                        value={stats.totalOrders}
+                        value={stats.totalOrders ?? 0}
                         label="Total Orders"
                         color="bg-[var(--admin-dark-primary)]"
                     />
                     <MetricCard
                         icon={PackageX}
-                        value={stats.cancelOrders}
+                        value={stats.cancelOrders ?? 0}
                         label="Cancel Orders"
                         color="bg-gray-500"
                     />
                     <MetricCard
                         icon={Users}
-                        value={stats.totalActiveSubscriptions}
+                        value={stats.totalActiveSubscriptions ?? 0}
                         label="Total Active Subscriptions"
                         color="bg-[var(--admin-dark-primary)]"
                     />
                     <MetricCard
                         icon={UserX}
-                        value={stats.totalInactiveSubscriptions}
+                        value={stats.totalInactiveSubscriptions ?? 0}
                         label="Total Inactive Subscriptions"
                         color="bg-gray-500"
                     />
                     <MetricCard
                         icon={UserPlus}
-                        value={stats.totalNewSubscriptions}
+                        value={stats.totalNewSubscriptions ?? 0}
                         label="Total New Subscriptions"
                         color="bg-[var(--admin-accent)]"
                     />
                     <MetricCard
                         icon={Headphones}
-                        value={stats.openTickets}
+                        value={stats.openTickets ?? 0}
                         label="Open Tickets"
                         color="bg-[var(--admin-accent)]"
                     />
@@ -408,25 +411,25 @@ export default function AdminDashboard({
                         <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                             <RefundMetric
                                 label="Total Amount"
-                                value={formatCurrency(stats.refundAmount.totalAmount)}
+                                value={formatCurrency(stats.refundAmount?.totalAmount)}
                                 icon={IndianRupee}
                                 color="bg-[var(--admin-dark-primary)]/10 text-[var(--admin-dark-primary)]"
                             />
                             <RefundMetric
                                 label="Requested Amount"
-                                value={formatCurrency(stats.refundAmount.requestedAmount)}
+                                value={formatCurrency(stats.refundAmount?.requestedAmount)}
                                 icon={Clock}
                                 color="bg-[var(--admin-accent)]/10 text-[var(--admin-accent)]"
                             />
                             <RefundMetric
                                 label="Refunded Amount"
-                                value={formatCurrency(stats.refundAmount.refundedAmount)}
+                                value={formatCurrency(stats.refundAmount?.refundedAmount)}
                                 icon={CheckCircle}
                                 color="bg-[var(--admin-dark-primary)]/10 text-[var(--admin-dark-primary)]"
                             />
                             <RefundMetric
                                 label="Cancel Refund Amount"
-                                value={formatCurrency(stats.refundAmount.cancelRefundAmount)}
+                                value={formatCurrency(stats.refundAmount?.cancelRefundAmount)}
                                 icon={XCircle}
                                 color="bg-gray-100 text-gray-600"
                             />
@@ -439,33 +442,33 @@ export default function AdminDashboard({
                     <OperationalCard
                         title="Morning Orders"
                         icon={Sun}
-                        delivered={stats.morningOrders.delivered}
-                        total={stats.morningOrders.total}
+                        delivered={stats.morningOrders?.delivered ?? 0}
+                        total={stats.morningOrders?.total ?? 0}
                         label="Delivered"
                         totalLabel="Total Orders"
                     />
                     <OperationalCard
                         title="Evening Orders"
                         icon={Moon}
-                        delivered={stats.eveningOrders.delivered}
-                        total={stats.eveningOrders.total}
+                        delivered={stats.eveningOrders?.delivered ?? 0}
+                        total={stats.eveningOrders?.total ?? 0}
                         label="Delivered"
                         totalLabel="Total Orders"
                     />
                     <OperationalCard
                         title="Bottle Collection"
                         icon={BottleIcon}
-                        delivered={stats.bottleCollection.collected}
-                        total={stats.bottleCollection.pending}
+                        delivered={stats.bottleCollection?.collected ?? 0}
+                        total={stats.bottleCollection?.pending ?? 0}
                         label="Collected"
                         totalLabel="Pending"
                     />
                     <OperationalCard
                         title="Cash Collection"
                         icon={IndianRupee}
-                        delivered={stats.cashCollection.request}
-                        total={stats.cashCollection.collected}
-                        accepted={stats.cashCollection.accepted}
+                        delivered={stats.cashCollection?.request ?? 0}
+                        total={stats.cashCollection?.collected ?? 0}
+                        accepted={stats.cashCollection?.accepted ?? 0}
                         label="Request"
                         totalLabel="Collection"
                         acceptedLabel="Accepted"
@@ -478,7 +481,7 @@ export default function AdminDashboard({
                         title="Latest Pending Refunds"
                         viewAllLink="#"
                         headers={['Customer Name', 'Hub Name', 'Refund Amount']}
-                        data={stats.pendingRefunds.map((refund) => [
+                        data={(stats.pendingRefunds ?? []).map((refund) => [
                             refund.customerName,
                             refund.hubName,
                             formatCurrency(refund.refundAmount),
@@ -488,7 +491,7 @@ export default function AdminDashboard({
                         title="Low Wallet/Credit Amount"
                         viewAllLink="#"
                         headers={['Customer Name', 'Hub Name', 'Tomorrow Ledger balance', 'Tomorrow Order value']}
-                        data={stats.lowWalletCustomers.map((customer) => [
+                        data={(stats.lowWalletCustomers ?? []).map((customer) => [
                             customer.customerName,
                             customer.hubName,
                             formatCurrency(customer.tomorrowLedgerBalance),
@@ -519,7 +522,7 @@ export default function AdminDashboard({
                                 View All
                             </button>
                         </div>
-                        {stats.subscriptionsEnds.length === 0 ? (
+                        {(stats.subscriptionsEnds ?? []).length === 0 ? (
                             <div className="py-8 text-center sm:py-10 lg:py-12">
                                 <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 sm:h-11 sm:w-11 lg:h-12 lg:w-12">
                                     <Package className="h-5 w-5 text-gray-400 lg:h-6 lg:w-6" />
@@ -529,7 +532,7 @@ export default function AdminDashboard({
                             </div>
                         ) : (
                             <div className="space-y-2 sm:space-y-2.5 lg:space-y-3">
-                                {stats.subscriptionsEnds.map((sub) => (
+                                {(stats.subscriptionsEnds ?? []).map((sub) => (
                                     <div
                                         key={sub.id}
                                         className="flex items-center justify-between rounded-md border border-gray-100 bg-gray-50/50 px-2.5 py-2 transition-colors hover:bg-gray-50 sm:rounded-lg sm:px-3 sm:py-2.5 lg:px-4 lg:py-3"
@@ -576,7 +579,7 @@ export default function AdminDashboard({
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {stats.latestRecharges.map((recharge) => (
+                                    {(stats.latestRecharges ?? []).map((recharge) => (
                                         <tr key={recharge.id} className="transition-colors hover:bg-gray-50/50">
                                             <td className="whitespace-nowrap px-2 py-1.5 text-[10px] text-gray-900 first:pl-3 sm:px-3 sm:py-2 sm:text-xs sm:first:pl-4 lg:first:pl-6">
                                                 {formatDateTime(recharge.dateTime)}
@@ -609,7 +612,7 @@ export default function AdminDashboard({
                         </button>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 lg:gap-4 xl:grid-cols-4">
-                        {stats.riders.map((rider) => (
+                        {(stats.riders ?? []).map((rider) => (
                             <RiderCard key={rider.id} rider={rider} />
                         ))}
                     </div>

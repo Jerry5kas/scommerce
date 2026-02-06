@@ -1,4 +1,4 @@
-import AppLayout from '@/layouts/AppLayout';
+import UserLayout from '@/layouts/UserLayout';
 import { Head, router } from '@inertiajs/react';
 import { Bell, Check, CheckCheck, Package, Wallet } from 'lucide-react';
 
@@ -45,7 +45,7 @@ export default function NotificationsIndex({ notifications, unreadCount }: Props
     };
 
     return (
-        <AppLayout>
+        <UserLayout>
             <Head title="Notifications" />
 
             <div className="mx-auto max-w-3xl px-4 py-8">
@@ -122,7 +122,7 @@ export default function NotificationsIndex({ notifications, unreadCount }: Props
                     </div>
                 )}
             </div>
-        </AppLayout>
+        </UserLayout>
     );
 }
 

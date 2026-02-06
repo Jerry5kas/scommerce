@@ -10,6 +10,19 @@ import {
     Package,
     Truck,
     Users,
+    ShoppingCart,
+    Calendar,
+    CreditCard,
+    Wallet,
+    PackageCheck,
+    Milk,
+    Award,
+    UserPlus,
+    Ticket,
+    Megaphone,
+    LayoutGrid,
+    Bell,
+    BarChart3,
     type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -22,12 +35,25 @@ interface NavItem {
 
 const navItems: NavItem[] = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { label: 'Users', href: '/admin/users', icon: Users },
     { label: 'Zones', href: '/admin/zones', icon: MapPin },
     { label: 'Drivers', href: '/admin/drivers', icon: Truck },
     { label: 'Categories', href: '/admin/categories', icon: FolderOpen },
     { label: 'Collections', href: '/admin/collections', icon: Image },
     { label: 'Products', href: '/admin/products', icon: Package },
+    { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+    { label: 'Subscriptions', href: '/admin/subscriptions', icon: Calendar },
+    { label: 'Payments', href: '/admin/payments', icon: CreditCard },
+    { label: 'Wallets', href: '/admin/wallets', icon: Wallet },
+    { label: 'Deliveries', href: '/admin/deliveries', icon: PackageCheck },
+    { label: 'Bottles', href: '/admin/bottles', icon: Milk },
+    { label: 'Loyalty', href: '/admin/loyalty', icon: Award },
+    { label: 'Referrals', href: '/admin/referrals', icon: UserPlus },
+    { label: 'Coupons', href: '/admin/coupons', icon: Ticket },
+    { label: 'Campaigns', href: '/admin/campaigns', icon: Megaphone },
+    { label: 'Banners', href: '/admin/banners', icon: LayoutGrid },
+    { label: 'Notifications', href: '/admin/notifications', icon: Bell },
 ];
 
 interface AdminSidebarProps {
