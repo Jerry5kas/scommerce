@@ -49,7 +49,8 @@ export default function AdminProductsManageZones({ product, zones }: AdminProduc
             price_override: z.price_override === '' ? null : Number(z.price_override),
             stock_quantity: z.stock_quantity === '' ? null : Number(z.stock_quantity),
         }));
-        form.transform(() => ({ zones: payload })).put('/admin/products/' + product.id + '/zones');
+        form.transform(() => ({ zones: payload }));
+        form.put('/admin/products/' + product.id + '/zones');
     };
 
     return (

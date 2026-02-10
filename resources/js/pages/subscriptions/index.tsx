@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { CalendarDays, ChevronRight, Package, Pause, Play, Plus, X } from 'lucide-react';
 import UserLayout from '@/layouts/UserLayout';
+import type React from 'react';
 
 interface SubscriptionPlan {
     id: number;
@@ -47,7 +48,7 @@ const statusColors: Record<string, string> = {
     expired: 'bg-gray-100 text-gray-800',
 };
 
-const statusIcons: Record<string, JSX.Element> = {
+const statusIcons: Record<string, React.ReactNode> = {
     active: <Play className="h-3 w-3" />,
     paused: <Pause className="h-3 w-3" />,
     cancelled: <X className="h-3 w-3" />,

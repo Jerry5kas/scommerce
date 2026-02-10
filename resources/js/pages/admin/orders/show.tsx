@@ -20,6 +20,7 @@ import {
     Edit3,
 } from 'lucide-react';
 import { useState } from 'react';
+import type React from 'react';
 
 interface OrderItem {
     id: number;
@@ -113,7 +114,7 @@ interface OrderShowProps {
     drivers: Driver[];
 }
 
-const statusConfig: Record<string, { color: string; bgColor: string; icon: JSX.Element }> = {
+const statusConfig: Record<string, { color: string; bgColor: string; icon: React.ReactNode }> = {
     pending: { color: 'text-yellow-800', bgColor: 'bg-yellow-100', icon: <Clock className="h-4 w-4" /> },
     confirmed: { color: 'text-blue-800', bgColor: 'bg-blue-100', icon: <CheckCircle className="h-4 w-4" /> },
     processing: { color: 'text-purple-800', bgColor: 'bg-purple-100', icon: <Package className="h-4 w-4" /> },

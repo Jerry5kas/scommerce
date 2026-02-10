@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Pencil, MapPin } from 'lucide-react';
+import { ArrowLeft, Pencil, MapPin, Ban, CheckCircle } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
 
 interface AddressData {
@@ -70,6 +70,27 @@ export default function AdminUsersShow({ user }: AdminUsersShowProps) {
                             <Pencil className="h-4 w-4" />
                             Edit
                         </Link>
+                        {user.is_active ? (
+                            <Link
+                                href={`/admin/users/${user.id}/block`}
+                                method="post"
+                                as="button"
+                                className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+                            >
+                                <Ban className="h-4 w-4" />
+                                Block
+                            </Link>
+                        ) : (
+                            <Link
+                                href={`/admin/users/${user.id}/unblock`}
+                                method="post"
+                                as="button"
+                                className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+                            >
+                                <CheckCircle className="h-4 w-4" />
+                                Unblock
+                            </Link>
+                        )}
                     </div>
                 </div>
                 <div>

@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\Subscription;
 use App\Models\SubscriptionItem;
 use App\Models\SubscriptionPlan;
+use App\Services\NotificationService;
 use App\Services\SubscriptionScheduleService;
 use App\Services\SubscriptionValidationService;
 use Carbon\Carbon;
@@ -25,7 +26,8 @@ class SubscriptionController extends Controller
 {
     public function __construct(
         private SubscriptionScheduleService $scheduleService,
-        private SubscriptionValidationService $validationService
+        private SubscriptionValidationService $validationService,
+        private NotificationService $notificationService
     ) {}
 
     /**
@@ -166,6 +168,8 @@ class SubscriptionController extends Controller
                 return $subscription;
             });
 
+            $this->notificationService->notifySubscriptionCreated($subscription);
+
             return redirect()->route('subscriptions.show', $subscription)
                 ->with('success', 'Subscription created successfully!');
         } catch (\Exception $e) {
@@ -263,6 +267,9 @@ class SubscriptionController extends Controller
                 }
             });
 
+            $subscription->refresh();
+            $this->notificationService->notifySubscriptionUpdated($subscription);
+
             return redirect()->route('subscriptions.show', $subscription)
                 ->with('success', 'Subscription updated successfully!');
         } catch (\Exception $e) {
@@ -291,6 +298,8 @@ class SubscriptionController extends Controller
             : null;
 
         $subscription->pause($pausedUntil);
+        $subscription->refresh();
+        $this->notificationService->notifySubscriptionPaused($subscription);
 
         return back()->with('success', 'Subscription paused successfully.');
     }
@@ -312,6 +321,8 @@ class SubscriptionController extends Controller
         }
 
         $subscription->resume();
+        $subscription->refresh();
+        $this->notificationService->notifySubscriptionResumed($subscription);
 
         return back()->with('success', 'Subscription resumed successfully.');
     }
@@ -333,6 +344,8 @@ class SubscriptionController extends Controller
         }
 
         $subscription->cancel($request->validated('reason'));
+        $subscription->refresh();
+        $this->notificationService->notifySubscriptionCancelled($subscription);
 
         return redirect()->route('subscriptions.index')
             ->with('success', 'Subscription cancelled successfully.');
@@ -360,6 +373,9 @@ class SubscriptionController extends Controller
             Carbon::parse($validated['vacation_end'])
         );
 
+        $subscription->refresh();
+        $this->notificationService->notifySubscriptionVacationSet($subscription);
+
         return back()->with('success', 'Vacation hold set successfully.');
     }
 
@@ -376,6 +392,8 @@ class SubscriptionController extends Controller
         }
 
         $subscription->clearVacation();
+        $subscription->refresh();
+        $this->notificationService->notifySubscriptionVacationCleared($subscription);
 
         return back()->with('success', 'Vacation hold cleared.');
     }

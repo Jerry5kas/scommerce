@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
+use App\Services\NotificationService;
 use App\Services\SubscriptionOrderService;
 use App\Services\SubscriptionScheduleService;
 use Carbon\Carbon;
@@ -20,7 +21,8 @@ class SubscriptionController extends Controller
 {
     public function __construct(
         private SubscriptionScheduleService $scheduleService,
-        private SubscriptionOrderService $orderService
+        private SubscriptionOrderService $orderService,
+        private NotificationService $notificationService
     ) {}
 
     /**
@@ -225,6 +227,8 @@ class SubscriptionController extends Controller
             : null;
 
         $subscription->pause($pausedUntil);
+        $subscription->refresh();
+        $this->notificationService->notifySubscriptionPaused($subscription);
 
         return back()->with('success', 'Subscription paused.');
     }
@@ -239,6 +243,8 @@ class SubscriptionController extends Controller
         }
 
         $subscription->resume();
+        $subscription->refresh();
+        $this->notificationService->notifySubscriptionResumed($subscription);
 
         return back()->with('success', 'Subscription resumed.');
     }
@@ -257,6 +263,8 @@ class SubscriptionController extends Controller
         }
 
         $subscription->cancel($validated['reason'] ?? 'Cancelled by admin');
+        $subscription->refresh();
+        $this->notificationService->notifySubscriptionCancelled($subscription);
 
         return redirect()->route('admin.subscriptions.index')
             ->with('success', 'Subscription cancelled.');

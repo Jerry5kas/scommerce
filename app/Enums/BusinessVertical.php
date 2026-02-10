@@ -24,6 +24,7 @@ enum BusinessVertical: string
         foreach (self::cases() as $case) {
             $out[$case->value] = $case->label();
         }
+
         return $out;
     }
 

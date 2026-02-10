@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
@@ -74,5 +75,51 @@ class UserController extends Controller
         $address->autoAssignZone();
 
         return redirect()->back()->with('message', 'Address updated.');
+    }
+
+    public function block(User $user): RedirectResponse
+    {
+        $user->update(['is_active' => false]);
+
+        return redirect()->back()->with('message', 'User blocked.');
+    }
+
+    public function unblock(User $user): RedirectResponse
+    {
+        $user->update(['is_active' => true]);
+
+        return redirect()->back()->with('message', 'User unblocked.');
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $role = $request->query('role');
+        $query = User::query()->whereIn('role', [User::ROLE_CUSTOMER, User::ROLE_DRIVER]);
+        if (in_array($role, [User::ROLE_CUSTOMER, User::ROLE_DRIVER], true)) {
+            $query->where('role', $role);
+        }
+
+        $filename = 'users_export_'.now()->format('Ymd_His').'.csv';
+
+        return response()->streamDownload(function () use ($query) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['id', 'name', 'phone', 'email', 'role', 'is_active', 'created_at']);
+            $query->orderBy('id')->chunk(500, function ($chunk) use ($handle) {
+                foreach ($chunk as $u) {
+                    fputcsv($handle, [
+                        $u->id,
+                        $u->name,
+                        $u->phone,
+                        $u->email,
+                        $u->role,
+                        $u->is_active ? 1 : 0,
+                        $u->created_at?->toDateTimeString(),
+                    ]);
+                }
+            });
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 }

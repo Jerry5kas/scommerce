@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
+use App\Http\Controllers\Admin\ReportsController as AdminReportsController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -47,6 +48,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
         Route::put('users/{user}', [AdminUserController::class, 'update'])->name('users.update');
         Route::put('users/{user}/addresses/{address}', [AdminUserController::class, 'updateAddress'])->name('users.addresses.update');
+        Route::post('users/{user}/block', [AdminUserController::class, 'block'])->name('users.block');
+        Route::post('users/{user}/unblock', [AdminUserController::class, 'unblock'])->name('users.unblock');
+        Route::get('users/export', [AdminUserController::class, 'export'])->name('users.export');
 
         Route::resource('zones', AdminZoneController::class)->names('zones');
         Route::post('zones/{zone}/toggle-status', [AdminZoneController::class, 'toggleStatus'])->name('zones.toggle-status');
@@ -171,5 +175,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('analytics/funnel', [AdminAnalyticsController::class, 'funnel'])->name('analytics.funnel');
         Route::get('analytics/revenue', [AdminAnalyticsController::class, 'revenue'])->name('analytics.revenue');
         Route::get('analytics/products', [AdminAnalyticsController::class, 'products'])->name('analytics.products');
+
+        // Reports (Phase 14)
+        Route::get('reports', [AdminReportsController::class, 'index'])->name('reports.index');
     });
 });

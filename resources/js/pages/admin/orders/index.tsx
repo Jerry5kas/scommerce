@@ -15,6 +15,7 @@ import {
     RefreshCw,
 } from 'lucide-react';
 import { useState } from 'react';
+import type React from 'react';
 
 interface OrderItem {
     id: number;
@@ -84,7 +85,7 @@ interface OrdersIndexProps {
     filters: Filters;
 }
 
-const statusConfig: Record<string, { color: string; bgColor: string; icon: JSX.Element }> = {
+const statusConfig: Record<string, { color: string; bgColor: string; icon: React.ReactNode }> = {
     pending: { color: 'text-yellow-800', bgColor: 'bg-yellow-100', icon: <Clock className="h-3 w-3" /> },
     confirmed: { color: 'text-blue-800', bgColor: 'bg-blue-100', icon: <CheckCircle className="h-3 w-3" /> },
     processing: { color: 'text-purple-800', bgColor: 'bg-purple-100', icon: <Package className="h-3 w-3" /> },

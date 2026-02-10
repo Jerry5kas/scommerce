@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
+import type React from 'react';
 
 interface OrderItem {
     id: number;
@@ -95,7 +96,7 @@ interface OrderShowProps {
     statusOptions: Record<string, string>;
 }
 
-const statusConfig: Record<string, { color: string; icon: JSX.Element; bgColor: string }> = {
+const statusConfig: Record<string, { color: string; icon: React.ReactNode; bgColor: string }> = {
     pending: {
         color: 'text-yellow-800',
         bgColor: 'bg-yellow-100',

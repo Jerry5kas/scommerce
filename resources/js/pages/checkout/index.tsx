@@ -83,6 +83,8 @@ const DELIVERY_SLOTS = [
     { id: 'evening', label: 'Evening', time: '4 PM – 7 PM' },
 ] as const;
 
+type DeliverySlotId = (typeof DELIVERY_SLOTS)[number]['id'];
+
 export default function CheckoutIndex({
     cart,
     items,
@@ -95,7 +97,13 @@ export default function CheckoutIndex({
 }: CheckoutIndexProps) {
     const [showAddAddress, setShowAddAddress] = useState(false);
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm<{
+        user_address_id: number | null;
+        scheduled_delivery_date: string;
+        scheduled_delivery_time: DeliverySlotId;
+        payment_method: string;
+        delivery_instructions: string;
+    }>({
         user_address_id: defaultAddressId || addresses[0]?.id || null,
         scheduled_delivery_date: deliveryDates[0]?.date || '',
         scheduled_delivery_time: DELIVERY_SLOTS[0].id,
@@ -442,11 +450,11 @@ export default function CheckoutIndex({
                                         </div>
 
                                         {/* Global errors */}
-                                        {errors.checkout && (
+                                        {((errors as unknown as Record<string, string>).checkout) && (
                                             <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
                                                 <p className="flex items-center gap-1.5">
                                                     <AlertCircle className="h-4 w-4 shrink-0" />
-                                                    {errors.checkout}
+                                                    {(errors as unknown as Record<string, string>).checkout}
                                                 </p>
                                             </div>
                                         )}

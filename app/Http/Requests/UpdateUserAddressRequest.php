@@ -11,6 +11,7 @@ class UpdateUserAddressRequest extends FormRequest
     public function authorize(): bool
     {
         $address = $this->route('address');
+
         return $address && $this->user() && $address->user_id === $this->user()->id;
     }
 

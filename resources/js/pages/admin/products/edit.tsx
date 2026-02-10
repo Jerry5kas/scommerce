@@ -108,7 +108,8 @@ export default function AdminProductsEdit({ product, verticalOptions, categories
                 max_quantity: form.data.max_quantity ? Number(form.data.max_quantity) : null,
                 bottle_deposit: form.data.bottle_deposit ? Number(form.data.bottle_deposit) : null,
             };
-            form.transform(() => payload).put('/admin/products/' + product.id);
+            form.transform(() => payload);
+            form.put('/admin/products/' + product.id);
         } catch (err) {
             setIsUploading(false);
             alert('Failed to upload image: ' + (err instanceof Error ? err.message : 'Unknown error'));

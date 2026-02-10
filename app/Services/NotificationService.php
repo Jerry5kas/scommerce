@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Delivery;
 use App\Models\DeviceToken;
 use App\Models\Notification;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -290,6 +292,201 @@ class NotificationService
         $device->deactivate();
 
         return true;
+    }
+
+    // Domain-specific helpers: Subscriptions
+
+    public function notifySubscriptionCreated(Subscription $subscription): void
+    {
+        $user = $subscription->user;
+        $plan = $subscription->plan?->name ?? 'Subscription';
+        $nextDate = $subscription->next_delivery_date?->toFormattedDateString();
+
+        $title = 'Subscription Created';
+        $message = "Your {$plan} subscription has been created. Next delivery: {$nextDate}.";
+        $data = [
+            'subscription_id' => $subscription->id,
+            'status' => $subscription->status,
+            'next_delivery_date' => $subscription->next_delivery_date?->toDateString(),
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
+    }
+
+    public function notifySubscriptionUpdated(Subscription $subscription): void
+    {
+        $user = $subscription->user;
+        $plan = $subscription->plan?->name ?? 'Subscription';
+        $title = 'Subscription Updated';
+        $message = "Your {$plan} subscription has been updated. Next delivery: ".$subscription->next_delivery_date?->toFormattedDateString();
+        $data = [
+            'subscription_id' => $subscription->id,
+            'status' => $subscription->status,
+            'next_delivery_date' => $subscription->next_delivery_date?->toDateString(),
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
+    }
+
+    public function notifySubscriptionPaused(Subscription $subscription): void
+    {
+        $user = $subscription->user;
+        $until = $subscription->paused_until?->toFormattedDateString();
+        $title = 'Subscription Paused';
+        $message = $until
+            ? "Your subscription is paused until {$until}."
+            : 'Your subscription has been paused.';
+        $data = [
+            'subscription_id' => $subscription->id,
+            'status' => $subscription->status,
+            'paused_until' => $subscription->paused_until?->toDateString(),
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
+    }
+
+    public function notifySubscriptionResumed(Subscription $subscription): void
+    {
+        $user = $subscription->user;
+        $title = 'Subscription Resumed';
+        $message = 'Your subscription has been resumed. Next delivery: '.$subscription->next_delivery_date?->toFormattedDateString();
+        $data = [
+            'subscription_id' => $subscription->id,
+            'status' => $subscription->status,
+            'next_delivery_date' => $subscription->next_delivery_date?->toDateString(),
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
+    }
+
+    public function notifySubscriptionCancelled(Subscription $subscription): void
+    {
+        $user = $subscription->user;
+        $title = 'Subscription Cancelled';
+        $message = 'Your subscription has been cancelled.';
+        $data = [
+            'subscription_id' => $subscription->id,
+            'status' => $subscription->status,
+            'cancelled_at' => $subscription->cancelled_at?->toDateTimeString(),
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
+    }
+
+    public function notifySubscriptionVacationSet(Subscription $subscription): void
+    {
+        $user = $subscription->user;
+        $title = 'Vacation Hold Set';
+        $message = 'Vacation hold set from '.$subscription->vacation_start?->toFormattedDateString().' to '.$subscription->vacation_end?->toFormattedDateString().'.';
+        $data = [
+            'subscription_id' => $subscription->id,
+            'status' => $subscription->status,
+            'vacation_start' => $subscription->vacation_start?->toDateString(),
+            'vacation_end' => $subscription->vacation_end?->toDateString(),
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
+    }
+
+    public function notifySubscriptionVacationCleared(Subscription $subscription): void
+    {
+        $user = $subscription->user;
+        $title = 'Vacation Hold Cleared';
+        $message = 'Vacation hold has been cleared.';
+        $data = [
+            'subscription_id' => $subscription->id,
+            'status' => $subscription->status,
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
+    }
+
+    // Domain-specific helpers: Deliveries
+
+    public function notifyDeliveryAssigned(Delivery $delivery): void
+    {
+        $user = $delivery->user;
+        $driver = $delivery->driver;
+        $title = 'Delivery Assigned';
+        $message = 'Your order '.$delivery->order?->order_number.' is assigned. Scheduled: '.$delivery->scheduled_date?->toFormattedDateString().($delivery->scheduled_time ? ' '.$delivery->scheduled_time : '').'. Driver: '.($driver?->name ?? 'TBD').'.';
+        $data = [
+            'delivery_id' => $delivery->id,
+            'order_id' => $delivery->order_id,
+            'status' => $delivery->status,
+            'scheduled_date' => $delivery->scheduled_date?->toDateString(),
+            'scheduled_time' => $delivery->scheduled_time,
+            'driver' => $driver ? ['name' => $driver->name, 'phone' => $driver->phone] : null,
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
+    }
+
+    public function notifyDeliveryOutForDelivery(Delivery $delivery): void
+    {
+        $user = $delivery->user;
+        $driver = $delivery->driver;
+        $title = 'Out for Delivery';
+        $message = 'Your order '.$delivery->order?->order_number.' is out for delivery. Driver: '.($driver?->name ?? 'TBD').', Phone: '.($driver?->phone ?? 'N/A').'.';
+        $data = [
+            'delivery_id' => $delivery->id,
+            'order_id' => $delivery->order_id,
+            'status' => $delivery->status,
+            'driver' => $driver ? ['name' => $driver->name, 'phone' => $driver->phone] : null,
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
+    }
+
+    public function notifyDeliveryDelivered(Delivery $delivery): void
+    {
+        $user = $delivery->user;
+        $title = 'Delivered';
+        $message = 'Your order '.$delivery->order?->order_number.' has been delivered.';
+        $data = [
+            'delivery_id' => $delivery->id,
+            'order_id' => $delivery->order_id,
+            'status' => $delivery->status,
+            'delivered_at' => $delivery->delivered_at?->toDateTimeString(),
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
+    }
+
+    public function notifyDeliveryFailed(Delivery $delivery): void
+    {
+        $user = $delivery->user;
+        $title = 'Delivery Failed';
+        $message = 'Delivery failed for order '.$delivery->order?->order_number.'. We will contact you for assistance.';
+        $data = [
+            'delivery_id' => $delivery->id,
+            'order_id' => $delivery->order_id,
+            'status' => $delivery->status,
+            'failure_reason' => $delivery->failure_reason,
+        ];
+
+        $this->sendPush($user, $title, $message, $data);
+        $this->sendInApp($user, $title, $message, $data);
+        $this->sendSMS($user, $message, $data);
     }
 
     // Channel-specific send methods

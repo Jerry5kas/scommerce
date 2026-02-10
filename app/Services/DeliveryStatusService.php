@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Log;
 
 class DeliveryStatusService
 {
+    public function __construct(
+        private NotificationService $notificationService
+    ) {}
+
     /**
      * Status transitions map
      *
@@ -112,14 +116,17 @@ class DeliveryStatusService
         switch ($newStatus) {
             case Delivery::STATUS_OUT_FOR_DELIVERY:
                 $order->update(['status' => \App\Models\Order::STATUS_OUT_FOR_DELIVERY]);
+                $this->notificationService->notifyDeliveryOutForDelivery($delivery);
                 break;
 
             case Delivery::STATUS_DELIVERED:
                 $order->markAsDelivered();
+                $this->notificationService->notifyDeliveryDelivered($delivery);
                 break;
 
             case Delivery::STATUS_FAILED:
                 // Keep order status as is - admin needs to decide what to do
+                $this->notificationService->notifyDeliveryFailed($delivery);
                 break;
 
             case Delivery::STATUS_CANCELLED:
@@ -127,7 +134,9 @@ class DeliveryStatusService
                 break;
         }
 
-        // TODO: Trigger notifications (Phase 12)
+        if ($newStatus === Delivery::STATUS_ASSIGNED && $oldStatus !== Delivery::STATUS_ASSIGNED) {
+            $this->notificationService->notifyDeliveryAssigned($delivery);
+        }
     }
 
     /**

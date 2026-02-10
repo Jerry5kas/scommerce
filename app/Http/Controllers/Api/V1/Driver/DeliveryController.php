@@ -8,6 +8,7 @@ use App\Models\Delivery;
 use App\Models\DeliveryTracking;
 use App\Services\DeliveryProofService;
 use App\Services\DeliveryStatusService;
+use App\Services\NotificationService;
 use App\Services\RouteAssignmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,8 @@ class DeliveryController extends Controller
     public function __construct(
         private DeliveryStatusService $statusService,
         private DeliveryProofService $proofService,
-        private RouteAssignmentService $routeService
+        private RouteAssignmentService $routeService,
+        private NotificationService $notificationService
     ) {}
 
     /**
@@ -78,6 +80,8 @@ class DeliveryController extends Controller
 
         try {
             $delivery->markAsOutForDelivery();
+
+            $this->notificationService->notifyDeliveryOutForDelivery($delivery->fresh());
 
             return response()->json([
                 'success' => true,
@@ -165,6 +169,8 @@ class DeliveryController extends Controller
             $delivery->update($updates);
         }
 
+        $this->notificationService->notifyDeliveryDelivered($delivery->fresh());
+
         return response()->json([
             'success' => true,
             'message' => 'Delivery completed successfully.',
@@ -189,6 +195,8 @@ class DeliveryController extends Controller
 
         try {
             $delivery->markAsFailed($request->reason);
+
+            $this->notificationService->notifyDeliveryFailed($delivery->fresh());
 
             return response()->json([
                 'success' => true,

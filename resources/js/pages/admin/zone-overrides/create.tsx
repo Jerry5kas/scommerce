@@ -46,7 +46,8 @@ export default function AdminZoneOverridesCreate({ zone, users, addresses }: Adm
             user_id: form.data.user_id === '' ? null : Number(form.data.user_id),
             address_id: form.data.address_id === '' ? null : Number(form.data.address_id),
         };
-        form.transform(() => data).post(`/admin/zones/${zone.id}/overrides`);
+        form.transform(() => data);
+        form.post(`/admin/zones/${zone.id}/overrides`);
     };
 
     return (

@@ -81,7 +81,8 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
                 collection_id: form.data.collection_id || null,
                 bottle_deposit: form.data.bottle_deposit ? Number(form.data.bottle_deposit) : null,
             };
-            form.transform(() => payload).post('/admin/products');
+            form.transform(() => payload);
+            form.post('/admin/products');
         } catch (err) {
             setIsUploading(false);
             alert('Failed to upload image: ' + (err instanceof Error ? err.message : 'Unknown error'));

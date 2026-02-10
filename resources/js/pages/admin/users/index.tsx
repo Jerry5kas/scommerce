@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { Eye, Pencil, Users } from 'lucide-react';
+import { Eye, Pencil, Users, Ban, CheckCircle, Download } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
 
 interface UserData {
@@ -48,6 +48,13 @@ export default function AdminUsersIndex({ users, filterRole }: AdminUsersIndexPr
                                 {r.label}
                             </Link>
                         ))}
+                        <Link
+                            href={`/admin/users/export${filterRole ? `?role=${filterRole}` : ''}`}
+                            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                        >
+                            <Download className="h-4 w-4" />
+                            Export CSV
+                        </Link>
                     </div>
                 </div>
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -103,6 +110,27 @@ export default function AdminUsersIndex({ users, filterRole }: AdminUsersIndexPr
                                                 >
                                                     <Pencil className="h-4 w-4" />
                                                 </Link>
+                                                {user.is_active ? (
+                                                    <Link
+                                                        href={`/admin/users/${user.id}/block`}
+                                                        method="post"
+                                                        as="button"
+                                                        className="rounded p-2 text-red-600 hover:bg-red-50"
+                                                        title="Block"
+                                                    >
+                                                        <Ban className="h-4 w-4" />
+                                                    </Link>
+                                                ) : (
+                                                    <Link
+                                                        href={`/admin/users/${user.id}/unblock`}
+                                                        method="post"
+                                                        as="button"
+                                                        className="rounded p-2 text-emerald-600 hover:bg-emerald-50"
+                                                        title="Unblock"
+                                                    >
+                                                        <CheckCircle className="h-4 w-4" />
+                                                    </Link>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
