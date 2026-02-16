@@ -7,11 +7,12 @@ use App\Http\Requests\Admin\UpdateUserAddressRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
 use App\Models\UserAddress;
+use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Inertia\Inertia;
 use Inertia\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
@@ -77,17 +78,31 @@ class UserController extends Controller
         return redirect()->back()->with('message', 'Address updated.');
     }
 
-    public function block(User $user): RedirectResponse
+    public function block(User $user, ActivityLogService $activityLogService): RedirectResponse
     {
         $user->update(['is_active' => false]);
-
+        $activityLogService->log(
+            'user.blocked',
+            $user,
+            $user,
+            null,
+            'User blocked by admin',
+            ['is_active' => false]
+        );
         return redirect()->back()->with('message', 'User blocked.');
     }
 
-    public function unblock(User $user): RedirectResponse
+    public function unblock(User $user, ActivityLogService $activityLogService): RedirectResponse
     {
         $user->update(['is_active' => true]);
-
+        $activityLogService->log(
+            'user.unblocked',
+            $user,
+            $user,
+            null,
+            'User unblocked by admin',
+            ['is_active' => true]
+        );
         return redirect()->back()->with('message', 'User unblocked.');
     }
 
@@ -99,8 +114,7 @@ class UserController extends Controller
             $query->where('role', $role);
         }
 
-        $filename = 'users_export_'.now()->format('Ymd_His').'.csv';
-
+        $filename = 'users_export_' . now()->format('Ymd_His') . '.csv';
         return response()->streamDownload(function () use ($query) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['id', 'name', 'phone', 'email', 'role', 'is_active', 'created_at']);

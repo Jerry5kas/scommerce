@@ -6,6 +6,7 @@
 |--------------------------------------------------------------------------
 */
 
+use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Admin\Auth\LoginController as AdminLoginController;
 use App\Http\Controllers\Admin\BannerController as AdminBannerController;
@@ -178,5 +179,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Reports (Phase 14)
         Route::get('reports', [AdminReportsController::class, 'index'])->name('reports.index');
+
+        // Activity Logs (Phase 14)
+        Route::get('activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');
     });
 });

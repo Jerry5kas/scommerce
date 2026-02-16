@@ -23,6 +23,7 @@ import {
     LayoutGrid,
     Bell,
     BarChart3,
+    FileText,
     type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -54,6 +55,8 @@ const navItems: NavItem[] = [
     { label: 'Campaigns', href: '/admin/campaigns', icon: Megaphone },
     { label: 'Banners', href: '/admin/banners', icon: LayoutGrid },
     { label: 'Notifications', href: '/admin/notifications', icon: Bell },
+    { label: 'Reports', href: '/admin/reports', icon: FileText },
+    { label: 'Activity Logs', href: '/admin/activity-logs', icon: FileText },
 ];
 
 interface AdminSidebarProps {
