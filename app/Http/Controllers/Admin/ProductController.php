@@ -78,6 +78,13 @@ class ProductController extends Controller
 
         unset($data['image_file'], $data['image_files']);
 
+        if (array_key_exists('stock_quantity', $data) && ($data['stock_quantity'] === null || $data['stock_quantity'] === '')) {
+            unset($data['stock_quantity']);
+        }
+        if (array_key_exists('min_quantity', $data) && ($data['min_quantity'] === null || $data['min_quantity'] === '')) {
+            unset($data['min_quantity']);
+        }
+
         Product::query()->create($data);
 
         return redirect()->route('admin.products.index')->with('message', 'Product created.');
@@ -122,6 +129,10 @@ class ProductController extends Controller
                 }
                 $data['image'] = $newUrl;
             }
+        }
+
+        if (array_key_exists('image', $data) && ($data['image'] === null || $data['image'] === '')) {
+            unset($data['image']);
         }
 
         // Handle multiple images upload

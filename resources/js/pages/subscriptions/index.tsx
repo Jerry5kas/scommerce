@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { CalendarDays, ChevronRight, Package, Pause, Play, Plus, X } from 'lucide-react';
-import UserLayout from '@/layouts/UserLayout';
 import type React from 'react';
+import UserLayout from '@/layouts/UserLayout';
 
 interface SubscriptionPlan {
     id: number;

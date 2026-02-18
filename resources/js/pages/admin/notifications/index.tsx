@@ -1,7 +1,7 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Bell, RefreshCw, Search } from 'lucide-react';
 import { useState } from 'react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 interface Notification {
     id: string;

@@ -2,8 +2,8 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { useState, useRef } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
-import type { SharedData } from '@/types';
 import { uploadImageToAdmin } from '@/lib/adminUpload';
+import type { SharedData } from '@/types';
 
 interface CategoryOption {
     id: number;
@@ -28,6 +28,8 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+    const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
     const imageInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm({
@@ -39,6 +41,7 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
         category_id: '' as string | number,
         collection_id: null as number | null,
         image: '',
+        images: [] as string[],
         price: '',
         compare_at_price: '',
         cost_price: '',
@@ -61,25 +64,38 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
         e.preventDefault();
         if (isUploading || form.processing) return;
         try {
+            let images = Array.isArray(form.data.images) ? form.data.images : [];
+            const hasUploads = !!imageFile || galleryFiles.length > 0;
+            if (hasUploads) setIsUploading(true);
             if (imageFile) {
-                setIsUploading(true);
                 const url = await uploadImageToAdmin(imageFile, 'products', csrfToken);
                 form.setData('image', url);
                 setImageFile(null);
                 setImagePreview(null);
-                setIsUploading(false);
             }
+            if (galleryFiles.length > 0) {
+                const uploadedUrls: string[] = [];
+                for (const file of galleryFiles) {
+                    const url = await uploadImageToAdmin(file, 'products', csrfToken);
+                    uploadedUrls.push(url);
+                }
+                images = [...images, ...uploadedUrls];
+                setGalleryFiles([]);
+                setGalleryPreviews([]);
+            }
+            if (hasUploads) setIsUploading(false);
             const payload = {
                 ...form.data,
+                images,
                 category_id: form.data.category_id === '' ? undefined : Number(form.data.category_id),
                 price: form.data.price ? Number(form.data.price) : 0,
                 compare_at_price: form.data.compare_at_price ? Number(form.data.compare_at_price) : null,
                 cost_price: form.data.cost_price ? Number(form.data.cost_price) : null,
-                stock_quantity: form.data.stock_quantity ? Number(form.data.stock_quantity) : null,
-                min_quantity: form.data.min_quantity ? Number(form.data.min_quantity) : null,
-                max_quantity: form.data.max_quantity ? Number(form.data.max_quantity) : null,
+                stock_quantity: form.data.stock_quantity === '' ? undefined : Number(form.data.stock_quantity),
+                min_quantity: form.data.min_quantity === '' ? undefined : Number(form.data.min_quantity),
+                max_quantity: form.data.max_quantity === '' ? undefined : Number(form.data.max_quantity),
                 collection_id: form.data.collection_id || null,
-                bottle_deposit: form.data.bottle_deposit ? Number(form.data.bottle_deposit) : null,
+                bottle_deposit: form.data.bottle_deposit === '' ? undefined : Number(form.data.bottle_deposit),
             };
             form.transform(() => payload);
             form.post('/admin/products');
@@ -87,6 +103,14 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
             setIsUploading(false);
             alert('Failed to upload image: ' + (err instanceof Error ? err.message : 'Unknown error'));
         }
+    };
+
+    const handleGalleryFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        if (!files.length) return;
+        setGalleryFiles(files);
+        const previews = files.map((file) => URL.createObjectURL(file));
+        setGalleryPreviews(previews);
     };
 
     return (
@@ -160,8 +184,44 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
                             </label>
                         </div>
                         <div className="relative"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">Or enter URL</span></div></div>
-                        <input type="text" placeholder="https://..." className="mt-3 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.image} onChange={(e) => { form.setData('image', e.target.value); if (e.target.value) { setImageFile(null); setImagePreview(null); } }} disabled={!!imageFile} />
+                        <input
+                            type="text"
+                            placeholder="https://..."
+                            className="mt-3 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm"
+                            value={form.data.image}
+                            onChange={(e) => {
+                                const url = e.target.value;
+                                form.setData('image', url);
+                                if (url) {
+                                    setImageFile(null);
+                                    setImagePreview(url);
+                                } else {
+                                    setImagePreview(null);
+                                }
+                            }}
+                            disabled={!!imageFile}
+                        />
                         {form.errors.image && <p className="mt-1 text-sm text-red-600">{form.errors.image}</p>}
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Additional images</label>
+                        <p className="mt-0.5 mb-2 text-xs text-gray-500">Upload up to 10 extra images</p>
+                        {galleryPreviews.length > 0 && (
+                            <div className="mb-3 flex flex-wrap gap-3">
+                                {galleryPreviews.map((src, index) => (
+                                    <div key={index} className="relative inline-block">
+                                        <img src={src} alt="" className="h-24 w-24 rounded-lg border border-gray-200 object-cover" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <div className="mb-3">
+                            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-[var(--admin-dark-primary)] hover:bg-gray-100">
+                                <Upload className="h-4 w-4" />
+                                <span>{galleryFiles.length > 0 ? `${galleryFiles.length} file(s) selected` : 'Choose additional images'}</span>
+                                <input type="file" multiple accept="image/*" className="hidden" onChange={handleGalleryFilesChange} />
+                            </label>
+                        </div>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-3">
                         <div>

@@ -1,7 +1,7 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { BarChart3, DollarSign, Package, ShoppingCart, TrendingUp, Users } from 'lucide-react';
 import { useState } from 'react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 interface RevenueMetrics {
     total: number;

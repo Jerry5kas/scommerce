@@ -17,8 +17,9 @@ class StoreZoneRequest extends FormRequest
     {
         $pincodes = $this->input('pincodes');
         if (is_string($pincodes)) {
+            $parsed = array_values(array_filter(array_map('trim', preg_split('/[\s,]+/', $pincodes))));
             $this->merge([
-                'pincodes' => array_values(array_filter(array_map('trim', preg_split('/[\s,]+/', $pincodes)))),
+                'pincodes' => array_values(array_unique($parsed)),
             ]);
         }
         $boundary = $this->input('boundary_coordinates');

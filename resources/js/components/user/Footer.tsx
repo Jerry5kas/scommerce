@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { Heart, Mail, MapPin, Send } from 'lucide-react';
+import { useState } from 'react';
 
 const FOOTER_PRODUCTS = [
     { label: 'Welcome Offer Plan', href: '#' },

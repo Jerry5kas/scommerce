@@ -1,5 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react';
-import AdminLayout from '@/layouts/AdminLayout';
 import {
     Package,
     Calendar,
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type React from 'react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 interface OrderItem {
     id: number;

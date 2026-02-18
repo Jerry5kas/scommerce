@@ -1,7 +1,7 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Banknote, CreditCard, Eye, RefreshCw, Search, Wallet } from 'lucide-react';
 import { useState } from 'react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 interface Payment {
     id: number;

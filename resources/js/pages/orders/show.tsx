@@ -17,8 +17,8 @@ import {
     Loader2,
 } from 'lucide-react';
 import { useState } from 'react';
-import UserLayout from '@/layouts/UserLayout';
 import type React from 'react';
+import UserLayout from '@/layouts/UserLayout';
 
 interface OrderItem {
     id: number;

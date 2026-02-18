@@ -10,9 +10,9 @@ use App\Models\UserAddress;
 use App\Services\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
@@ -89,6 +89,7 @@ class UserController extends Controller
             'User blocked by admin',
             ['is_active' => false]
         );
+
         return redirect()->back()->with('message', 'User blocked.');
     }
 
@@ -103,6 +104,7 @@ class UserController extends Controller
             'User unblocked by admin',
             ['is_active' => true]
         );
+
         return redirect()->back()->with('message', 'User unblocked.');
     }
 
@@ -114,7 +116,8 @@ class UserController extends Controller
             $query->where('role', $role);
         }
 
-        $filename = 'users_export_' . now()->format('Ymd_His') . '.csv';
+        $filename = 'users_export_'.now()->format('Ymd_His').'.csv';
+
         return response()->streamDownload(function () use ($query) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['id', 'name', 'phone', 'email', 'role', 'is_active', 'created_at']);

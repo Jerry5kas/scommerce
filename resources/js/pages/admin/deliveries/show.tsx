@@ -1,4 +1,3 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -15,6 +14,7 @@ import {
     AlertTriangle,
 } from 'lucide-react';
 import { useState } from 'react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 interface Driver {
     id: number;

@@ -23,6 +23,7 @@ interface ZoneData {
     drivers_count: number;
     addresses_count: number;
     overrides?: OverrideData[];
+    drivers?: { id: number; employee_id: string; phone: string; is_active: boolean; is_online: boolean }[];
 }
 
 interface AdminZonesShowProps {
@@ -61,13 +62,24 @@ export default function AdminZonesShow({ zone }: AdminZonesShowProps) {
                                 {zone.drivers_count} driver(s), {zone.addresses_count} address(es)
                             </p>
                         </div>
-                        <Link
-                            href={`/admin/zones/${zone.id}/edit`}
-                            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                        >
-                            <Pencil className="h-4 w-4" />
-                            Edit
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href={`/admin/zones/${zone.id}/toggle-status`}
+                                method="post"
+                                as="button"
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                title={zone.is_active ? 'Disable zone' : 'Enable zone'}
+                            >
+                                {zone.is_active ? 'Disable' : 'Enable'}
+                            </Link>
+                            <Link
+                                href={`/admin/zones/${zone.id}/edit`}
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                                <Pencil className="h-4 w-4" />
+                                Edit
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
@@ -137,6 +149,53 @@ export default function AdminZonesShow({ zone }: AdminZonesShowProps) {
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-900">Drivers in this zone</h3>
+                        <Link
+                            href="/admin/drivers/create"
+                            className="inline-flex items-center gap-2 rounded-lg bg-[var(--admin-dark-primary)] px-3 py-2 text-sm font-medium text-white hover:opacity-90"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Add driver
+                        </Link>
+                    </div>
+                    {(!zone.drivers || zone.drivers.length === 0) ? (
+                        <p className="mt-4 text-sm text-gray-500">No drivers assigned to this zone.</p>
+                    ) : (
+                        <div className="mt-4 overflow-x-auto rounded-lg border border-gray-200">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Employee ID</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Phone</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Active</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Online</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 bg-white">
+                                    {zone.drivers.map((d) => (
+                                        <tr key={d.id}>
+                                            <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-900">{d.employee_id}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{d.phone}</td>
+                                            <td className="whitespace-nowrap px-4 py-3">
+                                                <span className={d.is_active ? 'text-green-600' : 'text-gray-400'}>
+                                                    {d.is_active ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="whitespace-nowrap px-4 py-3">
+                                                <span className={d.is_online ? 'text-green-600' : 'text-gray-400'}>
+                                                    {d.is_online ? 'Online' : 'Offline'}
+                                                </span>
                                             </td>
                                         </tr>
                                     ))}

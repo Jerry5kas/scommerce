@@ -1,4 +1,3 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     Calendar,
@@ -12,6 +11,7 @@ import {
     AlertCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 interface Driver {
     id: number;

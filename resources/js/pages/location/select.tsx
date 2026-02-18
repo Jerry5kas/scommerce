@@ -1,6 +1,8 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import * as L from 'leaflet';
 import { MapPin, Search, Check, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import 'leaflet/dist/leaflet.css';
 import UserLayout from '@/layouts/UserLayout';
 import type { SharedData } from '@/types';
 
@@ -24,6 +26,11 @@ export default function LocationSelect({ zones = [] }: LocationSelectPageProps) 
     const [pincode, setPincode] = useState('');
     const [checkResult, setCheckResult] = useState<{ serviceable: boolean; zone?: ZoneData } | null>(null);
     const [checking, setChecking] = useState(false);
+    const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [mapChecking, setMapChecking] = useState(false);
+    const mapContainerRef = useRef<HTMLDivElement | null>(null);
+    const mapInstanceRef = useRef<L.Map | null>(null);
+    const markerRef = useRef<L.Marker | null>(null);
 
     useEffect(() => {
         if (theme) {
@@ -33,6 +40,38 @@ export default function LocationSelect({ zones = [] }: LocationSelectPageProps) 
             document.documentElement.style.setProperty('--theme-tertiary', theme.tertiary);
         }
     }, [theme]);
+
+    useEffect(() => {
+        if (!mapContainerRef.current || mapInstanceRef.current) {
+            return;
+        }
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const map = L.map(mapContainerRef.current).setView([10.0, 76.2], 12);
+        mapInstanceRef.current = map;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors',
+        }).addTo(map);
+
+        map.on('click', (e: L.LeafletMouseEvent) => {
+            const { lat, lng } = e.latlng;
+            setMapLocation({ lat, lng });
+            if (markerRef.current) {
+                markerRef.current.setLatLng(e.latlng);
+            } else {
+                markerRef.current = L.marker(e.latlng).addTo(map);
+            }
+        });
+
+        return () => {
+            map.remove();
+            mapInstanceRef.current = null;
+            markerRef.current = null;
+        };
+    }, []);
 
     const handleCheckPincode = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -62,6 +101,38 @@ export default function LocationSelect({ zones = [] }: LocationSelectPageProps) 
             setCheckResult({ serviceable: false });
         } finally {
             setChecking(false);
+        }
+    };
+
+    const handleCheckMapLocation = async () => {
+        if (!mapLocation) {
+            return;
+        }
+        setMapChecking(true);
+        setCheckResult(null);
+        try {
+            const res = await fetch('/location/check-serviceability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
+                },
+                body: JSON.stringify({
+                    pincode: pincode.replace(/\D/g, '').slice(0, 6),
+                    latitude: mapLocation.lat,
+                    longitude: mapLocation.lng,
+                }),
+            });
+            const data = await res.json();
+            setCheckResult({
+                serviceable: data.serviceable ?? false,
+                zone: data.zone ?? undefined,
+            });
+        } catch {
+            setCheckResult({ serviceable: false });
+        } finally {
+            setMapChecking(false);
         }
     };
 
@@ -128,6 +199,30 @@ export default function LocationSelect({ zones = [] }: LocationSelectPageProps) 
                         )}
                     </div>
                 )}
+
+                <div className="mt-8">
+                    <h2 className="text-lg font-semibold text-gray-900">Pick on map (optional)</h2>
+                    <p className="mt-1 text-sm text-gray-600">
+                        Tap on the map to mark your location. We&apos;ll check if that point is inside a delivery zone.
+                    </p>
+                    <div ref={mapContainerRef} className="mt-3 h-64 w-full overflow-hidden rounded-xl border border-gray-200" />
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                        <div className="text-xs text-gray-600">
+                            {mapLocation
+                                ? `Selected location: ${mapLocation.lat.toFixed(5)}, ${mapLocation.lng.toFixed(5)}`
+                                : 'No location selected yet. Tap anywhere on the map.'}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleCheckMapLocation}
+                            disabled={mapChecking || !mapLocation}
+                            className="shrink-0 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2 text-xs font-medium text-white hover:opacity-90 disabled:opacity-70 flex items-center gap-2"
+                        >
+                            <Search className="h-3 w-3" />
+                            {mapChecking ? 'Checking…' : 'Check this location'}
+                        </button>
+                    </div>
+                </div>
 
                 <div className="mt-8">
                     <h2 className="text-lg font-semibold text-gray-900">Serviceable zones</h2>

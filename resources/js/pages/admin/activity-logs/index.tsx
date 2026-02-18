@@ -1,5 +1,5 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 interface ActivityLogUser {
     id: number;
@@ -127,7 +127,7 @@ export default function ActivityLogsIndex({ logs }: ActivityLogsPageProps) {
                             .filter(isAdminUserPage)
                             .map((link, index) => (
                                 <Link
-                                    // eslint-disable-next-line react/no-array-index-key
+                                     
                                     key={index}
                                     href={link.url ?? url.toString()}
                                     className={`rounded border px-2 py-1 ${

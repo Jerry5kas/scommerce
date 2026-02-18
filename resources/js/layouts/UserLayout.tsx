@@ -1,9 +1,9 @@
 import { usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import type { SharedData } from '@/types';
 import Footer from '@/components/user/Footer';
 import Header from '@/components/user/Header';
 import TopBanner from '@/components/user/TopBanner';
+import type { SharedData } from '@/types';
 
 interface UserLayoutProps {
     children: React.ReactNode;

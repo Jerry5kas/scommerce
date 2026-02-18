@@ -2,8 +2,8 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { useState, useRef } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
-import type { SharedData } from '@/types';
 import { uploadImageToAdmin } from '@/lib/adminUpload';
+import type { SharedData } from '@/types';
 
 interface CategoryOption {
     id: number;

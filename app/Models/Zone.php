@@ -44,8 +44,8 @@ class Zone extends Model
             'is_active' => 'boolean',
             'delivery_charge' => 'decimal:2',
             'min_order_amount' => 'decimal:2',
-            'service_time_start' => 'datetime',
-            'service_time_end' => 'datetime',
+            'service_time_start' => 'string',
+            'service_time_end' => 'string',
         ];
     }
 

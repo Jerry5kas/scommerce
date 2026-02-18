@@ -1,8 +1,8 @@
 import { Head } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, ExternalLink, Heart, MapPin, MapPinned, Mail, Phone, Play, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import UserLayout from '@/layouts/UserLayout';
 import ProductCardMedia, { getMediaList } from '@/components/user/ProductCardMedia';
+import UserLayout from '@/layouts/UserLayout';
 
 interface CarouselSlide {
     id: number;

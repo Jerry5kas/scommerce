@@ -4,6 +4,7 @@
  * - Font Awesome: when installed, import this file to register icons; use <FontAwesomeIcon icon={iconName} /> in components.
  */
 import { library } from '@fortawesome/fontawesome-svg-core';
+import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import {
     faEnvelope,
     faMapMarkerAlt,
@@ -12,7 +13,6 @@ import {
     faCheck,
     faHeart,
 } from '@fortawesome/free-solid-svg-icons';
-import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 
 library.add(
     faEnvelope,

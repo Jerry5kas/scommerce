@@ -1,6 +1,6 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Edit, Tag, TrendingUp, Users } from 'lucide-react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 interface Coupon {
     id: number;

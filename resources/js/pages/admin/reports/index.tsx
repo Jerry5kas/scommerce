@@ -1,6 +1,6 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import { Head, Link } from '@inertiajs/react';
 import { BarChart3 } from 'lucide-react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 export default function AdminReportsIndex() {
     return (

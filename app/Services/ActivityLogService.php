@@ -46,4 +46,3 @@ class ActivityLogService
         return $authUser?->id;
     }
 }
-

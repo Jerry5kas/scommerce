@@ -1,4 +1,3 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -12,6 +11,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import AdminLayout from '@/layouts/AdminLayout';
 
 interface OrderItem {
     id: number;

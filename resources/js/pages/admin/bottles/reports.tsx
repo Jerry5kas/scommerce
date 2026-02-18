@@ -1,8 +1,8 @@
-import AdminLayout from '@/layouts/AdminLayout';
 import { Head, router } from '@inertiajs/react';
 import { BarChart3, Calendar, Package } from 'lucide-react';
-import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
 import { useState } from 'react';
+import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
+import AdminLayout from '@/layouts/AdminLayout';
 
 interface StatSummary {
     total_bottles: number;

@@ -1,6 +1,6 @@
-import UserLayout from '@/layouts/UserLayout';
 import { Head, router } from '@inertiajs/react';
 import { Bell, Check, CheckCheck, Package, Wallet } from 'lucide-react';
+import UserLayout from '@/layouts/UserLayout';
 
 interface Notification {
     id: string;

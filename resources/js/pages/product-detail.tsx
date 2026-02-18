@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { Heart, Star, ChevronDown, ChevronRight, Clock, Tag, ShoppingBag, CheckCircle2, ThumbsUp } from 'lucide-react';
 import { useState } from 'react';
-import UserLayout from '@/layouts/UserLayout';
 import ProductCardMedia, { getMediaList, type MediaItem } from '@/components/user/ProductCardMedia';
+import UserLayout from '@/layouts/UserLayout';
 
 interface ProductVariant {
     unit: string;

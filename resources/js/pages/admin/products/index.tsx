@@ -22,6 +22,7 @@ interface ProductData {
     price: string | number;
     is_active: boolean;
     vertical: string;
+    image?: string | null;
     category?: CategoryRef | null;
     collection?: CollectionRef | null;
 }
@@ -88,6 +89,7 @@ export default function AdminProductsIndex({ products, zones, verticalOptions, f
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Image</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">SKU</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Category</th>
@@ -100,13 +102,26 @@ export default function AdminProductsIndex({ products, zones, verticalOptions, f
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {products.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-500">
+                                    <td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-500">
                                         No products yet. Create one to get started.
                                     </td>
                                 </tr>
                             ) : (
                                 products.map((p) => (
                                     <tr key={p.id}>
+                                            <td className="whitespace-nowrap px-4 py-3">
+                                                {p.image ? (
+                                                    <img
+                                                        src={p.image}
+                                                        alt={p.name}
+                                                        className="h-12 w-12 rounded-lg border border-gray-200 object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-gray-200 text-xs text-gray-400">
+                                                        No image
+                                                    </div>
+                                                )}
+                                            </td>
                                         <td className="whitespace-nowrap px-4 py-3">
                                             <Link href={'/admin/products/' + p.id} className="font-medium text-[var(--admin-dark-primary)] hover:underline">
                                                 {p.name}

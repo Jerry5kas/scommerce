@@ -39,12 +39,21 @@ class ZoneController extends Controller
         $lat = $request->validated('latitude');
         $lng = $request->validated('longitude');
 
-        $address = [
-            'pincode' => $pincode,
-            'latitude' => $lat,
-            'longitude' => $lng,
-        ];
-        $zone = $this->locationService->validateAddress($address);
+        if ($pincode !== null && $pincode !== '') {
+            $address = [
+                'pincode' => $pincode,
+                'latitude' => $lat,
+                'longitude' => $lng,
+            ];
+            $zone = $this->locationService->validateAddress($address);
+        } elseif ($lat !== null && $lng !== null) {
+            $zone = $this->locationService->findZoneByCoordinates((float) $lat, (float) $lng);
+            if ($zone !== null && ! $zone->isServiceableAtTime()) {
+                $zone = null;
+            }
+        } else {
+            $zone = null;
+        }
 
         return response()->json([
             'serviceable' => $zone !== null,

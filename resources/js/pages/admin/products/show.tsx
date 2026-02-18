@@ -37,6 +37,8 @@ interface ProductData {
     is_subscription_eligible: boolean;
     requires_bottle: boolean;
     bottle_deposit: string | number | null;
+    image?: string | null;
+    images?: string[] | null;
     category?: CategoryRef | null;
     collection?: CollectionRef | null;
     zones?: ZoneRef[];
@@ -73,6 +75,26 @@ export default function AdminProductsShow({ product }: AdminProductsShowProps) {
                     </div>
                 </div>
                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    {(product.image || (product.images && product.images.length > 0)) && (
+                        <div className="mb-4 flex flex-wrap items-start gap-4">
+                            {product.image && (
+                                <div>
+                                    <div className="text-sm font-medium text-gray-500">Main image</div>
+                                    <img src={product.image} alt={product.name} className="mt-1 h-32 w-32 rounded-lg border border-gray-200 object-cover" />
+                                </div>
+                            )}
+                            {product.images && product.images.length > 0 && (
+                                <div className="flex-1">
+                                    <div className="text-sm font-medium text-gray-500">Gallery</div>
+                                    <div className="mt-1 flex flex-wrap gap-3">
+                                        {product.images.map((url, index) => (
+                                            <img key={index} src={url} alt={product.name + ' image ' + (index + 1)} className="h-20 w-20 rounded-lg border border-gray-200 object-cover" />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                     <dl className="grid gap-3 sm:grid-cols-2">
                         <div><dt className="text-sm font-medium text-gray-500">SKU</dt><dd className="mt-0.5 text-sm text-gray-900">{product.sku}</dd></div>
                         <div><dt className="text-sm font-medium text-gray-500">Slug</dt><dd className="mt-0.5 text-sm text-gray-900">{product.slug}</dd></div>

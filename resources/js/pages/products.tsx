@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { Heart, LayoutGrid, ChevronDown, Package } from 'lucide-react';
 import { useState } from 'react';
-import UserLayout from '@/layouts/UserLayout';
 import ProductCardMedia, { getMediaList, type MediaItem } from '@/components/user/ProductCardMedia';
+import UserLayout from '@/layouts/UserLayout';
 
 const CATEGORIES = [
     { slug: 'all', label: 'All Products', image: '/images/dairy-products.png' },

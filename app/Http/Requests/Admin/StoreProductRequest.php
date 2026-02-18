@@ -28,7 +28,7 @@ class StoreProductRequest extends FormRequest
     {
         $verticals = array_merge(BusinessVertical::values(), [Product::VERTICAL_BOTH]);
 
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:products,slug'],
             'sku' => ['required', 'string', 'max:100', 'unique:products,sku'],
@@ -62,8 +62,8 @@ class StoreProductRequest extends FormRequest
             'meta_description' => ['nullable', 'string', 'max:500'],
         ];
 
-        // Require either image or image_file
-        if (! $this->has('image') && ! $this->hasFile('image_file')) {
+        // Require either an image URL or an uploaded image file
+        if ($this->isMethod('post') && ! $this->filled('image') && ! $this->hasFile('image_file')) {
             $rules['image'] = ['required', 'string', 'max:500'];
         }
 
