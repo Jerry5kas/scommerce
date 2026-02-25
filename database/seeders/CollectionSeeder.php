@@ -2,60 +2,40 @@
 
 namespace Database\Seeders;
 
-use App\Enums\BusinessVertical;
+use App\Models\Category;
 use App\Models\Collection;
+use App\Models\Product;
 use Illuminate\Database\Seeder;
 
 class CollectionSeeder extends Seeder
 {
     public function run(): void
     {
-        $collections = [
-            // Daily Fresh banners
-            [
-                'name' => 'Fresh Daily Deals',
-                'slug' => 'fresh-daily-deals',
-                'description' => 'Get the freshest produce delivered daily',
-                'vertical' => BusinessVertical::DailyFresh->value,
-                'banner_image' => 'https://via.placeholder.com/1200x400?text=Fresh+Daily+Deals',
-                'banner_mobile_image' => 'https://via.placeholder.com/600x300?text=Fresh+Daily+Deals',
-                'display_order' => 1,
-                'is_active' => true,
-                'starts_at' => now()->subDays(1),
-                'ends_at' => now()->addDays(30),
-            ],
-            [
-                'name' => 'Vegetable Special',
-                'slug' => 'vegetable-special',
-                'description' => 'Best prices on fresh vegetables',
-                'vertical' => BusinessVertical::DailyFresh->value,
-                'banner_image' => 'https://via.placeholder.com/1200x400?text=Vegetable+Special',
-                'banner_mobile_image' => 'https://via.placeholder.com/600x300?text=Vegetable+Special',
-                'display_order' => 2,
-                'is_active' => true,
-                'starts_at' => now()->subDays(1),
-                'ends_at' => now()->addDays(15),
-            ],
-            // Society Fresh banners
-            [
-                'name' => 'Premium Water Subscription',
-                'slug' => 'premium-water-subscription',
-                'description' => 'Subscribe and save on premium water',
-                'vertical' => BusinessVertical::SocietyFresh->value,
-                'banner_image' => 'https://via.placeholder.com/1200x400?text=Premium+Water',
-                'banner_mobile_image' => 'https://via.placeholder.com/600x300?text=Premium+Water',
-                'display_order' => 1,
-                'is_active' => true,
-                'starts_at' => now()->subDays(1),
-                'ends_at' => now()->addDays(60),
-            ],
-        ];
+        // ── Clean slate — unlink products, then remove old collections ────────
+        Product::query()->whereNotNull('collection_id')->update(['collection_id' => null]);
+        Collection::query()->delete();
 
-        foreach ($collections as $data) {
-            Collection::query()->updateOrCreate(
-                ['slug' => $data['slug']],
-                $data,
-            );
-        }
+        // ── Create the single "Farm Fresh Dairy" collection ──────────────────
+        // Groups all our current dairy products: Ghee, Curd, Paneer, Buttermilk, Butter
+        $collection = Collection::query()->create([
+            'name' => 'Farm Fresh Dairy',
+            'slug' => 'farm-fresh-dairy',
+            'description' => 'Our signature range of pure, farm-fresh dairy products — made from ethically sourced cow milk, traditionally churned, and delivered fresh to your doorstep every day.',
+            'banner_image' => '/demo/Ghee.png',
+            'banner_mobile_image' => '/demo/Ghee.png',
+            'display_order' => 1,
+            'is_active' => true,
+            'vertical' => 'both',
+            'starts_at' => now()->subDay(),
+            'ends_at' => null, // evergreen collection
+        ]);
+
+        // ── Assign every existing product to this collection ─────────────────
+        $updated = Product::query()->update(['collection_id' => $collection->id]);
+
+        $this->command->info("✅  Collection \"{$collection->name}\" created (ID {$collection->id})");
+        $this->command->info("    → Linked {$updated} product(s) to this collection.");
+        $this->command->newLine();
+        $this->command->info('🎉  CollectionSeeder finished.');
     }
 }

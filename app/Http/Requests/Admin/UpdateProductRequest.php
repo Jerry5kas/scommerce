@@ -11,7 +11,7 @@ class UpdateProductRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user('admin');
+        return (bool)$this->user('admin');
     }
 
     /**
@@ -54,6 +54,15 @@ class UpdateProductRequest extends FormRequest
             'vertical' => ['nullable', 'string', Rule::in($verticals)],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
+            // Variants
+            'variants' => ['nullable', 'array'],
+            'variants.*.id' => ['nullable', 'integer'],
+            'variants.*.name' => ['required_with:variants', 'string', 'max:255'],
+            'variants.*.sku' => ['required_with:variants', 'string', 'max:100'],
+            'variants.*.price' => ['required_with:variants', 'numeric', 'min:0'],
+            'variants.*.stock_quantity' => ['nullable', 'integer', 'min:0'],
+            'variants.*.is_active' => ['sometimes', 'boolean'],
+            'variants.*._delete' => ['sometimes', 'boolean'],
         ];
     }
 }

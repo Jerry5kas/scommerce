@@ -1,26 +1,38 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft, Upload, X, Plus, Trash2, Package, Lock, Unlock } from 'lucide-react';
 import { useState, useRef } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
 import { uploadImageToAdmin } from '@/lib/adminUpload';
+import { generateProductSku, generateVariantSku } from '@/lib/skuGenerator';
 import type { SharedData } from '@/types';
 
-interface CategoryOption {
-    id: number;
+interface VariantRow {
     name: string;
-    slug: string;
+    sku: string;
+    price: string;
+    stock_quantity: string;
+    is_active: boolean;
 }
 
-interface CollectionOption {
-    id: number;
-    name: string;
-    slug: string;
-}
+interface CategoryOption { id: number; name: string; slug: string; }
+interface CollectionOption { id: number; name: string; slug: string; }
 
 interface AdminProductsCreateProps {
     verticalOptions: Record<string, string>;
     categories: CategoryOption[];
     collections: CollectionOption[];
+}
+
+/* ── Reusable section wrapper ────────────────────────────── */
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-200 px-5 py-3">
+                <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+            </div>
+            <div className="p-5 space-y-5">{children}</div>
+        </div>
+    );
 }
 
 export default function AdminProductsCreate({ verticalOptions, categories, collections }: AdminProductsCreateProps) {
@@ -31,6 +43,31 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
     const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
     const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
     const imageInputRef = useRef<HTMLInputElement>(null);
+    const [variants, setVariants] = useState<VariantRow[]>([]);
+    const [skuLocked, setSkuLocked] = useState(false);
+
+    const addVariant = () => setVariants([...variants, { name: '', sku: '', price: '', stock_quantity: '200', is_active: true }]);
+    const removeVariant = (i: number) => setVariants(variants.filter((_, idx) => idx !== i));
+    const updateVariant = (i: number, field: keyof VariantRow, value: string | boolean) => {
+        const next = [...variants];
+        next[i] = { ...next[i], [field]: value };
+        // Auto-generate variant SKU when label changes
+        if (field === 'name' && typeof value === 'string') {
+            next[i].sku = generateVariantSku(form.data.sku, value);
+        }
+        setVariants(next);
+    };
+
+    /** When product name changes, auto-regenerate product SKU + all variant SKUs */
+    const handleNameChange = (newName: string) => {
+        form.setData('name', newName);
+        if (!skuLocked) {
+            const newSku = generateProductSku(newName);
+            form.setData('sku', newSku);
+            // Re-derive all variant SKUs from the new product SKU
+            setVariants((prev) => prev.map((v) => ({ ...v, sku: generateVariantSku(newSku, v.name) })));
+        }
+    };
 
     const form = useForm({
         name: '',
@@ -53,6 +90,8 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
         min_quantity: '',
         max_quantity: '',
         unit: '',
+        weight: '',
+        is_one_time_purchase: true,
         display_order: 0,
         is_active: true,
         vertical: 'both',
@@ -84,9 +123,16 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
                 setGalleryPreviews([]);
             }
             if (hasUploads) setIsUploading(false);
+            const variantPayload = variants.filter(v => v.name.trim() !== '').map(v => ({
+                name: v.name, sku: v.sku,
+                price: v.price ? Number(v.price) : 0,
+                stock_quantity: v.stock_quantity ? Number(v.stock_quantity) : 0,
+                is_active: v.is_active,
+            }));
             const payload = {
                 ...form.data,
                 images,
+                variants: variantPayload,
                 category_id: form.data.category_id === '' ? undefined : Number(form.data.category_id),
                 price: form.data.price ? Number(form.data.price) : 0,
                 compare_at_price: form.data.compare_at_price ? Number(form.data.compare_at_price) : null,
@@ -94,6 +140,7 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
                 stock_quantity: form.data.stock_quantity === '' ? undefined : Number(form.data.stock_quantity),
                 min_quantity: form.data.min_quantity === '' ? undefined : Number(form.data.min_quantity),
                 max_quantity: form.data.max_quantity === '' ? undefined : Number(form.data.max_quantity),
+                weight: form.data.weight === '' ? undefined : Number(form.data.weight),
                 collection_id: form.data.collection_id || null,
                 bottle_deposit: form.data.bottle_deposit === '' ? undefined : Number(form.data.bottle_deposit),
             };
@@ -109,201 +156,247 @@ export default function AdminProductsCreate({ verticalOptions, categories, colle
         const files = Array.from(e.target.files ?? []);
         if (!files.length) return;
         setGalleryFiles(files);
-        const previews = files.map((file) => URL.createObjectURL(file));
-        setGalleryPreviews(previews);
+        setGalleryPreviews(files.map((file) => URL.createObjectURL(file)));
     };
+
+    const inputCls = 'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[var(--admin-dark-primary)] focus:ring-1 focus:ring-[var(--admin-dark-primary)]';
+    const labelCls = 'block text-sm font-medium text-gray-700';
 
     return (
         <AdminLayout title="Add product">
             <Head title="Add product - Admin" />
-            <div className="space-y-4">
+            <form onSubmit={submit} className="space-y-6">
                 <Link href="/admin/products" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--admin-dark-primary)]">
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to products
+                    <ArrowLeft className="h-4 w-4" /> Back to products
                 </Link>
-                <form onSubmit={submit} className="max-w-2xl space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Name *</label>
-                        <input type="text" required className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
-                        {form.errors.name && <p className="mt-1 text-sm text-red-600">{form.errors.name}</p>}
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
+
+                {/* ── Basic information ─────────────────────── */}
+                <Section title="Basic information">
+                    <div className="grid gap-5 sm:grid-cols-2">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Slug</label>
-                            <input type="text" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.slug} onChange={(e) => form.setData('slug', e.target.value)} />
-                            {form.errors.slug && <p className="mt-1 text-sm text-red-600">{form.errors.slug}</p>}
+                            <label className={labelCls}>Name *</label>
+                            <input type="text" required className={inputCls} value={form.data.name} onChange={(e) => handleNameChange(e.target.value)} />
+                            {form.errors.name && <p className="mt-1 text-sm text-red-600">{form.errors.name}</p>}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">SKU *</label>
-                            <input type="text" required className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.sku} onChange={(e) => form.setData('sku', e.target.value)} />
+                            <label className={labelCls}>SKU * <span className="text-xs font-normal text-gray-400">— {skuLocked ? 'manual' : 'auto-generated'}</span></label>
+                            <div className="relative">
+                                <input type="text" required className={inputCls + ' pr-9 font-mono uppercase'} value={form.data.sku} onChange={(e) => { setSkuLocked(true); form.setData('sku', e.target.value.toUpperCase()); }} />
+                                <button type="button" title={skuLocked ? 'Unlock to auto-generate from name' : 'SKU is auto-generated — click to lock and edit manually'} onClick={() => { if (skuLocked) { const newSku = generateProductSku(form.data.name); form.setData('sku', newSku); setVariants((prev) => prev.map((v) => ({ ...v, sku: generateVariantSku(newSku, v.name) }))); } setSkuLocked(!skuLocked); }} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 hover:text-gray-600">
+                                    {skuLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                                </button>
+                            </div>
                             {form.errors.sku && <p className="mt-1 text-sm text-red-600">{form.errors.sku}</p>}
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Description</label>
-                        <textarea rows={4} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.description} onChange={(e) => form.setData('description', e.target.value)} />
+                        <label className={labelCls}>Slug <span className="text-xs font-normal text-gray-400">— auto-generated if empty</span></label>
+                        <input type="text" className={inputCls} value={form.data.slug} onChange={(e) => form.setData('slug', e.target.value)} />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Short description</label>
-                        <input type="text" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.short_description} onChange={(e) => form.setData('short_description', e.target.value)} />
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-5 sm:grid-cols-2">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Category *</label>
-                            <select required className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.category_id === '' ? '' : form.data.category_id} onChange={(e) => form.setData('category_id', Number(e.target.value))}>
+                            <label className={labelCls}>Category *</label>
+                            <select className={inputCls} value={form.data.category_id} onChange={(e) => form.setData('category_id', Number(e.target.value) || '')}>
                                 <option value="">Select category</option>
-                                {categories.map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
+                                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
-                            {form.errors.category_id && <p className="mt-1 text-sm text-red-600">{form.errors.category_id}</p>}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Collection</label>
-                            <select className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.collection_id ?? ''} onChange={(e) => form.setData('collection_id', e.target.value ? Number(e.target.value) : null)}>
+                            <label className={labelCls}>Collection</label>
+                            <select className={inputCls} value={form.data.collection_id ?? ''} onChange={(e) => form.setData('collection_id', e.target.value ? Number(e.target.value) : null)}>
                                 <option value="">None</option>
-                                {collections.map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
+                                {collections.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Image *</label>
-                        <p className="mt-0.5 mb-2 text-xs text-gray-500">Upload a file or enter image URL</p>
-                        {imagePreview && (
-                            <div className="mb-3 relative inline-block">
-                                <img src={imagePreview} alt="" className="h-32 w-32 rounded-lg border border-gray-200 object-cover" />
-                                <button type="button" onClick={() => { setImageFile(null); setImagePreview(null); form.setData('image', ''); }} className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600" aria-label="Remove"><X className="h-4 w-4" strokeWidth={2} /></button>
-                            </div>
-                        )}
-                        <div className="mb-3">
+                        <label className={labelCls}>Description</label>
+                        <textarea rows={3} className={inputCls} value={form.data.description} onChange={(e) => form.setData('description', e.target.value)} />
+                    </div>
+                    <div>
+                        <label className={labelCls}>Short description</label>
+                        <input type="text" className={inputCls} value={form.data.short_description} onChange={(e) => form.setData('short_description', e.target.value)} />
+                    </div>
+                </Section>
+
+                {/* ── Media ─────────────────────────────────── */}
+                <Section title="Media">
+                    <div className="grid gap-5 sm:grid-cols-2">
+                        {/* Main image */}
+                        <div>
+                            <label className={labelCls}>Main image *</label>
+                            <p className="mt-0.5 mb-2 text-xs text-gray-500">Upload a file or enter image URL</p>
+                            {(imagePreview || form.data.image) && (
+                                <div className="mb-3 relative inline-block">
+                                    <img src={imagePreview || form.data.image} alt="Preview" className="h-28 w-28 rounded-lg border border-gray-200 object-cover" />
+                                    <button type="button" onClick={() => { setImageFile(null); setImagePreview(null); form.setData('image', ''); if (imageInputRef.current) imageInputRef.current.value = ''; }} className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"><X className="h-4 w-4" /></button>
+                                </div>
+                            )}
                             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-[var(--admin-dark-primary)] hover:bg-gray-100">
                                 <Upload className="h-4 w-4" /><span>{imageFile ? imageFile.name : 'Choose image'}</span>
                                 <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setImageFile(f); form.setData('image', ''); const r = new FileReader(); r.onloadend = () => setImagePreview(r.result as string); r.readAsDataURL(f); } }} />
                             </label>
+                            <div className="relative my-3"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">Or enter URL</span></div></div>
+                            <input type="text" placeholder="https://..." className={inputCls} value={form.data.image} onChange={(e) => { form.setData('image', e.target.value); if (e.target.value) { setImageFile(null); setImagePreview(null); } }} disabled={!!imageFile} />
+                            {form.errors.image && <p className="mt-1 text-sm text-red-600">{form.errors.image}</p>}
                         </div>
-                        <div className="relative"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">Or enter URL</span></div></div>
-                        <input
-                            type="text"
-                            placeholder="https://..."
-                            className="mt-3 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm"
-                            value={form.data.image}
-                            onChange={(e) => {
-                                const url = e.target.value;
-                                form.setData('image', url);
-                                if (url) {
-                                    setImageFile(null);
-                                    setImagePreview(url);
-                                } else {
-                                    setImagePreview(null);
-                                }
-                            }}
-                            disabled={!!imageFile}
-                        />
-                        {form.errors.image && <p className="mt-1 text-sm text-red-600">{form.errors.image}</p>}
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Additional images</label>
-                        <p className="mt-0.5 mb-2 text-xs text-gray-500">Upload up to 10 extra images</p>
-                        {galleryPreviews.length > 0 && (
-                            <div className="mb-3 flex flex-wrap gap-3">
-                                {galleryPreviews.map((src, index) => (
-                                    <div key={index} className="relative inline-block">
-                                        <img src={src} alt="" className="h-24 w-24 rounded-lg border border-gray-200 object-cover" />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        <div className="mb-3">
+                        {/* Gallery */}
+                        <div>
+                            <label className={labelCls}>Gallery images</label>
+                            <p className="mt-0.5 mb-2 text-xs text-gray-500">Upload multiple images for the gallery</p>
+                            {(galleryPreviews.length > 0 || (form.data.images && form.data.images.length > 0)) && (
+                                <div className="mb-3 flex flex-wrap gap-2">
+                                    {form.data.images.map((url, index) => (
+                                        <div key={'existing-' + index} className="relative">
+                                            <img src={url} alt="" className="h-20 w-20 rounded-lg border border-gray-200 object-cover" />
+                                            <button type="button" onClick={() => form.setData('images', form.data.images.filter((_, i) => i !== index))} className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"><X className="h-3 w-3" /></button>
+                                        </div>
+                                    ))}
+                                    {galleryPreviews.map((url, index) => (
+                                        <img key={'new-' + index} src={url} alt="" className="h-20 w-20 rounded-lg border border-gray-200 object-cover" />
+                                    ))}
+                                </div>
+                            )}
                             <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-[var(--admin-dark-primary)] hover:bg-gray-100">
-                                <Upload className="h-4 w-4" />
-                                <span>{galleryFiles.length > 0 ? `${galleryFiles.length} file(s) selected` : 'Choose additional images'}</span>
-                                <input type="file" multiple accept="image/*" className="hidden" onChange={handleGalleryFilesChange} />
+                                <Upload className="h-4 w-4" /><span>{galleryFiles.length > 0 ? `${galleryFiles.length} file(s)` : 'Choose gallery images'}</span>
+                                <input type="file" accept="image/*" multiple className="hidden" onChange={handleGalleryFilesChange} />
                             </label>
                         </div>
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-3">
+                </Section>
+
+                {/* ── Pricing & stock ───────────────────────── */}
+                <Section title="Pricing & stock">
+                    <div className="grid gap-5 sm:grid-cols-3">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Price *</label>
-                            <input type="number" step="0.01" min="0" required className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.price} onChange={(e) => form.setData('price', e.target.value)} />
-                            {form.errors.price && <p className="mt-1 text-sm text-red-600">{form.errors.price}</p>}
+                            <label className={labelCls}>Price *</label>
+                            <input type="number" step="0.01" min="0" required className={inputCls} value={form.data.price} onChange={(e) => form.setData('price', e.target.value)} />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Compare at price</label>
-                            <input type="number" step="0.01" min="0" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.compare_at_price} onChange={(e) => form.setData('compare_at_price', e.target.value)} />
+                            <label className={labelCls}>Compare at price</label>
+                            <input type="number" step="0.01" min="0" className={inputCls} value={form.data.compare_at_price} onChange={(e) => form.setData('compare_at_price', e.target.value)} />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Cost price</label>
-                            <input type="number" step="0.01" min="0" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.cost_price} onChange={(e) => form.setData('cost_price', e.target.value)} />
+                            <label className={labelCls}>Cost price</label>
+                            <input type="number" step="0.01" min="0" className={inputCls} value={form.data.cost_price} onChange={(e) => form.setData('cost_price', e.target.value)} />
                         </div>
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-5 sm:grid-cols-3">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Stock quantity</label>
-                            <input type="number" min="0" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.stock_quantity} onChange={(e) => form.setData('stock_quantity', e.target.value)} />
+                            <label className={labelCls}>Stock quantity</label>
+                            <input type="number" min="0" className={inputCls} value={form.data.stock_quantity} onChange={(e) => form.setData('stock_quantity', e.target.value)} />
                         </div>
-                        <div className="flex items-center gap-2 pt-6">
-                            <input type="checkbox" id="is_in_stock" className="h-4 w-4 rounded border-gray-300" checked={form.data.is_in_stock} onChange={(e) => form.setData('is_in_stock', e.target.checked)} />
-                            <label htmlFor="is_in_stock" className="text-sm text-gray-700">In stock</label>
+                        <div>
+                            <label className={labelCls}>Min quantity</label>
+                            <input type="number" min="1" className={inputCls} value={form.data.min_quantity} onChange={(e) => form.setData('min_quantity', e.target.value)} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>Max quantity</label>
+                            <input type="number" min="1" className={inputCls} value={form.data.max_quantity} onChange={(e) => form.setData('max_quantity', e.target.value)} />
                         </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Vertical</label>
-                        <select className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.vertical} onChange={(e) => form.setData('vertical', e.target.value)}>
-                            {Object.entries(verticalOptions).map(([value, label]) => (
-                                <option key={value} value={value}>{label}</option>
-                            ))}
-                        </select>
+                    <div className="grid gap-5 sm:grid-cols-3">
+                        <div>
+                            <label className={labelCls}>Bottle deposit</label>
+                            <input type="number" step="0.01" min="0" className={inputCls} value={form.data.bottle_deposit} onChange={(e) => form.setData('bottle_deposit', e.target.value)} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>Unit</label>
+                            <input type="text" placeholder="e.g. kg, L, g" className={inputCls} value={form.data.unit} onChange={(e) => form.setData('unit', e.target.value)} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>Weight</label>
+                            <input type="number" step="0.001" min="0" placeholder="e.g. 0.500" className={inputCls} value={form.data.weight} onChange={(e) => form.setData('weight', e.target.value)} />
+                        </div>
                     </div>
-                    <div className="flex flex-wrap gap-4">
-                        <label className="flex items-center gap-2">
-                            <input type="checkbox" className="h-4 w-4 rounded border-gray-300" checked={form.data.is_subscription_eligible} onChange={(e) => form.setData('is_subscription_eligible', e.target.checked)} />
+                </Section>
+
+                {/* ── Settings ──────────────────────────────── */}
+                <Section title="Settings">
+                    <div className="grid gap-5 sm:grid-cols-2">
+                        <div>
+                            <label className={labelCls}>Vertical</label>
+                            <select className={inputCls} value={form.data.vertical} onChange={(e) => form.setData('vertical', e.target.value)}>
+                                {Object.entries(verticalOptions).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className={labelCls}>Display order</label>
+                            <input type="number" min={0} className={inputCls} value={form.data.display_order} onChange={(e) => form.setData('display_order', Number(e.target.value) || 0)} />
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-[var(--admin-dark-primary)]" checked={form.data.is_in_stock} onChange={(e) => form.setData('is_in_stock', e.target.checked)} />
+                            <span className="text-sm text-gray-700">In stock</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-[var(--admin-dark-primary)]" checked={form.data.is_subscription_eligible} onChange={(e) => form.setData('is_subscription_eligible', e.target.checked)} />
                             <span className="text-sm text-gray-700">Subscription eligible</span>
                         </label>
-                        <label className="flex items-center gap-2">
-                            <input type="checkbox" className="h-4 w-4 rounded border-gray-300" checked={form.data.requires_bottle} onChange={(e) => form.setData('requires_bottle', e.target.checked)} />
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-[var(--admin-dark-primary)]" checked={form.data.requires_bottle} onChange={(e) => form.setData('requires_bottle', e.target.checked)} />
                             <span className="text-sm text-gray-700">Requires bottle</span>
                         </label>
-                        <label className="flex items-center gap-2">
-                            <input type="checkbox" id="is_active" className="h-4 w-4 rounded border-gray-300" checked={form.data.is_active} onChange={(e) => form.setData('is_active', e.target.checked)} />
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-[var(--admin-dark-primary)]" checked={form.data.is_one_time_purchase} onChange={(e) => form.setData('is_one_time_purchase', e.target.checked)} />
+                            <span className="text-sm text-gray-700">One-time purchase</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-[var(--admin-dark-primary)]" checked={form.data.is_active} onChange={(e) => form.setData('is_active', e.target.checked)} />
                             <span className="text-sm text-gray-700">Active</span>
                         </label>
                     </div>
-                    {form.data.requires_bottle && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Bottle deposit</label>
-                            <input type="number" step="0.01" min="0" className="mt-1 block w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.bottle_deposit} onChange={(e) => form.setData('bottle_deposit', e.target.value)} />
+                </Section>
+
+                {/* ── Variants ──────────────────────────────── */}
+                <Section title="Variants">
+                    <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-500">
+                            {variants.length > 0 ? `${variants.length} variant${variants.length > 1 ? 's' : ''} configured` : 'No variants yet. Click "Add variant" to create size/weight options.'}
+                        </p>
+                        <button type="button" onClick={addVariant} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+                            <Plus className="h-3.5 w-3.5" /> Add variant
+                        </button>
+                    </div>
+                    {variants.length > 0 && (
+                        <div className="overflow-x-auto rounded-lg border border-gray-200">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Label *</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">SKU *</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Price *</th>
+                                        <th className="px-3 py-2 text-left text-xs font-medium uppercase text-gray-500">Stock</th>
+                                        <th className="px-3 py-2 text-center text-xs font-medium uppercase text-gray-500">Active</th>
+                                        <th className="px-3 py-2 w-10"></th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 bg-white">
+                                    {variants.map((v, i) => (
+                                        <tr key={i}>
+                                            <td className="px-3 py-2"><input type="text" required placeholder="e.g. 500g" className="w-full rounded border border-gray-300 px-2 py-1.5 text-sm" value={v.name} onChange={(e) => updateVariant(i, 'name', e.target.value)} /></td>
+                                            <td className="px-3 py-2"><input type="text" required placeholder="Auto" className="w-full rounded border border-gray-300 bg-gray-50 px-2 py-1.5 text-sm font-mono uppercase" value={v.sku} readOnly title="Auto-generated from product SKU + variant label" /></td>
+                                            <td className="px-3 py-2"><input type="number" step="0.01" min="0" required placeholder="0.00" className="w-24 rounded border border-gray-300 px-2 py-1.5 text-sm" value={v.price} onChange={(e) => updateVariant(i, 'price', e.target.value)} /></td>
+                                            <td className="px-3 py-2"><input type="number" min="0" placeholder="0" className="w-20 rounded border border-gray-300 px-2 py-1.5 text-sm" value={v.stock_quantity} onChange={(e) => updateVariant(i, 'stock_quantity', e.target.value)} /></td>
+                                            <td className="px-3 py-2 text-center"><input type="checkbox" className="h-4 w-4 rounded border-gray-300" checked={v.is_active} onChange={(e) => updateVariant(i, 'is_active', e.target.checked)} /></td>
+                                            <td className="px-3 py-2"><button type="button" onClick={() => removeVariant(i)} className="rounded p-1 text-red-500 hover:bg-red-50" title="Remove"><Trash2 className="h-4 w-4" /></button></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     )}
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Min quantity</label>
-                            <input type="number" min="1" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.min_quantity} onChange={(e) => form.setData('min_quantity', e.target.value)} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Max quantity</label>
-                            <input type="number" min="1" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.max_quantity} onChange={(e) => form.setData('max_quantity', e.target.value)} />
-                        </div>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Unit</label>
-                            <input type="text" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" placeholder="e.g. kg, L" value={form.data.unit} onChange={(e) => form.setData('unit', e.target.value)} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Display order</label>
-                            <input type="number" min={0} className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm" value={form.data.display_order} onChange={(e) => form.setData('display_order', Number(e.target.value) || 0)} />
-                        </div>
-                    </div>
-                    <div className="flex gap-2 border-t border-gray-200 pt-4">
-                        <button type="submit" disabled={form.processing || isUploading} className="rounded-lg bg-[var(--admin-dark-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-70">
-                            {isUploading ? 'Uploading…' : form.processing ? 'Saving…' : 'Save'}
-                        </button>
-                        <Link href="/admin/products" className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</Link>
-                    </div>
-                </form>
-            </div>
+                </Section>
+
+                {/* ── Actions ──────────────────────────────── */}
+                <div className="flex items-center gap-3">
+                    <button type="submit" disabled={form.processing || isUploading} className="rounded-lg bg-[var(--admin-dark-primary)] px-6 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-70">
+                        {isUploading ? 'Uploading…' : form.processing ? 'Saving…' : 'Create product'}
+                    </button>
+                    <Link href="/admin/products" className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</Link>
+                </div>
+            </form>
         </AdminLayout>
     );
 }

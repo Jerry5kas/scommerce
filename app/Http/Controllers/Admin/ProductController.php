@@ -63,6 +63,10 @@ class ProductController extends Controller
     {
         $data = $request->validated();
 
+        // Extract variants before creating product
+        $variantsData = $data['variants'] ?? [];
+        unset($data['variants']);
+
         // Handle main image upload
         if ($request->hasFile('image_file')) {
             $data['image'] = $this->handleImageUpload(null, $request->file('image_file'), 'products');
@@ -85,7 +89,20 @@ class ProductController extends Controller
             unset($data['min_quantity']);
         }
 
-        Product::query()->create($data);
+        $product = Product::query()->create($data);
+
+        // Create variants if provided
+        if (! empty($variantsData)) {
+            foreach ($variantsData as $variant) {
+                $product->variants()->create([
+                    'name' => $variant['name'],
+                    'sku' => $variant['sku'],
+                    'price' => $variant['price'] ?? 0,
+                    'stock_quantity' => $variant['stock_quantity'] ?? 0,
+                    'is_active' => $variant['is_active'] ?? true,
+                ]);
+            }
+        }
 
         return redirect()->route('admin.products.index')->with('message', 'Product created.');
     }
@@ -95,6 +112,7 @@ class ProductController extends Controller
         $product->load([
             'category:id,name,slug',
             'collection:id,name,slug',
+            'variants',
             'zones' => fn ($q) => $q->orderBy('zones.name'),
         ]);
 
@@ -105,6 +123,8 @@ class ProductController extends Controller
 
     public function edit(Product $product): Response
     {
+        $product->load('variants');
+
         return Inertia::render('admin/products/edit', [
             'product' => $product,
             'verticalOptions' => array_merge([Product::VERTICAL_BOTH => 'Both'], BusinessVertical::options()),
@@ -116,6 +136,10 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
         $data = $request->validated();
+
+        // Extract variants before updating product
+        $variantsData = $data['variants'] ?? null;
+        unset($data['variants']);
 
         // Main image: file upload or URL from frontend ImageKit upload
         if ($request->hasFile('image_file')) {
@@ -146,6 +170,33 @@ class ProductController extends Controller
         unset($data['image_file'], $data['image_files']);
 
         $product->update($data);
+
+        // Sync variants if provided in payload
+        if ($variantsData !== null) {
+            $incomingIds = collect($variantsData)->pluck('id')->filter()->all();
+
+            // Delete variants that are no longer in the payload
+            $product->variants()->whereNotIn('id', $incomingIds)->delete();
+
+            // Create or update each variant
+            foreach ($variantsData as $variant) {
+                $variantFields = [
+                    'name' => $variant['name'],
+                    'sku' => $variant['sku'],
+                    'price' => $variant['price'] ?? 0,
+                    'stock_quantity' => $variant['stock_quantity'] ?? 0,
+                    'is_active' => $variant['is_active'] ?? true,
+                ];
+
+                if (! empty($variant['id'])) {
+                    // Update existing variant
+                    $product->variants()->where('id', $variant['id'])->update($variantFields);
+                } else {
+                    // Create new variant
+                    $product->variants()->create($variantFields);
+                }
+            }
+        }
 
         return redirect()->route('admin.products.index')->with('message', 'Product updated.');
     }

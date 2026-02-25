@@ -61,10 +61,13 @@ class CategoryController extends Controller
     public function show(Category $category): Response
     {
         $category->loadCount('products');
-        $category->load(['products' => fn ($q) => $q->ordered()->limit(10)]);
+        $category->load([
+            'products' => fn($q) => $q->withCount('variants')->ordered()->limit(20),
+        ]);
 
         return Inertia::render('admin/categories/show', [
             'category' => $category,
+            'verticalOptions' => array_merge([Category::VERTICAL_BOTH => 'Both'], BusinessVertical::options()),
         ]);
     }
 
@@ -107,18 +110,21 @@ class CategoryController extends Controller
                         'new_image_url' => $newImageUrl,
                         'old_image_url' => $oldImageUrl,
                     ]);
-                } else {
+                }
+                else {
                     \Log::error('Image upload returned null URL');
                     throw new \RuntimeException('Failed to upload image to ImageKit.');
                 }
-            } catch (\Exception $e) {
+            }
+            catch (\Exception $e) {
                 \Log::error('Image upload failed', [
                     'error' => $e->getMessage(),
                     'category_id' => $category->id,
                 ]);
                 throw $e;
             }
-        } elseif ($request->filled('image')) {
+        }
+        elseif ($request->filled('image')) {
             // Image URL provided (from separate upload endpoint)
             $newUrl = $request->input('image');
             $oldImageUrl = $category->image;
@@ -143,10 +149,12 @@ class CategoryController extends Controller
 
                 $data['image'] = $newUrl;
                 \Log::debug('Image URL set in data array', ['image' => $data['image']]);
-            } else {
+            }
+            else {
                 \Log::debug('URLs match, skipping update');
             }
-        } else {
+        }
+        else {
             \Log::debug('No image file or URL provided, keeping existing image');
         }
         // If neither file nor URL is provided, keep existing image (don't update it)
@@ -173,7 +181,7 @@ class CategoryController extends Controller
 
     public function toggleStatus(Category $category): RedirectResponse
     {
-        $category->update(['is_active' => ! $category->is_active]);
+        $category->update(['is_active' => !$category->is_active]);
 
         return redirect()->back()->with('message', $category->is_active ? 'Category enabled.' : 'Category disabled.');
     }

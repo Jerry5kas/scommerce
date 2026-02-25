@@ -4,161 +4,242 @@ namespace Database\Seeders;
 
 use App\Enums\BusinessVertical;
 use App\Models\Category;
-use App\Models\Collection;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Zone;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
+    /**
+     * Product catalogue mapped to their DB category slugs.
+     *
+     * Structure:
+     *  - category   : slug that matches the category already in DB
+     *  - vertical   : BusinessVertical value ('society_fresh' | 'daily_fresh' | 'both')
+     *  - products[] : each entry represents ONE parent product with ONE or many variants
+     *      - name        : product display name
+     *      - description : short marketing copy
+     *      - image       : primary image path (stored in public/demo)
+     *      - bestSeller  : bool – marks the product as featured/bestseller
+     *      - variants[]  : size/weight variants with individual prices
+     *          - label  : variant display label (e.g. "500g", "1L")
+     *          - price  : numeric price (INR)
+     *          - unit   : unit string for the products table (g / ml / L / kg)
+     *          - weight : decimal weight for the products table
+     */
+    private array $catalogue = [
+
+        // ─── GHEE ────────────────────────────────────────────────────────────
+        [
+            'category' => 'ghee',
+            'vertical' => 'both',
+            'products' => [
+                [
+                    'name' => 'Cow Ghee',
+                    'description' => 'Pure, traditionally churned cow ghee made from fresh cream. Rich aroma, golden colour, and full of essential nutrients.',
+                    'image' => '/demo/Ghee.png',
+                    'bestSeller' => false,
+                    'variants' => [
+                        ['label' => '100g', 'price' => 150.00, 'unit' => 'g', 'weight' => 0.100],
+                        ['label' => '200g', 'price' => 375.00, 'unit' => 'g', 'weight' => 0.200],
+                        ['label' => '500g', 'price' => 750.00, 'unit' => 'g', 'weight' => 0.500, 'bestSeller' => true],
+                        ['label' => '1L', 'price' => 1500.00, 'unit' => 'L', 'weight' => 1.000],
+                    ],
+                ],
+            ],
+        ],
+
+        // ─── FRESH CURD ──────────────────────────────────────────────────────
+        [
+            'category' => 'fresh-curd',
+            'vertical' => 'both',
+            'products' => [
+                [
+                    'name' => 'Fresh Curd',
+                    'description' => 'Thick, creamy curd set fresh every morning from full-fat cow milk. No preservatives, naturally probiotic.',
+                    'image' => '/demo/Fresh Curd.png',
+                    'bestSeller' => true,
+                    'variants' => [
+                        ['label' => '500g', 'price' => 40.00, 'unit' => 'g', 'weight' => 0.500],
+                        ['label' => '1L', 'price' => 80.00, 'unit' => 'L', 'weight' => 1.000, 'bestSeller' => true],
+                    ],
+                ],
+            ],
+        ],
+
+        // ─── PANEER ──────────────────────────────────────────────────────────
+        [
+            'category' => 'paneer',
+            'vertical' => 'society_fresh',
+            'products' => [
+                [
+                    'name' => 'Paneer',
+                    'description' => 'Soft, fresh-pressed cottage cheese made daily from whole cow milk. Perfect for curries, grills, and snacks.',
+                    'image' => '/demo/panneer.png',
+                    'bestSeller' => true,
+                    'variants' => [
+                        ['label' => '200g', 'price' => 120.00, 'unit' => 'g', 'weight' => 0.200, 'bestSeller' => true],
+                    ],
+                ],
+            ],
+        ],
+
+        // ─── BUTTER MILK ─────────────────────────────────────────────────────
+        [
+            'category' => 'butter-milk',
+            'vertical' => 'society_fresh',
+            'products' => [
+                [
+                    'name' => 'Spiced Butter Milk',
+                    'description' => 'Chilled, hand-spiced buttermilk with curry leaves, ginger, and green chilli. A refreshing summer staple.',
+                    'image' => '/demo/butter milk.png',
+                    'bestSeller' => false,
+                    'variants' => [
+                        ['label' => '200ML', 'price' => 15.00, 'unit' => 'ml', 'weight' => 0.200],
+                    ],
+                ],
+            ],
+        ],
+
+        // ─── COUNTRY BUTTER ──────────────────────────────────────────────────
+        [
+            'category' => 'country-butter',
+            'vertical' => 'society_fresh',
+            'products' => [
+                [
+                    'name' => 'Country Butter',
+                    'description' => 'Hand-churned country-style butter from fresh, full-cream cow milk. Unsalted and pure — great for cooking and spreading.',
+                    'image' => '/demo/butter.png',
+                    'bestSeller' => true,
+                    'variants' => [
+                        ['label' => '100g', 'price' => 100.00, 'unit' => 'g', 'weight' => 0.100],
+                        ['label' => '250g', 'price' => 250.00, 'unit' => 'g', 'weight' => 0.250, 'bestSeller' => true],
+                        ['label' => '500g', 'price' => 500.00, 'unit' => 'g', 'weight' => 0.500],
+                        ['label' => '1kg', 'price' => 1000.00, 'unit' => 'kg', 'weight' => 1.000],
+                    ],
+                ],
+            ],
+        ],
+    ];
+
+    // ─────────────────────────────────────────────────────────────────────────
+
     public function run(): void
     {
-        $dailyFreshCategory = Category::query()->where('slug', 'fresh-vegetables')->first();
-        $societyFreshCategory = Category::query()->where('slug', 'premium-water')->first();
-        $dailyFreshCollection = Collection::query()->where('slug', 'fresh-daily-deals')->first();
-        $societyFreshCollection = Collection::query()->where('slug', 'premium-water-subscription')->first();
-
-        $products = [
-            // Daily Fresh products
-            [
-                'name' => 'Fresh Tomatoes',
-                'slug' => 'fresh-tomatoes',
-                'sku' => 'DF-TOM-001',
-                'description' => 'Fresh, locally sourced tomatoes',
-                'short_description' => 'Fresh tomatoes',
-                'category_id' => $dailyFreshCategory?->id,
-                'collection_id' => $dailyFreshCollection?->id,
-                'image' => 'https://via.placeholder.com/400x400?text=Tomatoes',
-                'price' => 45.00,
-                'compare_at_price' => 50.00,
-                'stock_quantity' => 100,
-                'is_in_stock' => true,
-                'is_subscription_eligible' => false,
-                'requires_bottle' => false,
-                'is_one_time_purchase' => true,
-                'min_quantity' => 1,
-                'max_quantity' => 10,
-                'unit' => 'kg',
-                'weight' => 1.0,
-                'display_order' => 1,
-                'is_active' => true,
-                'vertical' => BusinessVertical::DailyFresh->value,
-            ],
-            [
-                'name' => 'Fresh Onions',
-                'slug' => 'fresh-onions',
-                'sku' => 'DF-ONI-001',
-                'description' => 'Fresh onions',
-                'short_description' => 'Fresh onions',
-                'category_id' => $dailyFreshCategory?->id,
-                'image' => 'https://via.placeholder.com/400x400?text=Onions',
-                'price' => 35.00,
-                'compare_at_price' => 40.00,
-                'stock_quantity' => 150,
-                'is_in_stock' => true,
-                'is_subscription_eligible' => false,
-                'requires_bottle' => false,
-                'is_one_time_purchase' => true,
-                'min_quantity' => 1,
-                'max_quantity' => 10,
-                'unit' => 'kg',
-                'weight' => 1.0,
-                'display_order' => 2,
-                'is_active' => true,
-                'vertical' => BusinessVertical::DailyFresh->value,
-            ],
-            [
-                'name' => 'Fresh Milk',
-                'slug' => 'fresh-milk',
-                'sku' => 'DF-MIL-001',
-                'description' => 'Fresh cow milk',
-                'short_description' => 'Fresh milk',
-                'category_id' => Category::query()->where('slug', 'dairy-products')->first()?->id,
-                'image' => 'https://via.placeholder.com/400x400?text=Milk',
-                'price' => 60.00,
-                'compare_at_price' => 65.00,
-                'stock_quantity' => 200,
-                'is_in_stock' => true,
-                'is_subscription_eligible' => true,
-                'requires_bottle' => false,
-                'is_one_time_purchase' => false,
-                'min_quantity' => 1,
-                'max_quantity' => 5,
-                'unit' => 'liter',
-                'weight' => 1.0,
-                'display_order' => 1,
-                'is_active' => true,
-                'vertical' => BusinessVertical::DailyFresh->value,
-            ],
-            // Society Fresh products
-            [
-                'name' => 'Premium Water 20L',
-                'slug' => 'premium-water-20l',
-                'sku' => 'SF-WAT-001',
-                'description' => 'Premium purified water in 20L bottle',
-                'short_description' => 'Premium water 20L',
-                'category_id' => $societyFreshCategory?->id,
-                'collection_id' => $societyFreshCollection?->id,
-                'image' => 'https://via.placeholder.com/400x400?text=Water+20L',
-                'price' => 120.00,
-                'compare_at_price' => 150.00,
-                'stock_quantity' => 500,
-                'is_in_stock' => true,
-                'is_subscription_eligible' => true,
-                'requires_bottle' => true,
-                'bottle_deposit' => 200.00,
-                'is_one_time_purchase' => false,
-                'min_quantity' => 1,
-                'max_quantity' => 10,
-                'unit' => 'bottle',
-                'weight' => 20.0,
-                'display_order' => 1,
-                'is_active' => true,
-                'vertical' => BusinessVertical::SocietyFresh->value,
-            ],
-            [
-                'name' => 'Premium Water 1L',
-                'slug' => 'premium-water-1l',
-                'sku' => 'SF-WAT-002',
-                'description' => 'Premium purified water in 1L bottle',
-                'short_description' => 'Premium water 1L',
-                'category_id' => $societyFreshCategory?->id,
-                'image' => 'https://via.placeholder.com/400x400?text=Water+1L',
-                'price' => 25.00,
-                'compare_at_price' => 30.00,
-                'stock_quantity' => 1000,
-                'is_in_stock' => true,
-                'is_subscription_eligible' => false,
-                'requires_bottle' => false,
-                'is_one_time_purchase' => true,
-                'min_quantity' => 1,
-                'max_quantity' => 24,
-                'unit' => 'bottle',
-                'weight' => 1.0,
-                'display_order' => 2,
-                'is_active' => true,
-                'vertical' => BusinessVertical::SocietyFresh->value,
-            ],
-        ];
-
         $zones = Zone::query()->active()->get();
 
-        foreach ($products as $data) {
-            $product = Product::query()->updateOrCreate(
-                ['slug' => $data['slug']],
-                $data,
-            );
+        foreach ($this->catalogue as $group) {
+            /** @var Category $category */
+            $category = Category::query()
+                ->where('slug', $group['category'])
+                ->first();
 
-            // Assign product to all active zones
-            $zoneData = [];
-            foreach ($zones as $zone) {
-                $zoneData[$zone->id] = [
-                    'is_available' => true,
-                    'price_override' => null,
-                    'stock_quantity' => $data['stock_quantity'],
-                ];
+            if (!$category) {
+                $this->command->warn("⚠️  Category [{$group['category']}] not found — skipping.");
+                continue;
             }
-            $product->zones()->sync($zoneData);
+
+            foreach ($group['products'] as $productData) {
+                $baseSlug = Str::slug($productData['name']);
+                $isBestSeller = $productData['bestSeller'] ?? false;
+
+                // The "primary" variant drives the product-level price
+                $primaryVariant = $productData['variants'][0];
+
+                // ── Upsert the parent product ────────────────────────────────
+                /** @var Product $product */
+                $product = Product::query()->updateOrCreate(
+                ['slug' => $baseSlug],
+                [
+                    'name' => $productData['name'],
+                    'slug' => $baseSlug,
+                    'sku' => $this->buildSku($category->slug, $productData['name']),
+                    'description' => $productData['description'],
+                    'short_description' => $productData['description'],
+                    'category_id' => $category->id,
+                    'image' => $productData['image'],
+                    'price' => $primaryVariant['price'],
+                    'compare_at_price' => null,
+                    'stock_quantity' => 200,
+                    'is_in_stock' => true,
+                    'is_subscription_eligible' => false,
+                    'requires_bottle' => false,
+                    'is_one_time_purchase' => true,
+                    'min_quantity' => 1,
+                    'max_quantity' => 20,
+                    'unit' => $primaryVariant['unit'],
+                    'weight' => $primaryVariant['weight'],
+                    'display_order' => 0,
+                    'is_active' => true,
+                    'vertical' => $group['vertical'],
+                ],
+                );
+
+                // ── Upsert each variant ──────────────────────────────────────
+                foreach ($productData['variants'] as $index => $variant) {
+                    $variantSku = $this->buildVariantSku(
+                        $category->slug,
+                        $productData['name'],
+                        $variant['label'],
+                    );
+
+                    ProductVariant::query()->updateOrCreate(
+                    ['sku' => $variantSku],
+                    [
+                        'product_id' => $product->id,
+                        'name' => $variant['label'],
+                        'sku' => $variantSku,
+                        'price' => $variant['price'],
+                        'stock_quantity' => 200,
+                        'is_active' => true,
+                    ],
+                    );
+                }
+
+                // ── Assign product to all active zones ───────────────────────
+                $zoneData = [];
+                foreach ($zones as $zone) {
+                    $zoneData[$zone->id] = [
+                        'is_available' => true,
+                        'price_override' => null,
+                        'stock_quantity' => 200,
+                    ];
+                }
+                $product->zones()->sync($zoneData);
+
+                $this->command->info("✅  Seeded: {$productData['name']} ({$product->variants()->count()} variants)");
+            }
         }
+
+        $this->command->newLine();
+        $this->command->info('🎉  ProductSeeder finished successfully.');
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    /**
+     * Build a clean, short SKU for the parent product.
+     * e.g. "cow-ghee" in category "ghee" → "GHEE-COW-GHEE"
+     */
+    private function buildSku(string $categorySlug, string $productName): string
+    {
+        $prefix = strtoupper(substr(str_replace('-', '', $categorySlug), 0, 4));
+        $name = strtoupper(substr(str_replace(' ', '-', $productName), 0, 8));
+
+        return "{$prefix}-{$name}";
+    }
+
+    /**
+     * Build a unique variant SKU.
+     * e.g. "GHEE-COW-GHEE-500G"
+     */
+    private function buildVariantSku(string $categorySlug, string $productName, string $variantLabel): string
+    {
+        $base = $this->buildSku($categorySlug, $productName);
+        $variant = strtoupper(str_replace([' ', '.'], '', $variantLabel));
+
+        return "{$base}-{$variant}";
     }
 }

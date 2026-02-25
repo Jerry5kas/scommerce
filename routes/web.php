@@ -53,9 +53,32 @@ Route::get('/', function () {
             'image' => $category->image,
         ]);
 
+    $products = \App\Models\Product::with('variants')
+        ->active()
+        ->inStock()
+        ->ordered()
+        ->get()
+        ->map(fn (\App\Models\Product $product) => [
+            'id' => $product->id,
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'image' => $product->image,
+            'price' => (float) $product->price,
+            'compare_at_price' => $product->compare_at_price ? (float) $product->compare_at_price : null,
+            'unit' => $product->unit,
+            'weight' => $product->weight ? (float) $product->weight : null,
+            'variants' => $product->variants->map(fn ($v) => [
+                'id' => $v->id,
+                'name' => $v->name,
+                'price' => (float) $v->price,
+                'is_active' => $v->is_active,
+            ])->values(),
+        ]);
+
     return Inertia::render('home', [
         'banners' => $banners,
         'categories' => $categories,
+        'products' => $products,
     ]);
 })->name('home');
 
