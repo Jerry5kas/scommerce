@@ -6,6 +6,7 @@ use App\Enums\BusinessVertical;
 use App\Models\Product;
 use App\Services\CatalogService;
 use App\Services\FreeSampleService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,7 +21,7 @@ class ProductController extends Controller
     /**
      * List products page (static page with hardcoded products)
      */
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
         // This page uses hardcoded products, so we just need to ensure user has location
         // The location middleware already handles this, but we keep it for consistency
@@ -35,7 +36,7 @@ class ProductController extends Controller
     /**
      * Show product details
      */
-    public function show(Request $request, Product $product): Response
+    public function show(Request $request, Product $product): Response|RedirectResponse
     {
         $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
         if (! in_array($vertical, array_merge(BusinessVertical::values(), ['both']), true)) {

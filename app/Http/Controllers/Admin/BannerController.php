@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\Zone;
+use App\Traits\HandlesImageUploads;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,6 +13,7 @@ use Inertia\Response;
 
 class BannerController extends Controller
 {
+    use HandlesImageUploads;
     /**
      * Display banners list.
      */
@@ -67,7 +69,9 @@ class BannerController extends Controller
             'title' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'image' => ['required', 'string', 'url'],
+            'image_file' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:10240'],
             'mobile_image' => ['nullable', 'string', 'url'],
+            'mobile_image_file' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:10240'],
             'link_url' => ['nullable', 'string', 'url'],
             'link_type' => ['required', 'in:product,category,collection,external,none'],
             'link_id' => ['nullable', 'string'],
@@ -77,6 +81,27 @@ class BannerController extends Controller
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'zones' => ['nullable', 'array'],
         ]);
+
+        // Handle image file upload if provided
+        if ($request->hasFile('image_file')) {
+            $validated['image'] = $this->handleImageUpload(
+                null,
+                $request->file('image_file'),
+                'banners'
+            );
+        }
+
+        // Handle mobile image file upload if provided
+        if ($request->hasFile('mobile_image_file')) {
+            $validated['mobile_image'] = $this->handleImageUpload(
+                null,
+                $request->file('mobile_image_file'),
+                'banners/mobile'
+            );
+        }
+
+        // Remove file fields from validated data
+        unset($validated['image_file'], $validated['mobile_image_file']);
 
         Banner::create($validated);
 
@@ -120,7 +145,9 @@ class BannerController extends Controller
             'title' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'image' => ['required', 'string', 'url'],
+            'image_file' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:10240'],
             'mobile_image' => ['nullable', 'string', 'url'],
+            'mobile_image_file' => ['nullable', 'file', 'mimes:jpeg,jpg,png,gif,webp', 'max:10240'],
             'link_url' => ['nullable', 'string', 'url'],
             'link_type' => ['required', 'in:product,category,collection,external,none'],
             'link_id' => ['nullable', 'string'],
@@ -130,6 +157,31 @@ class BannerController extends Controller
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'zones' => ['nullable', 'array'],
         ]);
+
+        // Handle image file upload if provided
+        if ($request->hasFile('image_file')) {
+            // Delete old image
+            $this->deleteOldImage($banner->image);
+            $validated['image'] = $this->handleImageUpload(
+                null,
+                $request->file('image_file'),
+                'banners'
+            );
+        }
+
+        // Handle mobile image file upload if provided
+        if ($request->hasFile('mobile_image_file')) {
+            // Delete old mobile image
+            $this->deleteOldImage($banner->mobile_image);
+            $validated['mobile_image'] = $this->handleImageUpload(
+                null,
+                $request->file('mobile_image_file'),
+                'banners/mobile'
+            );
+        }
+
+        // Remove file fields from validated data
+        unset($validated['image_file'], $validated['mobile_image_file']);
 
         $banner->update($validated);
 

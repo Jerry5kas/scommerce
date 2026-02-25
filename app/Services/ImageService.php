@@ -60,11 +60,11 @@ class ImageService
 
         // Check for duplicate file before uploading (by file hash in database)
         $fileHash = md5_file($file->getRealPath());
-        $existingFile = ImagekitFile::where('file_hash', $fileHash)
-            ->where('folder', $folderPath)
-            ->first();
+        $existingFile = ImagekitFile::where('file_hash', $fileHash)->first();
 
-        if ($existingFile !== null) {
+        // Only reuse if the existing file URL matches current ImageKit endpoint
+        $currentEndpoint = config('imagekit.url_endpoint');
+        if ($existingFile !== null && str_starts_with($existingFile->url, $currentEndpoint)) {
             Log::debug('Duplicate file detected, reusing existing', [
                 'file_hash' => $fileHash,
                 'existing_url' => $existingFile->url,
@@ -79,6 +79,15 @@ class ImageService
                 'size' => $existingFile->size,
                 'mimeType' => $existingFile->mime_type,
             ];
+        }
+
+        // If existing file exists but with different endpoint (credentials changed), log it
+        if ($existingFile !== null && !str_starts_with($existingFile->url, $currentEndpoint)) {
+            Log::debug('Existing file found but endpoint changed, re-uploading to new account', [
+                'file_hash' => $fileHash,
+                'old_url' => $existingFile->url,
+                'current_endpoint' => $currentEndpoint,
+            ]);
         }
 
         // Generate unique filename

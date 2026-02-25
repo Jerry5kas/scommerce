@@ -28,7 +28,35 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('home');
+    $banners = \App\Models\Banner::current()
+        ->byType(\App\Models\Banner::TYPE_HOME)
+        ->ordered()
+        ->get()
+        ->map(fn (\App\Models\Banner $banner) => [
+            'id' => $banner->id,
+            'title' => $banner->title,
+            'description' => $banner->description,
+            'image' => $banner->getImageUrl(),
+            'mobile_image' => $banner->getMobileImageUrl(),
+            'link' => $banner->getLink(),
+            'link_type' => $banner->link_type,
+        ]);
+
+    $categories = \App\Models\Category::active()
+        ->ordered()
+        ->limit(5)
+        ->get()
+        ->map(fn (\App\Models\Category $category) => [
+            'id' => $category->id,
+            'name' => $category->name,
+            'slug' => $category->slug,
+            'image' => $category->image,
+        ]);
+
+    return Inertia::render('home', [
+        'banners' => $banners,
+        'categories' => $categories,
+    ]);
 })->name('home');
 
 Route::middleware('location')->group(function () {

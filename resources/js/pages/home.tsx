@@ -1,9 +1,12 @@
-import { Head } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, ExternalLink, Heart, MapPin, MapPinned, Mail, Phone, Play, X } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import { ChevronLeft, ChevronRight, ExternalLink, Heart, MapPin, MapPinned, Mail, Package, Phone, Play, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import HeroBanner from '@/components/user/HeroBanner';
 import ProductCardMedia, { getMediaList } from '@/components/user/ProductCardMedia';
 import UserLayout from '@/layouts/UserLayout';
 
+// Interface for old carousel - kept for reference
+/*
 interface CarouselSlide {
     id: number;
     title: string;
@@ -11,6 +14,7 @@ interface CarouselSlide {
     description: string;
     image: string;
 }
+*/
 
 const PRODUCTS: Array<{
     name: string;
@@ -39,6 +43,8 @@ const PRODUCTS: Array<{
     { name: 'Welcome Offer Plan', variant: '₹39/ Unit', price: '', image: '/images/dairy-products.png', isPlan: true },
 ];
 
+// Carousel slides data - kept for reference if needed in future
+/*
 const carouselSlides: CarouselSlide[] = [
     {
         id: 1,
@@ -62,6 +68,7 @@ const carouselSlides: CarouselSlide[] = [
         image: '/demo/panneer.png',
     },
 ];
+*/
 
 const SUBSCRIPTION_FEATURES = [
     'Daily Morning delivery',
@@ -113,8 +120,32 @@ const TESTIMONIALS_PER_VIEW = { mobile: 1, sm: 2, lg: 3 };
 const GAP_PX = 16; // gap-4
 const TESTIMONIAL_GAP_PX = 16;
 
-export default function Home() {
-    const [currentSlide, setCurrentSlide] = useState(0);
+interface Banner {
+    id: number;
+    title: string;
+    description: string;
+    image: string;
+    mobile_image: string;
+    link: string | null;
+    link_type: string;
+}
+
+interface Category {
+    id: number;
+    name: string;
+    slug: string;
+    image: string | null;
+}
+
+interface HomeProps {
+    banners: Banner[];
+    categories: Category[];
+}
+
+export default function Home({ banners, categories }: HomeProps) {
+    // Old carousel state - removed (using HeroBanner component now)
+    // const [currentSlide, setCurrentSlide] = useState(0);
+    
     const [productIndex, setProductIndex] = useState(0);
     const [cardsPerView, setCardsPerView] = useState(4);
     const [stepPx, setStepPx] = useState(0);
@@ -126,7 +157,14 @@ export default function Home() {
     const [storyProgress, setStoryProgress] = useState(0);
     const [wishlistedProductIds, setWishlistedProductIds] = useState<Set<string>>(new Set());
     const [cardMediaIndex, setCardMediaIndex] = useState<Record<string, number>>({});
+    const [categoryActivePage, setCategoryActivePage] = useState(0);
+    const [productActivePage, setProductActivePage] = useState(0);
+    const [storiesActivePage, setStoriesActivePage] = useState(0);
+    const [testimonialsActivePage, setTestimonialsActivePage] = useState(0);
     const productSliderRef = useRef<HTMLDivElement>(null);
+    const categorySliderRef = useRef<HTMLDivElement>(null);
+    const storiesSliderRef = useRef<HTMLDivElement>(null);
+    const testimonialsSliderRef = useRef<HTMLDivElement>(null);
 
     const setCardMediaIndexForKey = (key: string, index: number) => {
         setCardMediaIndex((prev) => ({ ...prev, [key]: index }));
@@ -230,479 +268,313 @@ export default function Home() {
     const goPrevTestimonial = () => setTestimonialIndex((i) => Math.max(0, i - 1));
     const goNextTestimonial = () => setTestimonialIndex((i) => Math.min(testimonialMaxIndex, i + 1));
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
-        }, 5000);
 
-        return () => clearInterval(interval);
-    }, []);
-
-    const goToSlide = (index: number) => setCurrentSlide(index);
-    const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
-    const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + carouselSlides.length) % carouselSlides.length);
 
     return (
         <UserLayout>
             <Head title="FreshTick - Fresh Dairy Delivered Daily" />
-            {/* Hero Carousel - Mobile-first responsive design */}
-            <section
-                className="relative min-h-[100vh] overflow-hidden pt-[4.5rem] sm:pt-[4.75rem] lg:pt-[7rem] lg:h-screen lg:min-h-0"
-                aria-label="Hero carousel"
-            >
-                <div className="relative h-full min-h-[100vh] w-full overflow-hidden lg:h-[calc(100vh-7rem)] lg:min-h-0">
-                    {carouselSlides.map((slide, index) => (
-                        <div
-                            key={slide.id}
-                            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                                index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
-                            }`}
-                        >
-                            {/* Background image (full bleed) */}
-                            <div
-                                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                                style={{ backgroundImage: `url(${slide.image})` }}
-                                aria-hidden
-                            />
-                            {/* Black overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-gray-900/90 via-gray-800/85 to-black/90" aria-hidden />
-                            {/* Subtle texture overlay */}
-                            <div
-                                className="absolute inset-0 opacity-20"
-                                style={{
-                                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                                }}
-                                aria-hidden
-                            />
-
-                            {/* Content Container - Mobile-first layout */}
-                            <div className="relative z-10 flex h-full min-h-0 flex-col justify-center px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-0">
-                                <div className="container mx-auto w-full max-w-7xl">
-                                    <div className="flex flex-col items-center gap-6 sm:gap-8 lg:flex-row lg:items-stretch lg:justify-between lg:gap-8">
-                                        {/* Left Content - Mobile centered, Desktop vertically centered and left-aligned */}
-                                        <div className="flex w-full flex-shrink-0 flex-col items-center justify-center text-center lg:w-2/5 lg:items-start lg:justify-center lg:text-left">
-                                            {/* Branding Badge */}
-                                            <div className="mb-3 flex items-center justify-center lg:justify-start">
-                                                <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 backdrop-blur-sm sm:px-3.5 sm:py-1.5">
-                                                    <img
-                                                        src="/logo_new.png"
-                                                        alt="FreshTick"
-                                                        className="h-3.5 w-auto sm:h-4"
-                                                        loading="eager"
-                                                    />
-                                                    <span className="text-[10px] text-[var(--theme-primary-1)] font-semibold sm:text-xs">
-                                                        Fresh Daily
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            
-                                            {/* Main Heading */}
-                                            <h1 className="mb-3 text-2xl font-extrabold leading-tight text-white sm:text-3xl sm:mb-4 md:text-4xl lg:text-5xl lg:mb-5 xl:text-6xl">
-                                                {slide.title}
-                                                <br />
-                                                <span className="bg-gradient-to-r from-white to-white/90 bg-clip-text text-transparent">
-                                                    {slide.subtitle}
-                                                </span>
-                                            </h1>
-                                            
-                                            {/* Description */}
-                                            <p className="mb-5 text-sm leading-relaxed text-white/90 sm:text-base sm:mb-6 md:text-lg lg:text-xl lg:mb-8">
-                                                {slide.description}
-                                            </p>
-                                            
-                                            {/* CTA Buttons - Mobile stacked, Desktop inline */}
-                                            <div className="mb-4 flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-3 lg:justify-start lg:mb-5">
-                                                <button className="max-w-max rounded-lg bg-[var(--theme-primary-1)] px-5 py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:ring-offset-gray-900 sm:w-auto sm:px-6 sm:py-3 sm:text-base">
-                                                    Subscribe Now
-                                                </button>
-                                                <button className="max-w-max rounded-lg border-2 border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:border-white/50 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white sm:w-auto sm:px-6 sm:py-3 sm:text-base">
-                                                    Check Area
-                                                </button>
-                                            </div>
-                                            
-                                            {/* Trust Badges - Mobile centered, Desktop left */}
-                                            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 lg:justify-start">
-                                                {['Farm-fresh', 'Morning delivery', 'Pause anytime', 'No lock-in'].map(
-                                                    (badge) => (
-                                                        <div
-                                                            key={badge}
-                                                            className="flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] text-white backdrop-blur-sm sm:px-3 sm:text-xs"
-                                                        >
-                                                            <svg
-                                                                className="h-2.5 w-2.5 shrink-0 text-white sm:h-3 sm:w-3"
-                                                                fill="currentColor"
-                                                                viewBox="0 0 20 20"
-                                                            >
-                                                                <path
-                                                                    fillRule="evenodd"
-                                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                                    clipRule="evenodd"
-                                                                />
-                                                            </svg>
-                                                            <span className="whitespace-nowrap">{badge}</span>
-                                                        </div>
-                                                    ),
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Right Visual - Mobile centered, Desktop right-aligned */}
-                                        <div className="relative flex w-full flex-shrink-0 items-center justify-center lg:h-full lg:w-3/5 lg:min-h-0 lg:justify-end">
-                                            <div className="relative flex h-full w-full flex-col items-center justify-center lg:flex-row lg:justify-end">
-                                                {/* Decorative blur circles - Hidden on mobile, visible on desktop */}
-                                                <div className="absolute -left-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-3xl sm:-left-8 sm:-top-8 sm:h-40 sm:w-40 lg:-left-12 lg:-top-12 lg:h-64 lg:w-64" />
-                                                <div className="absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-white/10 blur-3xl sm:-bottom-8 sm:-right-8 sm:h-40 sm:w-40 lg:-bottom-12 lg:-right-12 lg:h-64 lg:w-64" />
-
-                                                {/* Product image container - Mobile responsive, Desktop original shape */}
-                                                <div className="relative h-[200px] w-full max-w-[280px] shrink-0 overflow-hidden sm:h-[280px] sm:max-w-[320px] md:h-[340px] md:max-w-[380px] lg:h-full lg:min-h-[420px] lg:w-[85%] lg:max-w-[620px] xl:max-w-[720px]">
-                                                    <div className="relative h-full w-full overflow-hidden bg-white/10 shadow-2xl backdrop-blur-md hero-image-shape">
-                                                        <img
-                                                            src={slide.image}
-                                                            alt={slide.title}
-                                                            className="h-full w-full object-cover object-center"
-                                                            loading="lazy"
-                                                        />
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-                                                    </div>
-                                                    {/* Decorative bubbles - Mobile hidden, Desktop at original positions */}
-                                                    <div className="absolute right-0 top-[28%] z-10 h-6 w-6 animate-float rounded-full bg-white/25 shadow-xl backdrop-blur-sm sm:right-0 sm:top-[28%] sm:h-8 sm:w-8 md:h-10 md:w-10 lg:h-20 lg:w-20 lg:top-[25%] xl:h-24 xl:w-24" aria-hidden />
-                                                    <div className="absolute bottom-[28%] left-0 z-10 h-6 w-6 animate-float-delayed rounded-full bg-white/25 shadow-xl backdrop-blur-sm sm:bottom-[28%] sm:left-0 sm:h-8 sm:w-8 md:h-10 md:w-10 lg:bottom-[25%] lg:h-20 lg:w-20 xl:h-24 xl:w-24" aria-hidden />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+            
+            {/* Hero Banner Section - Compact with thumbnails */}
+            <HeroBanner banners={banners} autoPlay={true} interval={5000} />
+            
+            {/* We deliver to – compact marquee, no margin */}
+            <section className="marquee-dark mt-0 overflow-hidden border-y border-gray-700/50 py-2 sm:py-2.5">
+                <div className="flex items-center overflow-hidden">
+                    <div className="flex flex-1 animate-marquee-slow items-center whitespace-nowrap">
+                        {[...Array(3)].map((_, copyIndex) => (
+                            <div key={copyIndex} className="flex min-w-max items-center gap-1.5 px-4 sm:gap-2 sm:px-6">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-[var(--theme-secondary)] sm:text-sm">
+                                    <MapPinned className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+                                    We deliver to
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-[var(--theme-secondary)] sm:text-sm">
+                                    <MapPinned className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+                                    Ernakulam
+                                </span>
+                                {['Kaloor', 'Panampilly Nagar', 'High Court (Kochi)', 'Nayarambalam'].map(
+                                    (location) => (
+                                        <span key={`ern-${copyIndex}-${location}`} className="inline-flex items-center gap-1 text-xs font-medium text-white/70 sm:text-sm">
+                                            <MapPin className="h-3 w-3 shrink-0" strokeWidth={2} />
+                                            {location}
+                                        </span>
+                                    ),
+                                )}
+                                <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-[var(--theme-secondary)] sm:text-sm">
+                                    <MapPinned className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+                                    Malappuram
+                                </span>
+                                {['Malipuram', 'Alathurpadi'].map((location) => (
+                                    <span key={`mal-${copyIndex}-${location}`} className="inline-flex items-center gap-1 text-xs font-medium text-white/70 sm:text-sm">
+                                        <MapPin className="h-3 w-3 shrink-0" strokeWidth={2} />
+                                        {location}
+                                    </span>
+                                ))}
                             </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Carousel Controls - Mobile optimized */}
-                <button
-                    onClick={prevSlide}
-                    className="absolute left-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-2.5 backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 sm:left-4 sm:p-3 lg:left-8"
-                    aria-label="Previous slide"
-                >
-                    <ChevronLeft className="h-5 w-5 text-white sm:h-6 sm:w-6 lg:h-8 lg:w-8" strokeWidth={2.5} />
-                </button>
-
-                <button
-                    onClick={nextSlide}
-                    className="absolute right-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-white/20 p-2.5 backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 sm:right-4 sm:p-3 lg:right-8"
-                    aria-label="Next slide"
-                >
-                    <ChevronRight className="h-5 w-5 text-white sm:h-6 sm:w-6 lg:h-8 lg:w-8" strokeWidth={2.5} />
-                </button>
-
-                {/* Carousel Indicators - Mobile optimized */}
-                <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 gap-2 sm:bottom-8">
-                    {carouselSlides.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => goToSlide(index)}
-                            className={`h-1.5 rounded-full transition-all duration-300 active:scale-125 sm:h-2 ${
-                                index === currentSlide
-                                    ? 'w-6 bg-white sm:w-8'
-                                    : 'w-1.5 bg-white/50 hover:bg-white/75 sm:w-2'
-                            }`}
-                            aria-label={`Go to slide ${index + 1}`}
-                        />
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </section>
 
-                {/* We deliver to – dark marquee, solid colors, larger size */}
-                <section className="marquee-dark overflow-hidden border-y border-white/10 py-5 sm:py-6 lg:py-7">
-                    <div className="flex items-center overflow-hidden">
-                        <div className="flex flex-1 animate-marquee-slow items-center whitespace-nowrap">
-                            {[...Array(3)].map((_, copyIndex) => (
-                                <div key={copyIndex} className="flex min-w-max items-center gap-2 px-8 sm:gap-3 sm:px-10 lg:gap-4 lg:px-12">
-                                    <span className="inline-flex items-center gap-2 text-base font-extrabold uppercase tracking-wide text-[var(--theme-secondary)] sm:text-lg lg:text-xl">
-                                        <MapPinned className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" strokeWidth={2.5} />
-                                        We deliver to
-                                    </span>
-                                    <span className="text-base font-bold text-white/30 sm:text-lg lg:text-xl" aria-hidden>_</span>
-                                    <span className="inline-flex items-center gap-2 text-base font-extrabold uppercase tracking-wide text-[var(--theme-secondary)] sm:text-lg lg:text-xl">
-                                        <MapPinned className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" strokeWidth={2.5} />
-                                        Ernakulam
-                                    </span>
-                                    <span className="text-base font-bold text-white/30 sm:text-lg lg:text-xl" aria-hidden>_</span>
-                                    {['Kaloor', 'Panampilly Nagar', 'High Court (Kochi)', 'Nayarambalam'].map(
-                                        (location, locIdx) => (
-                                            <span key={`ern-${copyIndex}-${location}`} className="inline-flex items-center gap-2 text-base font-semibold text-white/70 sm:text-lg lg:text-xl">
-                                                {locIdx > 0 && <span className="text-base font-bold text-white/30 sm:text-lg lg:text-xl" aria-hidden>_</span>}
-                                                <MapPin className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" strokeWidth={2} />
-                                                {location}
-                                            </span>
-                                        ),
-                                    )}
-                                    <span className="text-base font-bold text-white/30 sm:text-lg lg:text-xl" aria-hidden>_</span>
-                                    <span className="inline-flex items-center gap-2 text-base font-extrabold uppercase tracking-wide text-[var(--theme-secondary)] sm:text-lg lg:text-xl">
-                                        <MapPinned className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" strokeWidth={2.5} />
-                                        Malappuram
-                                    </span>
-                                    <span className="text-base font-bold text-white/30 sm:text-lg lg:text-xl" aria-hidden>_</span>
-                                    {['Malipuram', 'Alathurpadi'].map((location, locIdx) => (
-                                        <span key={`mal-${copyIndex}-${location}`} className="inline-flex items-center gap-2 text-base font-semibold text-white/70 sm:text-lg lg:text-xl">
-                                            {locIdx > 0 && <span className="text-base font-bold text-white/30 sm:text-lg lg:text-xl" aria-hidden>_</span>}
-                                            <MapPin className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" strokeWidth={2} />
-                                            {location}
-                                        </span>
-                                    ))}
+                {/* Trending Product Categories - Slider with Navigation */}
+                <section className="py-10 bg-white sm:py-12 lg:py-14" aria-labelledby="trending-categories-heading">
+                    <div className="container mx-auto px-3 sm:px-4 lg:px-6">
+                        {/* Compact Header with Icon and Nav Buttons */}
+                        <div className="mb-6 flex items-center justify-between sm:mb-5">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
+                                    <Package className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5" />
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Shop by Vertical - Daily Fresh & Society Fresh Entry Points */}
-                <section className="py-12 bg-gradient-to-b from-gray-900 to-gray-800 sm:py-16 lg:py-20" aria-labelledby="shop-verticals-heading">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="mx-auto max-w-3xl text-center mb-8 sm:mb-12">
-                            <h2 id="shop-verticals-heading" className="mb-3 text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
-                                How would you like to shop?
-                            </h2>
-                            <p className="text-base text-white/70 sm:text-lg">
-                                Choose your preferred shopping experience
-                            </p>
-                        </div>
-                        <div className="mx-auto max-w-4xl grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
-                            {/* Daily Fresh Card */}
-                            <a
-                                href="/catalog?vertical=daily_fresh"
-                                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl sm:p-8"
-                            >
-                                <div className="absolute inset-0 bg-[url('/images/pattern-dots.svg')] opacity-10" />
-                                <div className="relative z-10">
-                                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm sm:h-16 sm:w-16">
-                                        <svg className="h-8 w-8 text-white sm:h-9 sm:w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="mb-2 text-xl font-bold text-white sm:text-2xl">
-                                        Daily Fresh
-                                    </h3>
-                                    <p className="mb-4 text-sm text-white/80 sm:text-base">
-                                        Fresh milk, curd & dairy delivered every morning to your doorstep. No commitment, order what you need.
+                                <div>
+                                    <h2 id="trending-categories-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
+                                        Browse Categories
+                                    </h2>
+                                    <p className="text-xs text-gray-400 sm:text-sm">
+                                        Fresh dairy delivered
                                     </p>
-                                    <ul className="mb-6 space-y-2 text-sm text-white/70">
-                                        <li className="flex items-center gap-2">
-                                            <svg className="h-4 w-4 shrink-0 text-emerald-200" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                            Order anytime, no subscription
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <svg className="h-4 w-4 shrink-0 text-emerald-200" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                            Morning delivery before 7 AM
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <svg className="h-4 w-4 shrink-0 text-emerald-200" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                            Farm-fresh quality guaranteed
-                                        </li>
-                                    </ul>
-                                    <span className="inline-flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-colors group-hover:bg-white/30">
-                                        Shop Daily Fresh
-                                        <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                                        </svg>
-                                    </span>
                                 </div>
-                            </a>
-
-                            {/* Society Fresh Card */}
-                            <a
-                                href="/catalog?vertical=society_fresh"
-                                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 shadow-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl sm:p-8"
+                            </div>
+                            
+                            {/* Web: Nav buttons near View All */}
+                            <div className="hidden items-center gap-2 lg:flex">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const slider = document.getElementById('category-slider');
+                                        if (slider) slider.scrollBy({ left: -slider.offsetWidth / 6, behavior: 'smooth' });
+                                    }}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                    aria-label="Previous categories"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const slider = document.getElementById('category-slider');
+                                        if (slider) slider.scrollBy({ left: slider.offsetWidth / 6, behavior: 'smooth' });
+                                    }}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                    aria-label="Next categories"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </button>
+                                <Link
+                                    href="/products"
+                                    className="ml-2 rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white sm:text-sm"
+                                >
+                                    View All
+                                </Link>
+                            </div>
+                            
+                            {/* Mobile: View All only */}
+                            <Link
+                                href="/products"
+                                className="rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white lg:hidden sm:text-sm"
                             >
-                                <div className="absolute inset-0 bg-[url('/images/pattern-dots.svg')] opacity-10" />
-                                <div className="relative z-10">
-                                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm sm:h-16 sm:w-16">
-                                        <svg className="h-8 w-8 text-white sm:h-9 sm:w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5.5l-1.5-.5M6.75 7.364V3h-3v18m3-13.636l10.5-3.819" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="mb-2 text-xl font-bold text-white sm:text-2xl">
-                                        Society Fresh
-                                    </h3>
-                                    <p className="mb-4 text-sm text-white/80 sm:text-base">
-                                        Subscribe for daily delivery to your society. Save more with bulk plans and never run out of essentials.
-                                    </p>
-                                    <ul className="mb-6 space-y-2 text-sm text-white/70">
-                                        <li className="flex items-center gap-2">
-                                            <svg className="h-4 w-4 shrink-0 text-amber-200" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                            Up to 50% off with subscriptions
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <svg className="h-4 w-4 shrink-0 text-amber-200" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                            Pause/resume anytime
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <svg className="h-4 w-4 shrink-0 text-amber-200" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                            Vacation hold & WhatsApp alerts
-                                        </li>
-                                    </ul>
-                                    <span className="inline-flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition-colors group-hover:bg-white/30">
-                                        Shop Society Fresh
-                                        <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                                        </svg>
-                                    </span>
-                                </div>
-                            </a>
+                                View All
+                            </Link>
                         </div>
-                    </div>
-                </section>
-               
-                {/* Trending Product Categories */}
-                <section className="py-16 bg-gradient-to-b from-white to-gray-50/50 sm:py-20 lg:py-24" aria-labelledby="trending-categories-heading">
-                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="mx-auto max-w-3xl text-center">
-                            <h2 id="trending-categories-heading" className="mb-3 text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl">
-                                Trending Product Categories
-                            </h2>
-                            <p className="text-lg text-gray-600 sm:text-xl">
-                                Explore our most loved dairy categories
-                            </p>
-                        </div>
-                        <div className="mx-auto mt-12 grid max-w-5xl grid-cols-2 gap-6 sm:grid-cols-3 sm:gap-8 lg:grid-cols-5 lg:gap-6">
-                            {[
-                                { name: 'Country Butter', image: '/images/categories/butter.png' },
-                                { name: 'Butter Milk', image: '/images/categories/butter milk.png' },
-                                { name: 'Paneer', image: '/images/categories/panneer.png' },
-                                { name: 'Fresh Curd', image: '/images/categories/Fresh Curd.png' },
-                                { name: 'Ghee', image: '/images/categories/Ghee.png' },
-                            ].map((category) => (
-                                <div key={category.name} className="group flex flex-col items-center">
-                                    <div className="relative w-full overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-gray-200/60 transition-all duration-500 group-hover:shadow-2xl group-hover:ring-[var(--theme-primary-1)]/40 group-hover:-translate-y-1">
-                                        <div className="aspect-square w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                        
+                        {/* Category Slider */}
+                        <div
+                            ref={categorySliderRef}
+                            id="category-slider"
+                            className="scrollbar-hide flex snap-x snap-mandatory gap-2 overflow-x-auto sm:gap-3 lg:gap-3"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            onScroll={() => {
+                                const slider = categorySliderRef.current;
+                                if (slider) {
+                                    const scrollLeft = slider.scrollLeft;
+                                    const maxScroll = slider.scrollWidth - slider.clientWidth;
+                                    const pageCount = Math.ceil(categories.length / (window.innerWidth < 640 ? 2 : window.innerWidth < 1024 ? 3 : 6));
+                                    const currentPage = Math.round((scrollLeft / maxScroll) * (pageCount - 1));
+                                    setCategoryActivePage(Math.min(currentPage, pageCount - 1));
+                                }
+                            }}
+                        >
+                            {categories.map((category) => (
+                                <Link
+                                    key={category.id}
+                                    href={`/products?category=${category.slug}`}
+                                    className="group relative w-[calc(50%-4px)] flex-shrink-0 snap-start overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-100 transition-all duration-200 hover:shadow-md hover:ring-[var(--theme-primary-1)]/20 sm:w-[calc(33.333%-8px)] lg:w-[calc(16.666%-10px)]"
+                                >
+                                    <div className="aspect-square w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                                        {category.image ? (
                                             <img
                                                 src={category.image}
                                                 alt={category.name}
-                                                className="h-full w-full object-cover transition-all duration-500 group-hover:scale-110"
+                                                className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-110"
                                                 loading="lazy"
                                             />
-                                            {/* Gradient overlay on hover */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-[var(--theme-primary-1)]/0 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-10" />
-                                        </div>
-                                        {/* Shine effect on hover */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full transition-transform duration-700 group-hover:translate-x-full" />
+                                        ) : (
+                                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--theme-primary-1)]/10 to-[var(--theme-primary-1)]/5">
+                                                <Package className="h-6 w-6 text-[var(--theme-primary-1)]/30 sm:h-8 sm:w-8" strokeWidth={1.5} />
+                                            </div>
+                                        )}
                                     </div>
-                                    <h3 className="mt-4 text-center text-base font-bold text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-lg">
-                                        {category.name}
-                                    </h3>
-                                </div>
+                                    {/* Overlay with name */}
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 sm:p-2">
+                                        <h3 className="truncate text-center text-[10px] font-medium text-white sm:text-xs">
+                                            {category.name}
+                                        </h3>
+                                    </div>
+                                </Link>
                             ))}
+                        </div>
+                        
+                        {/* Mobile: Bottom Navigation with Pagination */}
+                        <div className="mt-4 flex items-center justify-center gap-4 lg:hidden">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const slider = document.getElementById('category-slider');
+                                    if (slider) {
+                                        const cardWidth = window.innerWidth < 640 ? slider.offsetWidth / 2 : slider.offsetWidth / 3;
+                                        slider.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+                                    }
+                                }}
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                aria-label="Previous categories"
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+                            
+                            {/* Pagination Dots */}
+                            <div className="flex items-center gap-1.5">
+                                {Array.from({ length: Math.min(5, Math.ceil(categories.length / (typeof window !== 'undefined' && window.innerWidth < 640 ? 2 : 3))) }).map((_, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => {
+                                            const slider = categorySliderRef.current;
+                                            if (slider) {
+                                                const cardWidth = window.innerWidth < 640 ? slider.offsetWidth / 2 : slider.offsetWidth / 3;
+                                                slider.scrollTo({ left: i * cardWidth * (window.innerWidth < 640 ? 2 : 3), behavior: 'smooth' });
+                                            }
+                                        }}
+                                        className={`h-2 w-2 rounded-full transition-colors ${
+                                            i === categoryActivePage 
+                                                ? 'bg-[var(--theme-primary-1)]' 
+                                                : 'bg-gray-300 hover:bg-gray-400'
+                                        }`}
+                                        aria-label={`Go to page ${i + 1}`}
+                                    />
+                                ))}
+                            </div>
+                            
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const slider = document.getElementById('category-slider');
+                                    if (slider) {
+                                        const cardWidth = window.innerWidth < 640 ? slider.offsetWidth / 2 : slider.offsetWidth / 3;
+                                        slider.scrollBy({ left: cardWidth, behavior: 'smooth' });
+                                    }
+                                }}
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                aria-label="Next categories"
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
                         </div>
                     </div>
                 </section>
 
-                {/* How Subscription Works Section */}
-                <section className="relative overflow-hidden py-16 bg-gradient-to-b from-gray-50 to-gray-100 sm:py-20 lg:py-24" aria-labelledby="subscription-steps-heading">
+                {/* How Subscription Works Section - Compact Enhanced */}
+                <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 py-10 sm:py-12 lg:py-14" aria-labelledby="subscription-steps-heading">
                     {/* Background decorative icons */}
                     <div className="section-icon-bg absolute inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden>
-                        <img src="/images/icons/milk-bottle.png" alt="" className="absolute left-[2%] top-[12%] h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16" style={{ opacity: 0.05, transform: 'rotate(-18deg)' }} />
-                        <img src="/images/icons/farm.png" alt="" className="absolute right-[4%] top-[10%] h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14" style={{ opacity: 0.04, transform: 'rotate(14deg)' }} />
-                        <img src="/images/icons/animal.png" alt="" className="absolute bottom-[18%] left-[1%] h-10 w-10 sm:h-12 sm:w-12" style={{ opacity: 0.04, transform: 'rotate(10deg)' }} />
-                        <img src="/images/icons/milk-bottle%20(1).png" alt="" className="absolute bottom-[12%] right-[7%] h-12 w-12 sm:h-14 sm:w-14" style={{ opacity: 0.05, transform: 'rotate(-12deg)' }} />
-                        <img src="/images/icons/discount.png" alt="" className="absolute left-[18%] top-1/2 h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10" style={{ opacity: 0.03, transform: 'rotate(18deg)' }} />
-                        <img src="/images/icons/milk%20(1).png" alt="" className="absolute right-[20%] top-1/2 h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10" style={{ opacity: 0.04, transform: 'rotate(-10deg)' }} />
+                        <img src="/images/icons/milk-bottle.png" alt="" className="absolute left-[2%] top-[12%] h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14" style={{ opacity: 0.05, transform: 'rotate(-18deg)' }} />
+                        <img src="/images/icons/farm.png" alt="" className="absolute right-[4%] top-[10%] h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12" style={{ opacity: 0.04, transform: 'rotate(14deg)' }} />
+                        <img src="/images/icons/animal.png" alt="" className="absolute bottom-[18%] left-[1%] h-8 w-8 sm:h-10 sm:w-10" style={{ opacity: 0.04, transform: 'rotate(10deg)' }} />
+                        <img src="/images/icons/milk-bottle%20(1).png" alt="" className="absolute bottom-[12%] right-[7%] h-10 w-10 sm:h-12 sm:w-12" style={{ opacity: 0.05, transform: 'rotate(-12deg)' }} />
+                        <img src="/images/icons/discount.png" alt="" className="absolute left-[18%] top-1/2 h-6 w-6 -translate-y-1/2 sm:h-8 sm:w-8" style={{ opacity: 0.03, transform: 'rotate(18deg)' }} />
+                        <img src="/images/icons/milk%20(1).png" alt="" className="absolute right-[20%] top-1/2 h-6 w-6 -translate-y-1/2 sm:h-8 sm:w-8" style={{ opacity: 0.04, transform: 'rotate(-10deg)' }} />
                     </div>
                     <style>{`
                         @keyframes blob-bounce {
-                            0% {
-                                transform: translate(-100%, -100%) translate3d(0, 0, 0);
-                            }
-                            25% {
-                                transform: translate(-100%, -100%) translate3d(100%, 0, 0);
-                            }
-                            50% {
-                                transform: translate(-100%, -100%) translate3d(100%, 100%, 0);
-                            }
-                            75% {
-                                transform: translate(-100%, -100%) translate3d(0, 100%, 0);
-                            }
-                            100% {
-                                transform: translate(-100%, -100%) translate3d(0, 0, 0);
-                            }
+                            0% { transform: translate(-100%, -100%) translate3d(0, 0, 0); }
+                            25% { transform: translate(-100%, -100%) translate3d(100%, 0, 0); }
+                            50% { transform: translate(-100%, -100%) translate3d(100%, 100%, 0); }
+                            75% { transform: translate(-100%, -100%) translate3d(0, 100%, 0); }
+                            100% { transform: translate(-100%, -100%) translate3d(0, 0, 0); }
                         }
                         .subscription-card {
                             position: relative;
-                            border-radius: 14px;
+                            border-radius: 12px;
                             z-index: 1111;
                             overflow: hidden;
                             display: flex;
                             flex-direction: column;
                             align-items: center;
                             justify-content: center;
-                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-                            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+                            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                         }
                         .subscription-card:hover {
-                            transform: translateY(-8px);
-                            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                            transform: translateY(-6px);
+                            box-shadow: 0 16px 20px -4px rgba(0, 0, 0, 0.1), 0 8px 8px -4px rgba(0, 0, 0, 0.04);
                         }
                         .subscription-card-bg {
                             position: absolute;
-                            top: 5px;
-                            left: 5px;
-                            right: 5px;
-                            bottom: 5px;
+                            top: 4px;
+                            left: 4px;
+                            right: 4px;
+                            bottom: 4px;
                             z-index: 2;
                             background: rgba(255, 255, 255, .95);
-                            backdrop-filter: blur(24px);
-                            border-radius: 10px;
+                            backdrop-filter: blur(20px);
+                            border-radius: 8px;
                             overflow: hidden;
                             outline: 2px solid white;
-                            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                         }
                         .subscription-card:hover .subscription-card-bg {
-                            box-shadow: 0 0 0 2px rgba(58, 154, 133, 0.3);
+                            box-shadow: 0 0 0 2px rgba(58, 154, 133, 0.25);
                         }
                         .subscription-card-blob {
                             position: absolute;
                             z-index: 1;
                             top: 50%;
                             left: 50%;
-                            width: 150px;
-                            height: 150px;
+                            width: 120px;
+                            height: 120px;
                             border-radius: 50%;
                             opacity: 1;
-                            filter: blur(12px);
+                            filter: blur(10px);
                             animation: blob-bounce 5s infinite ease;
-                            transition: opacity 0.5s ease;
+                            transition: opacity 0.4s ease;
                         }
                         .subscription-card:hover .subscription-card-blob {
                             opacity: 0.8;
                         }
                         @media (max-width: 640px) {
                             .subscription-card-blob {
-                                width: 100px;
-                                height: 100px;
+                                width: 80px;
+                                height: 80px;
                             }
                         }
                     `}</style>
-                    <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="mx-auto max-w-3xl text-center">
-                            <h2 id="subscription-steps-heading" className="mb-3 text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl">
-                                How Subscription Works
-                            </h2>
-                            <p className="text-lg text-gray-600 sm:text-xl">
-                                Simple steps to get fresh dairy delivered daily
-                            </p>
+                    <div className="container relative z-10 mx-auto px-3 sm:px-4 lg:px-6">
+                        {/* Compact Header with Icon - Row Layout */}
+                        <div className="mb-6 flex flex-row items-center justify-center gap-3 sm:mb-5 sm:gap-4">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
+                                <svg className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </div>
+                            <div className="text-left">
+                                <h2 id="subscription-steps-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
+                                    How Subscription Works
+                                </h2>
+                                <p className="text-xs text-gray-400 sm:text-sm">
+                                    Simple steps to get fresh dairy
+                                </p>
+                            </div>
                         </div>
 
-                        <div className="mx-auto mt-12 grid max-w-6xl grid-cols-2 gap-6 sm:gap-8 lg:flex lg:flex-row lg:items-stretch lg:justify-center lg:gap-4">
+                        {/* Enhanced Compact Cards Grid - Aligned with Categories */}
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-4">
                             {[
                                 {
                                     step: '1',
@@ -736,290 +608,422 @@ export default function Home() {
                                     imageAlt: 'Pause or modify',
                                     blobColor: 'var(--theme-secondary)',
                                 },
-                            ].flatMap((item, index) => {
-                                const card = (
-                                    <article
-                                        key={`step-${index}`}
-                                        className="subscription-card group h-full w-full min-h-[250px] sm:min-h-[280px] lg:min-h-[300px] lg:flex-1 lg:max-w-[200px]"
-                                    >
-                                        <div
-                                            className="subscription-card-blob"
-                                            style={{ backgroundColor: item.blobColor }}
-                                        />
-                                        <div className="subscription-card-bg flex flex-col items-center justify-center p-4 sm:p-6">
-                                            <div className="mb-4 flex flex-shrink-0 flex-col items-center">
-                                                <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-[var(--theme-primary-1)]/10 p-3 transition-all duration-500 group-hover:scale-110 group-hover:bg-[var(--theme-primary-1)]/20 sm:h-28 sm:w-28 sm:p-4 lg:h-32 lg:w-32">
-                                                    <img
-                                                        src={item.image}
-                                                        alt={item.imageAlt}
-                                                        className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-110"
-                                                        loading="lazy"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <h3 className="mb-2 text-center text-sm font-bold text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
-                                                {item.title}
-                                            </h3>
-                                            <p className="mt-auto text-center text-[10px] text-gray-600 transition-colors duration-300 group-hover:text-gray-800 sm:text-xs">
-                                                {item.description}
-                                            </p>
-                                        </div>
-                                    </article>
-                                );
-                                const arrow = (
+                            ].map((item, index) => (
+                                <article
+                                    key={`step-${index}`}
+                                    className="subscription-card group relative h-full w-full min-h-[200px] overflow-hidden sm:min-h-[240px] lg:min-h-[280px]"
+                                >
+                                    {/* Animated Blob Background */}
                                     <div
-                                        key={`arrow-${index}`}
-                                        className="hidden flex-shrink-0 items-center justify-center lg:flex"
-                                        aria-hidden
-                                    >
-                                        <svg className="h-6 w-6 text-[var(--theme-primary-1)] transition-all duration-300 hover:scale-125 hover:text-[var(--theme-primary-1-dark)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                        </svg>
+                                        className="subscription-card-blob"
+                                        style={{ backgroundColor: item.blobColor }}
+                                    />
+                                    {/* Step Number Badge */}
+                                    <div className="absolute left-3 top-3 z-30 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-[var(--theme-primary-1)] shadow-sm sm:left-4 sm:top-4 sm:h-7 sm:w-7 sm:text-sm">
+                                        {item.step}
                                     </div>
-                                );
-                                return index < 3 ? [card, arrow] : [card];
-                            })}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Our Products – enhanced card slider with improved UI */}
-                <section id="products" className="py-16 bg-gradient-to-b from-white to-gray-50/30 sm:py-20 lg:py-24" aria-labelledby="products-heading">
-                    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div className="mb-8 text-center sm:mb-10">
-                            <h2 id="products-heading" className="mb-2 text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl">
-                                Our Products
-                            </h2>
-                            <p className="text-base text-gray-600 sm:text-lg">
-                                Fresh dairy delivered to your doorstep
-                            </p>
-                        </div>
-
-                        <div className="relative flex items-center gap-3 sm:gap-4">
-                            <button
-                                type="button"
-                                onClick={goPrev}
-                                disabled={!canGoPrev}
-                                aria-label="Previous products"
-                                className={`z-10 flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border-2 shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 hover:scale-110 active:scale-95 sm:h-12 sm:w-12 ${
-                                    canGoPrev
-                                        ? 'border-[var(--theme-primary-1)]/50 bg-white text-[var(--theme-primary-1)] hover:border-[var(--theme-primary-1)] hover:bg-[var(--theme-primary-1)]/10 hover:shadow-lg'
-                                        : 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300'
-                                }`}
-                            >
-                                <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.5} />
-                            </button>
-
-                            <div ref={productSliderRef} className="min-w-0 flex-1 overflow-x-hidden">
-                                <div
-                                    className="flex gap-4 transition-transform duration-500 ease-out sm:gap-5"
-                                    style={{
-                                        width: stepPx > 0 ? `${PRODUCTS.length * stepPx - GAP_PX}px` : undefined,
-                                        transform: `translateX(-${productIndex * stepPx}px)`,
-                                    }}
-                                    role="list"
-                                >
-                                    {PRODUCTS.map((product, index) => {
-                                        const productId = `${product.name}-${product.variant}-${index}`;
-                                        const isWishlisted = wishlistedProductIds.has(productId);
-                                        return (
-                                            <article
-                                                key={productId}
-                                                className="group flex w-full shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-500 hover:border-[var(--theme-primary-1)]/50 hover:shadow-2xl"
-                                                style={{ width: stepPx > 0 ? `${stepPx - GAP_PX}px` : undefined }}
-                                                role="listitem"
-                                            >
-                                                <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 sm:aspect-[4/3]">
-                                                    <ProductCardMedia
-                                                        media={getMediaList(product)}
-                                                        alt={`${product.name} ${product.variant}`}
-                                                        productKey={productId}
-                                                        currentIndexMap={cardMediaIndex}
-                                                        onIndexChange={setCardMediaIndexForKey}
-                                                        className="h-full w-full"
-                                                        imageClassName="transition-transform duration-500 group-hover:scale-110"
-                                                    />
-                                                    {/* Gradient overlay on hover */}
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--theme-primary-1)]/0 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-5" />
-                                                    {product.bestSeller && (
-                                                        <span className="absolute left-2 top-2 z-10 rounded-full bg-gradient-to-r from-[#cf992c] to-[#e6b047] px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-white shadow-lg sm:left-2.5 sm:top-2.5 sm:px-2.5 sm:text-[10px]">
-                                                            Best Seller
-                                                        </span>
-                                                    )}
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            toggleProductWishlist(productId);
-                                                        }}
-                                                        aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                                                        className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 shadow-lg backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:bg-white active:scale-95 sm:right-2.5 sm:top-2.5 sm:h-8 sm:w-8"
-                                                    >
-                                                        <Heart
-                                                            className={`h-4 w-4 transition-all duration-300 sm:h-5 sm:w-5 ${isWishlisted ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-500 group-hover:text-red-400'}`}
-                                                            strokeWidth={2}
-                                                        />
-                                                    </button>
-                                                </div>
-                                                <div className="flex w-full flex-1 flex-col p-3 sm:p-4">
-                                                    <h3 className="mb-1 line-clamp-2 text-sm font-bold text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
-                                                        {product.name} {!product.isPlan && `- (${product.variant})`}
-                                                    </h3>
-                                                    {product.isPlan ? (
-                                                        <p className="mb-2 text-xs font-medium text-gray-600 sm:text-sm">
-                                                            {product.variant}
-                                                        </p>
-                                                    ) : (
-                                                        <p className="mb-2 text-sm font-bold text-[var(--theme-primary-1)] sm:text-base">
-                                                            {product.price}/ Unit
-                                                        </p>
-                                                    )}
-                                                    <button
-                                                        type="button"
-                                                        className="mt-auto w-full rounded-lg bg-[var(--theme-primary-1)] py-2.5 text-center text-xs font-semibold text-white shadow-md transition-all duration-300 hover:scale-105 hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 active:scale-95 sm:py-3 sm:text-sm"
-                                                    >
-                                                        {product.isPlan ? 'Subscribe' : 'Add to Cart'}
-                                                    </button>
-                                                </div>
-                                            </article>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={goNext}
-                                disabled={!canGoNext}
-                                aria-label="Next products"
-                                className={`z-10 flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border-2 shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 hover:scale-110 active:scale-95 sm:h-12 sm:w-12 ${
-                                    canGoNext
-                                        ? 'border-[var(--theme-primary-1)]/50 bg-white text-[var(--theme-primary-1)] hover:border-[var(--theme-primary-1)] hover:bg-[var(--theme-primary-1)]/10 hover:shadow-lg'
-                                        : 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300'
-                                }`}
-                            >
-                                <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.5} />
-                            </button>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Why Choose Us – modern design with enhanced UI/UX */}
-                <section className="py-16 bg-gradient-to-b from-white via-gray-50/50 to-white sm:py-20 lg:py-24" aria-labelledby="why-choose-heading">
-                    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div className="mb-12 text-center sm:mb-14">
-                            <h2 id="why-choose-heading" className="mb-3 text-3xl font-bold text-gray-800 sm:text-4xl lg:text-5xl">
-                                Why Choose Us
-                            </h2>
-                            <p className="text-base text-gray-600 sm:text-lg">
-                                Building trust through quality and transparency
-                            </p>
-                        </div>
-
-                        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-                            {[
-                                { title: 'Sourced from local Kerala farms', image: '/images/why-choose-us/Sourced from local Kerala farms.png' },
-                                { title: 'No preservatives', image: '/images/why-choose-us/no-preservatives.png' },
-                                { title: 'Hygienic processing', image: '/images/why-choose-us/Hygienic processing.png' },
-                                { title: 'Morning delivery before 7 AM', image: '/images/why-choose-us/morning-delivery.png' },
-                                { title: 'Cancel / pause anytime', image: '/images/why-choose-us/Cancel-pause anytime.png' },
-                                { title: 'Quality checked daily', image: '/images/why-choose-us/Quality checked daily.png' },
-                                { title: 'Cold-chain maintained', image: '/images/why-choose-us/Cold-chain maintained.png' },
-                                { title: 'Transparent pricing', image: '/images/why-choose-us/transparent-pricing.png' },
-                            ].map((item) => (
-                                <div
-                                    key={item.title}
-                                    className="group relative flex flex-col items-center rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200/60 transition-all duration-500 hover:-translate-y-2 hover:shadow-xl hover:ring-[var(--theme-primary-1)]/30 sm:p-7"
-                                >
-                                    {/* Decorative background element */}
-                                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--theme-primary-1)]/0 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-5" />
-                                    
-                                    {/* Icon container with modern design */}
-                                    <div className="relative mb-4 flex h-20 w-20 shrink-0 items-center justify-center overflow-visible rounded-2xl bg-gradient-to-br from-[var(--theme-primary-1)]/10 via-[var(--theme-primary-1)]/5 to-[var(--theme-secondary)]/10 p-4 shadow-lg transition-all duration-500 group-hover:scale-110 group-hover:bg-gradient-to-br group-hover:from-[var(--theme-primary-1)]/20 group-hover:via-[var(--theme-primary-1)]/10 group-hover:to-[var(--theme-primary-1)]/15 group-hover:shadow-xl sm:h-24 sm:w-24 sm:p-5">
-                                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/50 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                                        <img
-                                            src={item.image}
-                                            alt={item.title}
-                                            className="relative z-10 h-full w-full object-contain transition-transform duration-500 group-hover:scale-110"
-                                            loading="lazy"
-                                        />
+                                    {/* Card Content */}
+                                    <div className="subscription-card-bg flex flex-col items-center justify-center p-4 sm:p-5">
+                                        {/* Image Container with Enhanced Hover */}
+                                        <div className="mb-4 flex flex-shrink-0 flex-col items-center">
+                                            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--theme-primary-1)]/10 to-[var(--theme-primary-1)]/5 p-2.5 shadow-inner transition-all duration-400 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-[var(--theme-primary-1)]/10 sm:h-24 sm:w-24 sm:p-3 lg:h-28 lg:w-28">
+                                                {/* Subtle ring on hover */}
+                                                <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/5 group-hover:ring-[var(--theme-primary-1)]/20" />
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.imageAlt}
+                                                    className="h-full w-full object-contain transition-transform duration-400 group-hover:scale-110"
+                                                    loading="lazy"
+                                                />
+                                            </div>
+                                        </div>
+                                        {/* Title with Enhanced Typography */}
+                                        <h3 className="mb-2 text-center text-sm font-bold leading-tight text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
+                                            {item.title}
+                                        </h3>
+                                        {/* Description with Better Visual Hierarchy */}
+                                        <p className="text-center text-[11px] font-medium leading-relaxed text-gray-500 transition-colors duration-300 group-hover:text-gray-700 sm:text-xs">
+                                            {item.description}
+                                        </p>
                                     </div>
-                                    
-                                    {/* Title with modern typography */}
-                                    <h3 className="line-clamp-2 min-h-[2.5em] text-center text-sm font-bold text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
-                                        {item.title}
-                                    </h3>
-                                    
-                                    {/* Subtle accent line on hover */}
-                                    <div className="absolute bottom-0 left-1/2 h-1 w-0 -translate-x-1/2 rounded-full bg-[var(--theme-primary-1)] transition-all duration-500 group-hover:w-12" />
-                                </div>
+                                </article>
                             ))}
                         </div>
                     </div>
                 </section>
 
-                {/* Morning Delivery Promise – gray section, max-w-7xl, creative icon bg */}
-                <section className="relative overflow-hidden bg-gray-100 py-9">
-                    {/* Creative background: scattered icons from public/images/icons */}
-                    <div className="section-icon-bg absolute inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden>
-                        <img src="/images/icons/milk-bottle.png" alt="" className="absolute -left-4 top-[12%] h-20 w-20 sm:h-24 sm:w-24 lg:h-28 lg:w-28 lg:left-[8%] lg:top-[15%]" style={{ transform: 'rotate(-12deg)' }} />
-                        <img src="/images/icons/farm.png" alt="" className="absolute right-[5%] top-[8%] h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24 lg:right-[12%] lg:top-[10%]" style={{ transform: 'rotate(8deg)' }} />
-                        <img src="/images/icons/animal.png" alt="" className="absolute bottom-[20%] left-[2%] h-14 w-14 sm:h-18 sm:w-18 sm:bottom-[18%] lg:h-20 lg:w-20 lg:left-[5%] lg:bottom-[22%]" style={{ transform: 'rotate(6deg)' }} />
-                        <img src="/images/icons/milk-bottle%20(1).png" alt="" className="absolute bottom-[15%] right-[10%] h-20 w-20 sm:h-22 sm:w-22 sm:right-[8%] lg:h-24 lg:w-24 lg:right-[15%] lg:bottom-[18%]" style={{ transform: 'rotate(-10deg)' }} />
-                        <img src="/images/icons/discount.png" alt="" className="absolute left-1/2 top-[25%] h-12 w-12 -translate-x-1/2 sm:h-14 sm:w-14 lg:h-16 lg:w-16 lg:top-[28%]" style={{ transform: 'rotate(15deg)' }} />
-                        <img src="/images/icons/milk%20(1).png" alt="" className="absolute right-[20%] bottom-[12%] h-14 w-14 sm:h-16 sm:w-16 lg:h-[4.5rem] lg:w-[4.5rem] lg:right-[25%] lg:bottom-[14%]" style={{ transform: 'rotate(-5deg)' }} />
-                    </div>
-                    <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div className="relative flex min-h-[min(50vh,420px)] flex-col gap-6 sm:gap-8 lg:min-h-[480px] lg:flex-row lg:items-stretch lg:gap-10">
-                            {/* Left: content – on gray, black/dark text, primary accent */}
-                            <div className="relative z-10 flex flex-shrink-0 flex-col justify-center py-4 lg:w-[44%] lg:max-w-xl lg:py-6">
-                                <span className="mb-3 inline-flex w-fit rounded-full bg-[var(--theme-primary-1)] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-widest text-white sm:text-xs">
-                                    Morning delivery
-                                </span>
-                                <h2 className="mb-3 text-2xl font-bold tracking-tight text-black sm:text-3xl lg:text-4xl">
-                                    Wake Up to <span className="text-[var(--theme-primary-1)]">Freshness</span> Every Day
-                                </h2>
-                                <p className="mb-5 max-w-md text-base leading-relaxed text-gray-700 sm:text-lg">
-                                    Milk delivered before your day starts—no store visits, no forgetting. Start your
-                                    morning with the freshest dairy products right at your doorstep.
-                                </p>
-                                <ul className="mb-5 space-y-2.5 sm:mb-6 sm:space-y-3" role="list">
-                                    {[
-                                        'Delivered before 7 AM',
-                                        'No need to visit stores',
-                                        'Never miss your daily milk',
-                                        'Fresh from farm to your door',
-                                    ].map((point) => (
-                                        <li key={point} className="flex items-center gap-3 text-gray-800">
-                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--theme-secondary)] text-[var(--theme-primary-1)]">
-                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </span>
-                                            <span className="text-sm font-medium text-gray-800 sm:text-base">{point}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                                <div className="flex flex-wrap gap-3 sm:gap-4">
-                                    <a
-                                        href="/login"
-                                        className="inline-flex items-center justify-center rounded-xl bg-[var(--theme-primary-1)] px-5 py-3 text-sm font-semibold text-white shadow-md transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:px-6 sm:py-3.5 sm:text-base"
-                                    >
-                                        Subscribe Now
-                                    </a>
-                                    <a
-                                        href="#"
-                                        className="inline-flex items-center justify-center rounded-xl border-2 border-gray-800 bg-white px-5 py-3 text-sm font-semibold text-black transition-colors hover:bg-gray-100 hover:border-black focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2 sm:px-6 sm:py-3.5 sm:text-base"
-                                    >
-                                        Check delivery area
-                                    </a>
+                {/* Our Products – Slider with Navigation (Same layout as Categories) */}
+                <section id="products" className="py-10 bg-gradient-to-b from-white to-gray-50/30 sm:py-12 lg:py-14" aria-labelledby="products-heading">
+                    <div className="container mx-auto px-3 sm:px-4 lg:px-6">
+                        {/* Compact Header with Icon and Nav Buttons */}
+                        <div className="mb-6 flex items-center justify-between sm:mb-5">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
+                                    <Package className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5" />
+                                </div>
+                                <div>
+                                    <h2 id="products-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
+                                        Our Products
+                                    </h2>
+                                    <p className="text-xs text-gray-400 sm:text-sm">
+                                        Fresh dairy delivered
+                                    </p>
                                 </div>
                             </div>
+                            
+                            {/* Web: Nav buttons near View All */}
+                            <div className="hidden items-center gap-2 lg:flex">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const slider = document.getElementById('product-slider');
+                                        if (slider) slider.scrollBy({ left: -slider.offsetWidth / 4, behavior: 'smooth' });
+                                    }}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                    aria-label="Previous products"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const slider = document.getElementById('product-slider');
+                                        if (slider) slider.scrollBy({ left: slider.offsetWidth / 4, behavior: 'smooth' });
+                                    }}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                    aria-label="Next products"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </button>
+                                <Link
+                                    href="/products"
+                                    className="ml-2 rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white sm:text-sm"
+                                >
+                                    View All
+                                </Link>
+                            </div>
+                            
+                            {/* Mobile: View All only */}
+                            <Link
+                                href="/products"
+                                className="rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white lg:hidden sm:text-sm"
+                            >
+                                View All
+                            </Link>
+                        </div>
+                        
+                        {/* Product Slider */}
+                        <div
+                            ref={productSliderRef}
+                            id="product-slider"
+                            className="scrollbar-hide flex snap-x snap-mandatory gap-3 overflow-x-auto sm:gap-4 lg:gap-4"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            onScroll={() => {
+                                const slider = productSliderRef.current;
+                                if (slider) {
+                                    const scrollLeft = slider.scrollLeft;
+                                    const maxScroll = slider.scrollWidth - slider.clientWidth;
+                                    const pageCount = Math.ceil(PRODUCTS.length / (window.innerWidth < 640 ? 2 : window.innerWidth < 1024 ? 2 : 4));
+                                    const currentPage = Math.round((scrollLeft / maxScroll) * (pageCount - 1));
+                                    setProductActivePage(Math.min(currentPage, pageCount - 1));
+                                }
+                            }}
+                        >
+                            {PRODUCTS.map((product, index) => {
+                                const productId = `${product.name}-${product.variant}-${index}`;
+                                const isWishlisted = wishlistedProductIds.has(productId);
+                                return (
+                                    <article
+                                        key={productId}
+                                        className="group relative w-[calc(50%-6px)] flex-shrink-0 snap-start overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-[var(--theme-primary-1)]/50 hover:shadow-lg sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)]"
+                                    >
+                                        <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                                            <ProductCardMedia
+                                                media={getMediaList(product)}
+                                                alt={`${product.name} ${product.variant}`}
+                                                productKey={productId}
+                                                currentIndexMap={cardMediaIndex}
+                                                onIndexChange={setCardMediaIndexForKey}
+                                                className="h-full w-full"
+                                                imageClassName="transition-transform duration-300 group-hover:scale-110"
+                                            />
+                                            {product.bestSeller && (
+                                                <span className="absolute left-2 top-2 z-10 rounded-full bg-gradient-to-r from-[#cf992c] to-[#e6b047] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-md">
+                                                    Best Seller
+                                                </span>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    toggleProductWishlist(productId);
+                                                }}
+                                                aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                                                className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white sm:h-7 sm:w-7"
+                                            >
+                                                <Heart
+                                                    className={`h-3.5 w-3.5 transition-all duration-200 sm:h-4 sm:w-4 ${isWishlisted ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-500 group-hover:text-red-400'}`}
+                                                    strokeWidth={2}
+                                                />
+                                            </button>
+                                        </div>
+                                        <div className="flex w-full flex-1 flex-col p-2.5 sm:p-3">
+                                            <h3 className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors duration-200 group-hover:text-[var(--theme-primary-1)] sm:text-sm">
+                                                {product.name} {!product.isPlan && `- (${product.variant})`}
+                                            </h3>
+                                            {product.isPlan ? (
+                                                <p className="mb-1.5 text-[10px] font-medium text-gray-600 sm:text-xs">
+                                                    {product.variant}
+                                                </p>
+                                            ) : (
+                                                <p className="mb-1.5 text-xs font-bold text-[var(--theme-primary-1)] sm:text-sm">
+                                                    {product.price}/ Unit
+                                                </p>
+                                            )}
+                                            <button
+                                                type="button"
+                                                className="mt-auto w-full rounded-md bg-[var(--theme-primary-1)] py-2 text-center text-[10px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[var(--theme-primary-1-dark)] hover:shadow-md active:scale-95 sm:py-2.5 sm:text-xs"
+                                            >
+                                                {product.isPlan ? 'Subscribe' : 'Add to Cart'}
+                                            </button>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                        
+                        {/* Mobile: Bottom Navigation with Pagination */}
+                        <div className="mt-4 flex items-center justify-center gap-4 lg:hidden">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const slider = document.getElementById('product-slider');
+                                    if (slider) {
+                                        const cardWidth = window.innerWidth < 640 ? slider.offsetWidth / 2 : slider.offsetWidth / 2;
+                                        slider.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+                                    }
+                                }}
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                aria-label="Previous products"
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+                            
+                            {/* Pagination Dots */}
+                            <div className="flex items-center gap-1.5">
+                                {Array.from({ length: Math.min(5, Math.ceil(PRODUCTS.length / (typeof window !== 'undefined' && window.innerWidth < 640 ? 2 : 2))) }).map((_, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => {
+                                            const slider = document.getElementById('product-slider');
+                                            if (slider) {
+                                                const cardWidth = window.innerWidth < 640 ? slider.offsetWidth / 2 : slider.offsetWidth / 2;
+                                                slider.scrollTo({ left: i * cardWidth * 2, behavior: 'smooth' });
+                                            }
+                                        }}
+                                        className={`h-2 w-2 rounded-full transition-colors ${
+                                            i === productActivePage
+                                                ? 'bg-[var(--theme-primary-1)]'
+                                                : 'bg-gray-300 hover:bg-gray-400'
+                                        }`}
+                                        aria-label={`Go to products page ${i + 1}`}
+                                    />
+                                ))}
+                            </div>
+                            
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const slider = document.getElementById('product-slider');
+                                    if (slider) {
+                                        const cardWidth = window.innerWidth < 640 ? slider.offsetWidth / 2 : slider.offsetWidth / 2;
+                                        slider.scrollBy({ left: cardWidth, behavior: 'smooth' });
+                                    }
+                                }}
+                                className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                aria-label="Next products"
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                        </div>
+                    </div>
+                </section>
 
-                            {/* Right: video – explicit size so it never collapses; hero-style clip-path */}
-                            <div className="relative min-h-[260px] w-full flex-1 lg:min-h-[420px] lg:min-w-[50%]">
-                                <div className="absolute inset-0 overflow-hidden rounded-lg bg-gray-300 hero-image-shape">
+                {/* Why Choose Us – Auto-scrolling Slider with Consistent Pattern */}
+                <section className="py-10 bg-gradient-to-b from-white via-gray-50/50 to-white sm:py-12 lg:py-14" aria-labelledby="why-choose-heading">
+                    <div className="container mx-auto px-3 sm:px-4 lg:px-6">
+                        {/* Centered Header with Icon */}
+                        <div className="mb-6 flex flex-col items-center justify-center sm:mb-5">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
+                                    <svg className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div className="text-center">
+                                    <h2 id="why-choose-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
+                                        Why Choose Us
+                                    </h2>
+                                    <p className="text-xs text-gray-400 sm:text-sm">
+                                        Building trust through quality
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Auto-scrolling Why Choose Us Slider */}
+                        <div className="relative overflow-hidden py-4">
+                            <style>{`
+                                @keyframes scroll-why-choose {
+                                    0% { transform: translateX(0); }
+                                    100% { transform: translateX(-50%); }
+                                }
+                                .why-choose-scroll {
+                                    animation: scroll-why-choose 20s linear infinite;
+                                }
+                                .why-choose-scroll:hover {
+                                    animation-play-state: paused;
+                                }
+                            `}</style>
+                            <div className="why-choose-scroll flex gap-3 sm:gap-4 lg:gap-4">
+                                {/* Duplicate items for seamless loop */}
+                                {[...[
+                                    { title: 'Sourced from local Kerala farms', image: '/images/why-choose-us/Sourced from local Kerala farms.png' },
+                                    { title: 'No preservatives', image: '/images/why-choose-us/no-preservatives.png' },
+                                    { title: 'Hygienic processing', image: '/images/why-choose-us/Hygienic processing.png' },
+                                    { title: 'Morning delivery before 7 AM', image: '/images/why-choose-us/morning-delivery.png' },
+                                    { title: 'Cancel / pause anytime', image: '/images/why-choose-us/Cancel-pause anytime.png' },
+                                    { title: 'Quality checked daily', image: '/images/why-choose-us/Quality checked daily.png' },
+                                    { title: 'Cold-chain maintained', image: '/images/why-choose-us/Cold-chain maintained.png' },
+                                    { title: 'Transparent pricing', image: '/images/why-choose-us/transparent-pricing.png' },
+                                ], ...[
+                                    { title: 'Sourced from local Kerala farms', image: '/images/why-choose-us/Sourced from local Kerala farms.png' },
+                                    { title: 'No preservatives', image: '/images/why-choose-us/no-preservatives.png' },
+                                    { title: 'Hygienic processing', image: '/images/why-choose-us/Hygienic processing.png' },
+                                    { title: 'Morning delivery before 7 AM', image: '/images/why-choose-us/morning-delivery.png' },
+                                    { title: 'Cancel / pause anytime', image: '/images/why-choose-us/Cancel-pause anytime.png' },
+                                    { title: 'Quality checked daily', image: '/images/why-choose-us/Quality checked daily.png' },
+                                    { title: 'Cold-chain maintained', image: '/images/why-choose-us/Cold-chain maintained.png' },
+                                    { title: 'Transparent pricing', image: '/images/why-choose-us/transparent-pricing.png' },
+                                ]].map((item, index) => (
+                                    <div
+                                        key={`${item.title}-${index}`}
+                                        className="group flex w-[calc(33.333%-8px)] flex-shrink-0 flex-col items-center sm:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)]"
+                                    >
+                                        {/* Icon container - larger, no bg */}
+                                        <div className="relative mb-2 flex h-16 w-16 items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 sm:h-20 sm:w-20">
+                                            <img
+                                                src={item.image}
+                                                alt={item.title}
+                                                className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-110"
+                                                loading="lazy"
+                                            />
+                                        </div>
+                                        
+                                        {/* Title - centered, compact */}
+                                        <h3 className="text-center text-[10px] font-semibold leading-tight text-gray-700 transition-colors duration-200 group-hover:text-[var(--theme-primary-1)] sm:text-xs">
+                                            {item.title}
+                                        </h3>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Morning Delivery Promise – Modern Compact Design */}
+                <section className="relative overflow-hidden bg-[var(--theme-primary-1)] py-8 sm:py-10 lg:py-12">
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 opacity-10" aria-hidden>
+                        <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/20 blur-3xl sm:h-96 sm:w-96" />
+                        <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-white/20 blur-3xl sm:h-96 sm:w-96" />
+                    </div>
+                    
+                    <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
+                        {/* Main Content Card */}
+                        <div className="overflow-hidden rounded-xl bg-white shadow-xl lg:rounded-2xl">
+                            <div className="flex flex-col lg:flex-row">
+                                {/* Left: Content */}
+                                <div className="flex-1 p-5 sm:p-6 lg:p-8">
+                                    {/* Badge */}
+                                    <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-primary-1)]/10 px-2.5 py-1 text-[10px] font-semibold text-[var(--theme-primary-1)] sm:text-xs">
+                                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Morning Delivery
+                                    </span>
+                                    
+                                    {/* Heading */}
+                                    <h2 className="mb-3 text-xl font-bold leading-tight text-gray-900 sm:text-2xl lg:text-3xl">
+                                        Wake Up to <span className="text-[var(--theme-primary-1)]">Freshness</span> Every Day
+                                    </h2>
+                                    
+                                    {/* Description */}
+                                    <p className="mb-4 text-xs leading-relaxed text-gray-600 sm:text-sm">
+                                        Milk delivered before your day starts—no store visits, no forgetting. Start your morning with the freshest dairy products right at your doorstep.
+                                    </p>
+                                    
+                                    {/* Feature Grid */}
+                                    <div className="mb-5 grid grid-cols-2 gap-2 sm:gap-3">
+                                        {[
+                                            { text: 'Before 7 AM', icon: 'clock', desc: 'Daily delivery' },
+                                            { text: 'No store visits', icon: 'home', desc: 'Doorstep service' },
+                                            { text: 'Never miss milk', icon: 'check', desc: 'Reliable supply' },
+                                            { text: 'Farm to door', icon: 'truck', desc: 'Fresh & pure' },
+                                        ].map((point) => (
+                                            <div key={point.text} className="group rounded-lg bg-gray-50 p-2.5 transition-all hover:bg-[var(--theme-primary-1)]/5 hover:shadow-md sm:p-3">
+                                                <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-md bg-[var(--theme-primary-1)] text-white shadow-sm transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
+                                                    {point.icon === 'clock' && (
+                                                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    )}
+                                                    {point.icon === 'home' && (
+                                                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                                        </svg>
+                                                    )}
+                                                    {point.icon === 'check' && (
+                                                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    )}
+                                                    {point.icon === 'truck' && (
+                                                        <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                                <h4 className="text-xs font-bold text-gray-800 sm:text-sm">{point.text}</h4>
+                                                <p className="text-[10px] text-gray-500 sm:text-xs">{point.desc}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    
+                                    {/* CTA Buttons */}
+                                    <div className="flex flex-wrap gap-2.5 sm:gap-3">
+                                        <a
+                                            href="/login"
+                                            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[var(--theme-primary-1)]/30 transition-all hover:-translate-y-0.5 hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg active:scale-95 sm:px-5 sm:py-3 sm:text-sm"
+                                        >
+                                            Subscribe Now
+                                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                            </svg>
+                                        </a>
+                                        <a
+                                            href="#"
+                                            className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 transition-all hover:border-[var(--theme-primary-1)] hover:text-[var(--theme-primary-1)] active:scale-95 sm:px-5 sm:py-3 sm:text-sm"
+                                        >
+                                            Check delivery area
+                                        </a>
+                                    </div>
+                                </div>
+
+                                {/* Right: Video */}
+                                <div className="relative aspect-video w-full lg:aspect-auto lg:w-[42%]">
                                     <video
                                         src="/video/fresh-milk.mp4"
                                         autoPlay
@@ -1027,73 +1031,183 @@ export default function Home() {
                                         loop
                                         playsInline
                                         preload="auto"
-                                        className="absolute inset-0 h-full w-full object-cover"
+                                        className="h-full w-full object-cover"
                                         aria-label="Fresh milk delivery"
-                                        onEnded={(e) => e.currentTarget.play()}
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-gray-100/50 via-transparent to-transparent pointer-events-none" aria-hidden />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-transparent lg:from-white/30" aria-hidden />
+                                    
+                                    {/* Floating Stats Card */}
+                                    <div className="absolute bottom-3 left-3 rounded-lg bg-white/95 p-2 shadow-lg backdrop-blur-sm sm:bottom-4 sm:left-4 sm:p-3 lg:bottom-6 lg:left-6">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] sm:h-10 sm:w-10">
+                                                <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-500 sm:text-xs">Delivery Success</p>
+                                                <p className="text-base font-bold text-gray-900 sm:text-lg">99.8%</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {/* Our Stories – YouTube Shorts–style preview with user/channel details, primary bg */}
-                <section className="py-12 bg-[var(--theme-primary-1)] sm:py-14 lg:py-16" aria-labelledby="our-stories-heading">
-                    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div className="mb-6 text-center sm:mb-8">
-                            <h2 id="our-stories-heading" className="text-2xl font-bold text-white sm:text-3xl lg:text-4xl">
-                                Our Stories
-                            </h2>
-                            <p className="mt-2 text-sm text-white/90 sm:text-base">
-                                Freshtick Shorts — fresh updates, farm to home.
-                            </p>
+                {/* Our Stories – Slider with Navigation (Same layout as Categories/Products) */}
+                <section className="py-10 bg-[var(--theme-primary-1)] sm:py-12 lg:py-14" aria-labelledby="our-stories-heading">
+                    <div className="container mx-auto px-3 sm:px-4 lg:px-6">
+                        {/* Compact Header with Icon and Nav Buttons */}
+                        <div className="mb-6 flex items-center justify-between sm:mb-5">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20 sm:h-9 sm:w-9">
+                                    <Play className="h-4 w-4 text-white sm:h-5 sm:w-5" fill="currentColor" />
+                                </div>
+                                <div>
+                                    <h2 id="our-stories-heading" className="text-lg font-bold text-white sm:text-xl">
+                                        Our Stories
+                                    </h2>
+                                    <p className="text-xs text-white/70 sm:text-sm">
+                                        Freshtick Shorts — fresh updates
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            {/* Web: Nav buttons near View All */}
+                            <div className="hidden items-center gap-2 lg:flex">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const slider = document.getElementById('stories-slider');
+                                        if (slider) slider.scrollBy({ left: -slider.offsetWidth / 6, behavior: 'smooth' });
+                                    }}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--theme-primary-1)] shadow-md transition-all hover:bg-white/90 hover:shadow-lg"
+                                    aria-label="Previous stories"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const slider = document.getElementById('stories-slider');
+                                        if (slider) slider.scrollBy({ left: slider.offsetWidth / 6, behavior: 'smooth' });
+                                    }}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--theme-primary-1)] shadow-md transition-all hover:bg-white/90 hover:shadow-lg"
+                                    aria-label="Next stories"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex overflow-x-auto pb-4 scrollbar-thin sm:justify-center">
-                            <div className="flex gap-4 sm:gap-5">
-                                {STORIES.map((story, index) => (
-                                    <button
-                                        key={story.id}
-                                        type="button"
-                                        onClick={() => setStoryViewerIndex(index)}
-                                        className="group flex shrink-0 flex-col focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[var(--theme-primary-1)] rounded-xl text-left"
-                                        aria-label={`Watch short: ${story.label}`}
-                                    >
-                                        {/* Short video preview – vertical 9:16 */}
-                                        <div className="relative w-[140px] overflow-hidden rounded-lg bg-gray-200 sm:w-[160px]">
-                                            <div className="aspect-[9/16] w-full">
-                                                <video
-                                                    src={story.src}
-                                                    className="h-full w-full object-cover"
-                                                    muted
-                                                    loop
-                                                    playsInline
-                                                    preload="metadata"
-                                                    aria-hidden
-                                                />
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity group-hover:bg-black/30">
-                                                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md sm:h-12 sm:w-12">
-                                                        <Play className="h-5 w-5 text-[var(--theme-primary-1)] sm:h-6 sm:w-6" strokeWidth={2} fill="currentColor" />
-                                                    </span>
-                                                </div>
-                                                <span className="absolute bottom-1.5 right-1.5 rounded bg-black/6 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur sm:text-xs">
-                                                    {story.views} views
+
+                        {/* Stories Slider */}
+                        <div
+                            ref={storiesSliderRef}
+                            id="stories-slider"
+                            className="scrollbar-hide mb-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 sm:gap-4 lg:mb-0"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            onScroll={() => {
+                                const slider = storiesSliderRef.current;
+                                if (slider) {
+                                    const scrollLeft = slider.scrollLeft;
+                                    const maxScroll = slider.scrollWidth - slider.clientWidth;
+                                    const pageCount = Math.ceil(STORIES.length / (window.innerWidth < 640 ? 2 : window.innerWidth < 1024 ? 3 : 6));
+                                    const currentPage = Math.round((scrollLeft / maxScroll) * (pageCount - 1));
+                                    setStoriesActivePage(Math.min(currentPage, pageCount - 1));
+                                }
+                            }}
+                        >
+                            {STORIES.map((story, index) => (
+                                <button
+                                    key={story.id}
+                                    type="button"
+                                    onClick={() => setStoryViewerIndex(index)}
+                                    className="group flex w-[calc(33.333%-8px)] flex-shrink-0 snap-start flex-col focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[var(--theme-primary-1)] rounded-xl text-left sm:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)]"
+                                    aria-label={`Watch short: ${story.label}`}
+                                >
+                                    {/* Short video preview – vertical 9:16 */}
+                                    <div className="relative w-full overflow-hidden rounded-lg bg-gray-200">
+                                        <div className="aspect-[9/16] w-full">
+                                            <video
+                                                src={story.src}
+                                                className="h-full w-full object-cover"
+                                                muted
+                                                loop
+                                                playsInline
+                                                preload="metadata"
+                                                aria-hidden
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity group-hover:bg-black/30">
+                                                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md sm:h-12 sm:w-12">
+                                                    <Play className="h-5 w-5 text-[var(--theme-primary-1)] sm:h-6 sm:w-6" strokeWidth={2} fill="currentColor" />
                                                 </span>
                                             </div>
-                                        </div>
-                                        {/* User / channel details */}
-                                        <div className="mt-2 flex items-center gap-2">
-                                            <span className="flex h-7 w-7 shrink-0 overflow-hidden rounded-full bg-white/20 ring-1 ring-white/40">
-                                                <img src="/images/logo_light.png" alt="" className="h-full w-full object-contain p-0.5" />
+                                            <span className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur sm:text-xs">
+                                                {story.views} views
                                             </span>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate text-xs font-semibold text-white sm:text-sm">Freshtick</p>
-                                                <p className="truncate text-[10px] text-white/80 sm:text-xs">{story.label}</p>
-                                            </div>
                                         </div>
-                                    </button>
+                                    </div>
+                                    {/* User / channel details */}
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <span className="flex h-7 w-7 shrink-0 overflow-hidden rounded-full bg-white/20 ring-1 ring-white/40">
+                                            <img src="/images/logo_light.png" alt="" className="h-full w-full object-contain p-0.5" />
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-xs font-semibold text-white sm:text-sm">Freshtick</p>
+                                            <p className="truncate text-[10px] text-white/80 sm:text-xs">{story.label}</p>
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Mobile: Bottom nav with pagination */}
+                        <div className="flex items-center justify-center gap-4 lg:hidden">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const slider = document.getElementById('stories-slider');
+                                    if (slider) slider.scrollBy({ left: -slider.offsetWidth / 2, behavior: 'smooth' });
+                                }}
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--theme-primary-1)] shadow-md transition-all hover:bg-white/90"
+                                aria-label="Previous stories"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            
+                            {/* Pagination dots */}
+                            <div className="flex items-center gap-1.5">
+                                {[...Array(Math.min(5, Math.ceil(STORIES.length / 2)))].map((_, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => {
+                                            const slider = document.getElementById('stories-slider');
+                                            if (slider) slider.scrollTo({ left: i * slider.offsetWidth, behavior: 'smooth' });
+                                        }}
+                                        className={`h-2 w-2 rounded-full transition-all ${
+                                            i === storiesActivePage
+                                                ? 'bg-white'
+                                                : 'bg-white/40 hover:bg-white/60'
+                                        }`}
+                                        aria-label={`Go to stories page ${i + 1}`}
+                                    />
                                 ))}
                             </div>
+                            
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const slider = document.getElementById('stories-slider');
+                                    if (slider) slider.scrollBy({ left: slider.offsetWidth / 2, behavior: 'smooth' });
+                                }}
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--theme-primary-1)] shadow-md transition-all hover:bg-white/90"
+                                aria-label="Next stories"
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -1238,7 +1352,7 @@ export default function Home() {
                     </div>
                 </section>
 
-                {/* Customer Testimonials – single-row carousel, icon bg from public/images/icons */}
+                {/* Customer Testimonials – Slider with Navigation (Same layout as Categories/Products) */}
                 <section className="relative overflow-hidden py-10 bg-gray-50 sm:py-12 lg:py-14" aria-label="Customer testimonials">
                     <div className="section-icon-bg absolute inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden>
                         <img src="/images/icons/milk-bottle.png" alt="" className="absolute left-[2%] top-[8%] h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16" style={{ opacity: 0.06, transform: 'rotate(-15deg)' }} />
@@ -1248,90 +1362,150 @@ export default function Home() {
                         <img src="/images/icons/discount.png" alt="" className="absolute left-[15%] top-1/2 h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10" style={{ opacity: 0.04, transform: 'rotate(12deg)' }} />
                         <img src="/images/icons/milk%20(1).png" alt="" className="absolute right-[18%] top-1/2 h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10" style={{ opacity: 0.05, transform: 'rotate(-6deg)' }} />
                     </div>
-                    <div className="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-                        <div className="mb-6 flex flex-col items-center justify-between gap-4 sm:mb-8 sm:flex-row sm:gap-6">
-                            <div className="text-center sm:text-left">
-                                <h2 className="text-xl font-bold text-gray-900 sm:text-2xl lg:text-3xl">
-                                    What Our Customers Say
-                                </h2>
-                                <p className="mt-1 text-xs text-gray-600 sm:text-sm">
-                                    Real feedback from Kerala
-                                </p>
-                            </div>
+                    <div className="relative z-10 container mx-auto px-3 sm:px-4 lg:px-6">
+                        {/* Compact Header with Icon and Nav Buttons */}
+                        <div className="mb-6 flex items-center justify-between sm:mb-5">
                             <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
+                                    <svg className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
+                                        What Our Customers Say
+                                    </h2>
+                                    <p className="text-xs text-gray-400 sm:text-sm">
+                                        Real feedback from Kerala
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            {/* Web: Nav buttons near View All */}
+                            <div className="hidden items-center gap-2 lg:flex">
                                 <button
                                     type="button"
-                                    onClick={goPrevTestimonial}
-                                    disabled={!canGoPrevTestimonial}
+                                    onClick={() => {
+                                        const slider = document.getElementById('testimonials-slider');
+                                        if (slider) slider.scrollBy({ left: -slider.offsetWidth / 3, behavior: 'smooth' });
+                                    }}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
                                     aria-label="Previous testimonials"
-                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:h-10 sm:w-10 ${
-                                        canGoPrevTestimonial
-                                            ? 'border-[var(--theme-primary-1)]/30 bg-white text-[var(--theme-primary-1)] hover:border-[var(--theme-primary-1)] hover:bg-[var(--theme-secondary)]/40'
-                                            : 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300'
-                                    }`}
                                 >
-                                    <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
+                                    <ChevronLeft className="h-4 w-4" />
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={goNextTestimonial}
-                                    disabled={!canGoNextTestimonial}
+                                    onClick={() => {
+                                        const slider = document.getElementById('testimonials-slider');
+                                        if (slider) slider.scrollBy({ left: slider.offsetWidth / 3, behavior: 'smooth' });
+                                    }}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
                                     aria-label="Next testimonials"
-                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:h-10 sm:w-10 ${
-                                        canGoNextTestimonial
-                                            ? 'border-[var(--theme-primary-1)]/30 bg-white text-[var(--theme-primary-1)] hover:border-[var(--theme-primary-1)] hover:bg-[var(--theme-secondary)]/40'
-                                            : 'cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300'
-                                    }`}
                                 >
-                                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2.5} />
+                                    <ChevronRight className="h-4 w-4" />
                                 </button>
                             </div>
                         </div>
 
-                        <div ref={testimonialSliderRef} className="min-w-0 overflow-hidden">
-                            <div
-                                className="flex gap-4 transition-transform duration-300 ease-out sm:gap-5"
-                                style={{
-                                    width: testimonialStepPx > 0 ? `${TESTIMONIALS.length * testimonialStepPx - TESTIMONIAL_GAP_PX}px` : undefined,
-                                    transform: `translateX(-${testimonialIndex * testimonialStepPx}px)`,
+                        {/* Testimonials Slider */}
+                        <div
+                            ref={testimonialsSliderRef}
+                            id="testimonials-slider"
+                            className="scrollbar-hide mb-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 sm:gap-4 lg:mb-0"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            role="list"
+                            onScroll={() => {
+                                const slider = testimonialsSliderRef.current;
+                                if (slider) {
+                                    const scrollLeft = slider.scrollLeft;
+                                    const maxScroll = slider.scrollWidth - slider.clientWidth;
+                                    const pageCount = Math.ceil(TESTIMONIALS.length / (window.innerWidth < 640 ? 1 : window.innerWidth < 1024 ? 2 : 3));
+                                    const currentPage = Math.round((scrollLeft / maxScroll) * (pageCount - 1));
+                                    setTestimonialsActivePage(Math.min(currentPage, pageCount - 1));
+                                }
+                            }}
+                        >
+                            {TESTIMONIALS.map((t, index) => (
+                                <article
+                                    key={index}
+                                    className="flex w-[calc(85%-8px)] flex-shrink-0 snap-start flex-col rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-14px)]"
+                                    role="listitem"
+                                >
+                                    <div className="mb-2 flex items-center justify-between gap-2">
+                                        <div className="flex gap-0.5 text-[var(--theme-tertiary)]">
+                                            {[...Array(5)].map((_, i) => (
+                                                <svg key={i} className="h-4 w-4 fill-current" viewBox="0 0 20 20" aria-hidden>
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
+                                            ))}
+                                        </div>
+                                        <span className="text-[10px] font-medium text-[var(--theme-primary-1)] sm:text-xs">{t.recent}</span>
+                                    </div>
+                                    <p className="mb-3 flex-1 text-sm leading-relaxed text-gray-700 line-clamp-3 sm:text-base">
+                                        "{t.quote}"
+                                    </p>
+                                    <div className="flex items-center gap-2 border-t border-gray-100 pt-2 sm:pt-3">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--theme-primary-1)]/15 text-xs font-bold text-[var(--theme-primary-1)] sm:h-9 sm:w-9 sm:text-sm">
+                                            {t.name.charAt(0)}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-semibold text-gray-900">{t.name}</p>
+                                            <p className="flex items-center gap-1 truncate text-xs text-gray-600">
+                                                <MapPin className="h-3 w-3 shrink-0 text-[var(--theme-primary-1)]" strokeWidth={2} />
+                                                {t.location}, Kerala
+                                            </p>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+
+                        {/* Mobile: Bottom nav with pagination */}
+                        <div className="flex items-center justify-center gap-4 lg:hidden">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const slider = document.getElementById('testimonials-slider');
+                                    if (slider) slider.scrollBy({ left: -slider.offsetWidth / 1.5, behavior: 'smooth' });
                                 }}
-                                role="list"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)]"
+                                aria-label="Previous testimonials"
                             >
-                                {TESTIMONIALS.map((t, index) => (
-                                    <article
-                                        key={index}
-                                        className="flex shrink-0 flex-col rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5"
-                                        style={{ width: testimonialStepPx > 0 ? `${testimonialStepPx - TESTIMONIAL_GAP_PX}px` : undefined }}
-                                        role="listitem"
-                                    >
-                                        <div className="mb-2 flex items-center justify-between gap-2">
-                                            <div className="flex gap-0.5 text-[var(--theme-tertiary)]">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <svg key={i} className="h-4 w-4 fill-current" viewBox="0 0 20 20" aria-hidden>
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                    </svg>
-                                                ))}
-                                            </div>
-                                            <span className="text-[10px] font-medium text-[var(--theme-primary-1)] sm:text-xs">{t.recent}</span>
-                                        </div>
-                                        <p className="mb-3 flex-1 text-sm leading-relaxed text-gray-700 line-clamp-3 sm:text-base">
-                                            "{t.quote}"
-                                        </p>
-                                        <div className="flex items-center gap-2 border-t border-gray-100 pt-2 sm:pt-3">
-                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--theme-primary-1)]/15 text-xs font-bold text-[var(--theme-primary-1)] sm:h-9 sm:w-9 sm:text-sm">
-                                                {t.name.charAt(0)}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate font-semibold text-gray-900 text-sm">{t.name}</p>
-                                                <p className="flex items-center gap-1 truncate text-xs text-gray-600">
-                                                    <MapPin className="h-3 w-3 shrink-0 text-[var(--theme-primary-1)]" strokeWidth={2} />
-                                                    {t.location}, Kerala
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </article>
+                                <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            
+                            {/* Pagination dots */}
+                            <div className="flex items-center gap-1.5">
+                                {[...Array(Math.min(5, Math.ceil(TESTIMONIALS.length / 1.5)))].map((_, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => {
+                                            const slider = document.getElementById('testimonials-slider');
+                                            if (slider) slider.scrollTo({ left: i * slider.offsetWidth * 0.7, behavior: 'smooth' });
+                                        }}
+                                        className={`h-2 w-2 rounded-full transition-all ${
+                                            i === testimonialsActivePage
+                                                ? 'bg-[var(--theme-primary-1)]'
+                                                : 'bg-gray-300 hover:bg-gray-400'
+                                        }`}
+                                        aria-label={`Go to testimonials page ${i + 1}`}
+                                    />
                                 ))}
                             </div>
+                            
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const slider = document.getElementById('testimonials-slider');
+                                    if (slider) slider.scrollBy({ left: slider.offsetWidth / 1.5, behavior: 'smooth' });
+                                }}
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)]"
+                                aria-label="Next testimonials"
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
                         </div>
                     </div>
                 </section>

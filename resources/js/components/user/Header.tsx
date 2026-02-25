@@ -9,11 +9,11 @@ const NAV_LINKS = [
 ];
 
 interface HeaderProps {
-    showMarquee: boolean;
+    showTopBanner: boolean;
     isScrolled: boolean;
 }
 
-export default function Header({ showMarquee, isScrolled }: HeaderProps) {
+export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const authUser = (usePage().props as { auth?: { user?: unknown } }).auth?.user;
 
@@ -31,26 +31,24 @@ export default function Header({ showMarquee, isScrolled }: HeaderProps) {
     return (
         <>
             <header
-                className={`fixed left-0 right-0 z-[1200] border-b transition-all duration-300 ease-out ${
-                    showMarquee ? 'top-10' : 'top-0'
-                } ${
-                    isScrolled
-                        ? 'border-gray-200/60 bg-white/95 shadow-sm backdrop-blur-md'
-                        : 'border-gray-100/80 bg-white/95 backdrop-blur-sm'
+                className={`fixed left-0 right-0 z-[1200] border-b bg-white transition-all duration-300 ease-out ${
+                    showTopBanner 
+                        ? 'top-10 border-gray-100' 
+                        : 'top-0 border-gray-200 shadow-sm'
                 }`}
->
+            >
                 <div className="container mx-auto max-w-7xl px-4 sm:px-5 lg:px-6">
                     <div className="flex items-center justify-between gap-3 py-2.5 sm:py-3 lg:py-3">
-                        {/* Logo */}
+                        {/* Logo with white background */}
                         <Link
                             href="/"
-                            className="flex shrink-0 items-center py-1 focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 rounded-lg"
+                            className="flex shrink-0 items-center rounded-xl bg-white px-3 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
                             aria-label="Freshtick Home"
                         >
                             <img
                                 src="/logo_new.png"
                                 alt="Freshtick"
-                                className="h-7 w-auto sm:h-8 lg:h-9"
+                                className="h-6 w-auto sm:h-7 lg:h-8"
                                 loading="eager"
                             />
                         </Link>

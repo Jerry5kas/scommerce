@@ -11,8 +11,8 @@ interface UserLayoutProps {
 
 export default function UserLayout({ children }: UserLayoutProps) {
     const { theme } = (usePage().props as unknown as SharedData) ?? {};
-    const [showMarquee, setShowMarquee] = useState(true);
-    const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+    const [showTopBanner, setShowTopBanner] = useState(true);
+    const [isScrolled, setIsScrolled] = useState(false);
 
     useEffect(() => {
         if (theme) {
@@ -27,8 +27,11 @@ export default function UserLayout({ children }: UserLayoutProps) {
     useEffect(() => {
         const handleScroll = () => {
             const scrollY = window.scrollY;
-            setIsHeaderScrolled(scrollY > 50);
-            setShowMarquee(scrollY < 10);
+            
+            // Hide top banner when scrolled past 10px
+            setShowTopBanner(scrollY < 10);
+            // Mark as scrolled when past 10px
+            setIsScrolled(scrollY >= 10);
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
@@ -37,8 +40,8 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
     return (
         <div className="min-h-screen bg-white">
-            <TopBanner visible={showMarquee} />
-            <Header showMarquee={showMarquee} isScrolled={isHeaderScrolled} />
+            <TopBanner visible={showTopBanner} />
+            <Header showTopBanner={showTopBanner} isScrolled={isScrolled} />
             <main>{children}</main>
             <Footer />
         </div>
