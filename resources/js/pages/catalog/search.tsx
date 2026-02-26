@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { product as productRoute } from '@/routes/catalog';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
 
@@ -37,7 +38,7 @@ export default function SearchPage({ query, vertical, zone, products }: SearchPa
         <UserLayout>
             <Head title={`Search: ${query}`} />
             <div className="min-h-screen bg-gray-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                     {/* Search Bar */}
                     <form onSubmit={handleSearch} className="mb-8">
                         <div className="flex gap-2">
@@ -46,12 +47,9 @@ export default function SearchPage({ query, vertical, zone, products }: SearchPa
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search products..."
-                                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="flex-1 rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                             />
-                            <button
-                                type="submit"
-                                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            >
+                            <button type="submit" className="rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700">
                                 Search
                             </button>
                         </div>
@@ -67,33 +65,23 @@ export default function SearchPage({ query, vertical, zone, products }: SearchPa
                     )}
 
                     {products.length > 0 ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
                             {products.map((product) => (
                                 <Link
                                     key={product.id}
-                                    href={`/products/${product.slug}?vertical=${vertical}`}
-                                    className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                                    href={productRoute(product.slug, { query: { vertical } })}
+                                    className="overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                 >
-                                    {product.image && (
-                                        <img
-                                            src={product.image}
-                                            alt={product.name}
-                                            className="w-full h-48 object-cover"
-                                        />
-                                    )}
+                                    {product.image && <img src={product.image} alt={product.name} className="h-48 w-full object-cover" />}
                                     <div className="p-4">
-                                        <h3 className="font-medium text-sm mb-2 line-clamp-2">{product.name}</h3>
+                                        <h3 className="mb-2 line-clamp-2 text-sm font-medium">{product.name}</h3>
                                         {product.short_description && (
-                                            <p className="text-xs text-gray-500 mb-2 line-clamp-2">
-                                                {product.short_description}
-                                            </p>
+                                            <p className="mb-2 line-clamp-2 text-xs text-gray-500">{product.short_description}</p>
                                         )}
                                         <div className="flex items-center gap-2">
                                             <span className="text-lg font-bold">₹{product.price}</span>
                                             {product.compare_at_price && (
-                                                <span className="text-sm text-gray-500 line-through">
-                                                    ₹{product.compare_at_price}
-                                                </span>
+                                                <span className="text-sm text-gray-500 line-through">₹{product.compare_at_price}</span>
                                             )}
                                         </div>
                                     </div>
@@ -101,7 +89,7 @@ export default function SearchPage({ query, vertical, zone, products }: SearchPa
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center py-12">
+                        <div className="py-12 text-center">
                             <p className="text-gray-500">No products found. Try a different search term.</p>
                         </div>
                     )}
@@ -110,4 +98,3 @@ export default function SearchPage({ query, vertical, zone, products }: SearchPa
         </UserLayout>
     );
 }
-

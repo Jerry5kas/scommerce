@@ -1,4 +1,4 @@
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import Footer from '@/components/user/Footer';
 import Header from '@/components/user/Header';
@@ -13,6 +13,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
     const { theme } = (usePage().props as unknown as SharedData) ?? {};
     const [showTopBanner, setShowTopBanner] = useState(true);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [navigating, setNavigating] = useState(false);
 
     useEffect(() => {
         if (theme) {
@@ -27,19 +28,24 @@ export default function UserLayout({ children }: UserLayoutProps) {
     useEffect(() => {
         const handleScroll = () => {
             const scrollY = window.scrollY;
-            
-            // Hide top banner when scrolled past 10px
             setShowTopBanner(scrollY < 10);
-            // Mark as scrolled when past 10px
             setIsScrolled(scrollY >= 10);
         };
-
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    useEffect(() => {
+        const startHandler = router.on('start', () => setNavigating(true));
+        const finishHandler = router.on('finish', () => setNavigating(false));
+        return () => {
+            startHandler();
+            finishHandler();
+        };
+    }, []);
+
     return (
-        <div className="min-h-screen bg-white">
+        <div className={`min-h-screen bg-white${navigating ? ' cursor-wait' : ''}`}>
             <TopBanner visible={showTopBanner} />
             <Header showTopBanner={showTopBanner} isScrolled={isScrolled} />
             <main>{children}</main>

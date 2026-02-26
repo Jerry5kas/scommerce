@@ -15,7 +15,14 @@ interface HeaderProps {
 
 export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const authUser = (usePage().props as { auth?: { user?: unknown } }).auth?.user;
+    const pageProps = usePage().props as unknown as {
+        auth?: { user?: unknown; wishlisted_products?: number[] };
+        zone?: { id: number; name: string; code: string } | null;
+    };
+    const auth = pageProps.auth;
+    const authUser = auth?.user;
+    const wishlistCount = auth?.wishlisted_products?.length || 0;
+    const zone = pageProps.zone;
 
     useEffect(() => {
         if (!mobileMenuOpen) return;
@@ -31,10 +38,8 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
     return (
         <>
             <header
-                className={`fixed left-0 right-0 z-[1200] border-b bg-white transition-all duration-300 ease-out ${
-                    showTopBanner 
-                        ? 'top-10 border-gray-100' 
-                        : 'top-0 border-gray-200 shadow-sm'
+                className={`fixed right-0 left-0 z-[1200] border-b bg-white transition-all duration-300 ease-out ${
+                    showTopBanner ? 'top-10 border-gray-100' : 'top-0 border-gray-200 shadow-sm'
                 }`}
             >
                 <div className="container mx-auto max-w-7xl px-4 sm:px-5 lg:px-6">
@@ -42,15 +47,10 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
                         {/* Logo with white background */}
                         <Link
                             href="/"
-                            className="flex shrink-0 items-center rounded-xl bg-white px-3 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                            className="flex shrink-0 items-center rounded-xl bg-white px-3 py-2 transition-all duration-200 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                             aria-label="Freshtick Home"
                         >
-                            <img
-                                src="/logo_new.png"
-                                alt="Freshtick"
-                                className="h-6 w-auto sm:h-7 lg:h-8"
-                                loading="eager"
-                            />
+                            <img src="/logo_new.png" alt="Freshtick" className="h-6 w-auto sm:h-7 lg:h-8" loading="eager" />
                         </Link>
 
                         {/* Desktop nav – compact, with icons */}
@@ -59,14 +59,12 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
                                 const Icon = item.icon;
                                 const isLink = item.href.startsWith('/') && item.href.length > 1;
                                 const Component = item.href.startsWith('#') ? 'a' : Link;
-                                const props = item.href.startsWith('#') || item.href === '/'
-                                    ? { href: item.href }
-                                    : { href: item.href as string };
+                                const props = item.href.startsWith('#') || item.href === '/' ? { href: item.href } : { href: item.href as string };
                                 return (
                                     <Component
                                         key={item.label}
                                         {...props}
-                                        className="group flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-medium text-gray-600 transition-colors hover:text-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                        className="group flex items-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-medium text-gray-600 transition-colors hover:text-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                                     >
                                         <Icon className="h-4 w-4 shrink-0 opacity-80 group-hover:opacity-100" strokeWidth={2} />
                                         <span>{item.label}</span>
@@ -78,38 +76,44 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
                         {/* Actions: Pincode, Login, Wishlist, Cart */}
                         <div className="flex items-center gap-1.5 sm:gap-2">
                             <div className="hidden lg:flex">
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:border-[var(--theme-primary-1)]/30 hover:text-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                {/* Link to location picker; show current zone name if available */}
+                                <Link
+                                    href="/location"
+                                    className="flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:border-[var(--theme-primary-1)]/30 hover:text-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                                 >
                                     <MapPin className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-                                    <span>Pincode</span>
-                                </button>
+                                    <span>{zone?.name ?? 'Select location'}</span>
+                                </Link>
                             </div>
 
                             <Link
                                 href={authUser ? '/profile' : '/login'}
-                                className="flex h-8 w-8 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-[var(--theme-primary-1)]/10 hover:text-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:h-9 sm:w-9"
+                                className="flex h-8 w-8 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-[var(--theme-primary-1)]/10 hover:text-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none sm:h-9 sm:w-9"
                                 aria-label={authUser ? 'Profile' : 'Login'}
                             >
                                 <User className="h-4 w-4" strokeWidth={2} />
                             </Link>
 
-                            <button
-                                type="button"
-                                className="relative flex h-8 w-8 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-[var(--theme-primary-1)]/10 hover:text-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:h-9 sm:w-9"
+                            <Link
+                                href="/wishlist"
+                                className="relative flex h-8 w-8 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-[var(--theme-primary-1)]/10 hover:text-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none sm:h-9 sm:w-9"
                                 aria-label="Wishlist"
                             >
                                 <Heart className="h-4 w-4" strokeWidth={2} />
-                            </button>
+                                {wishlistCount > 0 && (
+                                    <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+                                        {wishlistCount}
+                                    </span>
+                                )}
+                            </Link>
 
                             <Link
                                 href="/cart"
-                                className="relative flex h-8 w-8 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-[var(--theme-primary-1)]/10 hover:text-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:h-9 sm:w-9"
+                                className="relative flex h-8 w-8 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-[var(--theme-primary-1)]/10 hover:text-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none sm:h-9 sm:w-9"
                                 aria-label="Cart"
                             >
                                 <ShoppingCart className="h-4 w-4" strokeWidth={2} />
-                                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[var(--theme-primary-1)] px-1 text-[10px] font-semibold text-white">
+                                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[var(--theme-primary-1)] px-1 text-[10px] font-semibold text-white">
                                     0
                                 </span>
                             </Link>
@@ -117,7 +121,7 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
                             <button
                                 type="button"
                                 onClick={() => setMobileMenuOpen(true)}
-                                className="flex h-8 w-8 items-center justify-center rounded-full text-gray-600 hover:bg-[var(--theme-primary-1)]/10 hover:text-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:h-9 sm:w-9 lg:hidden"
+                                className="flex h-8 w-8 items-center justify-center rounded-full text-gray-600 hover:bg-[var(--theme-primary-1)]/10 hover:text-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none sm:h-9 sm:w-9 lg:hidden"
                                 aria-label="Open menu"
                             >
                                 <Menu className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
@@ -128,10 +132,7 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
             </header>
 
             {/* Mobile drawer */}
-            <div
-                className={`fixed inset-0 z-50 lg:hidden ${mobileMenuOpen ? 'visible' : 'invisible'}`}
-                aria-hidden={!mobileMenuOpen}
-            >
+            <div className={`fixed inset-0 z-50 lg:hidden ${mobileMenuOpen ? 'visible' : 'invisible'}`} aria-hidden={!mobileMenuOpen}>
                 <button
                     type="button"
                     onClick={() => setMobileMenuOpen(false)}
@@ -141,7 +142,7 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
                     aria-label="Close overlay"
                 />
                 <div
-                    className={`absolute right-0 top-0 flex h-full w-full max-w-xs flex-col bg-white shadow-2xl transition-all duration-300 ease-out ${
+                    className={`absolute top-0 right-0 flex h-full w-full max-w-xs flex-col bg-white shadow-2xl transition-all duration-300 ease-out ${
                         mobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-95'
                     }`}
                 >
@@ -150,7 +151,7 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen(false)}
-                            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 transition-all duration-300 hover:bg-gray-100 hover:text-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)]"
+                            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-600 transition-all duration-300 hover:bg-gray-100 hover:text-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:outline-none"
                             aria-label="Close menu"
                         >
                             <X className="h-5 w-5" strokeWidth={2} />
@@ -160,7 +161,8 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
                         {NAV_LINKS.map((item, i) => {
                             const Icon = item.icon;
                             const isAnchor = item.href.startsWith('#');
-                            const className = "nav-drawer-item group flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-700 opacity-0 transition-colors hover:bg-gray-50 hover:text-[var(--theme-primary-1)]";
+                            const className =
+                                'nav-drawer-item group flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-700 opacity-0 transition-colors hover:bg-gray-50 hover:text-[var(--theme-primary-1)]';
                             const style = mobileMenuOpen ? { animationDelay: `${i * 50}ms` } : undefined;
                             const content = (
                                 <>
@@ -185,13 +187,14 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
                             );
                         })}
                         <div className="my-3 border-t border-gray-100" />
-                        <button
-                            type="button"
+                        <Link
+                            href="/location"
                             className="flex items-center gap-3 rounded-lg border border-gray-200/80 bg-gray-50/60 px-4 py-3 text-left text-sm font-medium text-gray-600"
+                            onClick={() => setMobileMenuOpen(false)}
                         >
                             <MapPin className="h-4 w-4 shrink-0" strokeWidth={2} />
-                            <span>Pincode</span>
-                        </button>
+                            <span>{zone?.name ?? 'Select location'}</span>
+                        </Link>
                         <div className="mt-2 flex items-center gap-2">
                             <Link
                                 href={authUser ? '/profile' : '/login'}
@@ -201,10 +204,21 @@ export default function Header({ showTopBanner, isScrolled }: HeaderProps) {
                                 <User className="h-4 w-4" strokeWidth={2} />
                                 {authUser ? 'Profile' : 'Login'}
                             </Link>
-                            <button type="button" className="flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--theme-primary-1)]">
-                                <Heart className="h-4 w-4" strokeWidth={2} />
+                            <Link
+                                href="/wishlist"
+                                className="flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--theme-primary-1)]"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <div className="relative">
+                                    <Heart className="h-4 w-4" strokeWidth={2} />
+                                    {wishlistCount > 0 && (
+                                        <span className="absolute -top-1 -right-2 flex h-3.5 min-w-[0.875rem] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-semibold text-white">
+                                            {wishlistCount}
+                                        </span>
+                                    )}
+                                </div>
                                 Wishlist
-                            </button>
+                            </Link>
                             <Link
                                 href="/cart"
                                 className="flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[var(--theme-primary-1)]"

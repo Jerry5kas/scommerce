@@ -24,6 +24,9 @@ class CatalogTest extends TestCase
     {
         parent::setUp();
 
+        // clear any cache entries created by other tests; our service caches heavily
+        \Illuminate\Support\Facades\Cache::flush();
+
         $this->zone = Zone::factory()->create([
             'is_active' => true,
             'verticals' => [BusinessVertical::DailyFresh->value],
@@ -57,13 +60,15 @@ class CatalogTest extends TestCase
             'stock_quantity' => 100,
         ]);
 
-        $response = $this->actingAs($this->user)->get(route('home', ['vertical' => BusinessVertical::DailyFresh->value]));
+        $response = $this->actingAs($this->user)->get(route('catalog.home', ['vertical' => BusinessVertical::DailyFresh->value]));
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
             ->component('catalog/home')
             ->has('categories')
             ->has('featuredProducts')
+            ->has('zone')
+            ->where('zone.id', $this->zone->id)
         );
     }
 
@@ -86,12 +91,20 @@ class CatalogTest extends TestCase
             'stock_quantity' => 100,
         ]);
 
+        // ensure pivot created correctly
+        $this->assertDatabaseHas('product_zones', [
+            'product_id' => $product->id,
+            'zone_id' => $this->zone->id,
+            'is_available' => true,
+        ]);
+
         $response = $this->actingAs($this->user)->get(route('catalog.category', [
             'category' => $category->slug,
             'vertical' => BusinessVertical::DailyFresh->value,
         ]));
 
         $response->assertOk();
+
         $response->assertInertia(fn ($page) => $page
             ->component('catalog/category')
             ->has('products', 1)
@@ -149,7 +162,7 @@ class CatalogTest extends TestCase
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
-            ->component('catalog/product')
+            ->component('product-detail')
             ->has('product')
         );
     }
@@ -206,5 +219,54 @@ class CatalogTest extends TestCase
             ->has('products', 1)
             ->where('products.0.id', $dailyFreshProduct->id)
         );
+    }
+
+    public function test_routes_redirect_when_user_has_no_zone(): void
+    {
+        $user = User::factory()->create();
+
+        $category = Category::factory()->create([
+            'vertical' => BusinessVertical::DailyFresh->value,
+            'is_active' => true,
+        ]);
+
+        $collection = Collection::factory()->create([
+            'vertical' => BusinessVertical::DailyFresh->value,
+            'is_active' => true,
+        ]);
+
+        $product = Product::factory()->create([
+            'vertical' => BusinessVertical::DailyFresh->value,
+            'is_active' => true,
+            'is_in_stock' => true,
+        ]);
+
+        // product page
+        $response = $this->actingAs($user)->get(route('catalog.product', [
+            'product' => $product->slug,
+            'vertical' => BusinessVertical::DailyFresh->value,
+        ]));
+        $response->assertRedirect(route('location.select'));
+
+        // category page
+        $response = $this->actingAs($user)->get(route('catalog.category', [
+            'category' => $category->slug,
+            'vertical' => BusinessVertical::DailyFresh->value,
+        ]));
+        $response->assertRedirect(route('location.select'));
+
+        // collection page
+        $response = $this->actingAs($user)->get(route('catalog.collection', [
+            'collection' => $collection->slug,
+            'vertical' => BusinessVertical::DailyFresh->value,
+        ]));
+        $response->assertRedirect(route('location.select'));
+
+        // search page
+        $response = $this->actingAs($user)->get(route('catalog.search', [
+            'q' => 'foo',
+            'vertical' => BusinessVertical::DailyFresh->value,
+        ]));
+        $response->assertRedirect(route('location.select'));
     }
 }

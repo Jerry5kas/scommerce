@@ -3,6 +3,7 @@ import { Heart, ChevronDown, Package } from 'lucide-react';
 import { useState } from 'react';
 import ProductCardMedia, { getMediaList } from '@/components/user/ProductCardMedia';
 import UserLayout from '@/layouts/UserLayout';
+import { product as productRoute } from '@/routes/catalog';
 import type { SharedData } from '@/types';
 
 interface BackendCategory {
@@ -275,7 +276,7 @@ export default function Products() {
                                                 </button>
                                             </div>
                                             <div className="flex flex-1 flex-col p-2 sm:p-2.5">
-                                                <Link href={`/products/${product.slug}`} className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors hover:text-[var(--theme-primary-1)] sm:text-sm">
+                                                <Link href={productRoute(product.slug)} className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors hover:text-[var(--theme-primary-1)] sm:text-sm">
                                                     {product.name} {(!product.is_subscription_eligible && !hasVariants && product.weight) && `- (${parseFloat(product.weight)} ${product.unit})`}
                                                 </Link>
                                                 {product.is_subscription_eligible || hasVariants ? (
@@ -288,7 +289,7 @@ export default function Products() {
                                                     </p>
                                                 )}
                                                 <Link
-                                                    href={product.is_subscription_eligible ? `/subscription?plan=${encodeURIComponent(product.slug)}` : `/products/${product.slug}`}
+                                                    href={product.is_subscription_eligible ? `/subscription?plan=${encodeURIComponent(product.slug)}` : productRoute(product.slug)}
                                                     className="mt-auto w-full rounded-md bg-[var(--theme-primary-1)] py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:py-2 sm:text-xs"
                                                 >
                                                     {product.is_subscription_eligible ? 'Subscribe' : 'View Details'}

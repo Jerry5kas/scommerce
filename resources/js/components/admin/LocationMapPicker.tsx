@@ -1,6 +1,6 @@
 import L, { type Map as LeafletMap } from 'leaflet';
-import { useEffect, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 import { cn } from '@/lib/utils';
 

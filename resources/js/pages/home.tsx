@@ -1,7 +1,9 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { product as productRoute } from '@/routes/catalog';
 import { ChevronLeft, ChevronRight, ExternalLink, Heart, MapPin, MapPinned, Mail, Package, Phone, Play, ShoppingCart, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import HeroBanner from '@/components/user/HeroBanner';
+import ProductCardMedia, { type MediaItem } from '@/components/user/ProductCardMedia';
 import UserLayout from '@/layouts/UserLayout';
 
 interface ProductVariant {
@@ -18,8 +20,10 @@ interface ProductItem {
     image: string;
     price: number;
     compare_at_price: number | null;
+    is_subscription_eligible: boolean;
     unit: string | null;
     weight: number | null;
+    images?: string[] | null;
     variants: ProductVariant[];
 }
 
@@ -50,13 +54,7 @@ const carouselSlides: CarouselSlide[] = [
 ];
 */
 
-const SUBSCRIPTION_FEATURES = [
-    'Daily Morning delivery',
-    'Free delivery',
-    'Pause/Resume anytime',
-    'Vacation hold',
-    'WhatsApp alerts',
-];
+const SUBSCRIPTION_FEATURES = ['Daily Morning delivery', 'Free delivery', 'Pause/Resume anytime', 'Vacation hold', 'WhatsApp alerts'];
 
 const SUBSCRIPTION_PLANS = [
     {
@@ -82,7 +80,12 @@ const TESTIMONIALS = [
     { quote: 'Milk tastes just like village milk. Delivery is always on time.', name: 'Rashid', location: 'Malappuram', recent: '2 days ago' },
     { quote: 'Fresh curd every morning. My family loves it!', name: 'Priya', location: 'Manjeri', recent: '1 week ago' },
     { quote: 'Best ghee in town. Quality is unmatched.', name: 'Rajesh', location: 'Perinthalmanna', recent: '3 days ago' },
-    { quote: 'Subscription is so convenient. Pause when we travel, resume when we’re back.', name: 'Anitha', location: 'Kozhikode', recent: '5 days ago' },
+    {
+        quote: 'Subscription is so convenient. Pause when we travel, resume when we’re back.',
+        name: 'Anitha',
+        location: 'Kozhikode',
+        recent: '5 days ago',
+    },
     { quote: 'Morning delivery before 7 AM—perfect for our chai.', name: 'Suresh', location: 'Palakkad', recent: 'Yesterday' },
     { quote: 'No preservatives, real taste. Kids finally drink milk without fuss.', name: 'Deepa', location: 'Thrissur', recent: '4 days ago' },
 ];
@@ -134,9 +137,11 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
     const [testimonialCardsPerView, setTestimonialCardsPerView] = useState(1);
     const [testimonialIndex, setTestimonialIndex] = useState(0);
     const [testimonialStepPx, setTestimonialStepPx] = useState(0);
+    const [similarCardMediaIndex, setSimilarCardMediaIndex] = useState<Record<string, number>>({});
     const [storyViewerIndex, setStoryViewerIndex] = useState<number | null>(null);
     const [storyProgress, setStoryProgress] = useState(0);
-    const [wishlistedProductIds, setWishlistedProductIds] = useState<Set<number>>(new Set());
+    const auth = (usePage().props as { auth?: { user?: unknown; wishlisted_products?: number[] } }).auth;
+    const wishlistedProductIds = new Set(auth?.wishlisted_products || []);
     const [selectedVariants, setSelectedVariants] = useState<Record<number, number>>({});
     const [categoryActivePage, setCategoryActivePage] = useState(0);
     const [productActivePage, setProductActivePage] = useState(0);
@@ -148,19 +153,28 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
     const testimonialsSliderRef = useRef<HTMLDivElement>(null);
 
     const toggleProductWishlist = (id: number) => {
-        setWishlistedProductIds((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
+        if (!auth?.user) {
+            router.get('/login');
+            return;
+        }
+        router.post(`/wishlist/toggle/${id}`, {}, { preserveScroll: true, preserveState: true });
+    };
+
+    const setSimilarCardMediaIndexForKey = (key: string, index: number) => {
+        setSimilarCardMediaIndex((prev) => ({ ...prev, [key]: index }));
+    };
+
+    const getSafeUrl = (url: string | null | undefined) => {
+        if (!url) return '/placeholder.png';
+        if (url.startsWith('http') || url.startsWith('/')) return url;
+        return `/storage/${url}`;
     };
 
     /** Get the currently displayed price for a product (selected variant or base price) */
     const getDisplayPrice = (product: ProductItem) => {
         if (product.variants.length > 0) {
             const selectedId = selectedVariants[product.id];
-            const variant = selectedId ? product.variants.find(v => v.id === selectedId) : product.variants[0];
+            const variant = selectedId ? product.variants.find((v) => v.id === selectedId) : product.variants[0];
             return variant ? variant.price : product.price;
         }
         return product.price;
@@ -237,7 +251,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
         if (!video) return;
         setStoryProgress(0);
         video.currentTime = 0;
-        video.play().catch(() => { });
+        video.play().catch(() => {});
         const onTimeUpdate = () => setStoryProgress(video.duration ? (100 * video.currentTime) / video.duration : 0);
         const onEnded = () => {
             if (storyViewerIndex < STORIES.length - 1) setStoryViewerIndex(storyViewerIndex + 1);
@@ -263,8 +277,6 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
     const goPrevTestimonial = () => setTestimonialIndex((i) => Math.max(0, i - 1));
     const goNextTestimonial = () => setTestimonialIndex((i) => Math.min(testimonialMaxIndex, i + 1));
 
-
-
     return (
         <UserLayout>
             <Head title="FreshTick - Fresh Dairy Delivered Daily" />
@@ -275,31 +287,35 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
             {/* We deliver to – compact marquee, no margin */}
             <section className="marquee-dark mt-0 overflow-hidden border-y border-gray-700/50 py-2 sm:py-2.5">
                 <div className="flex items-center overflow-hidden">
-                    <div className="flex flex-1 animate-marquee-slow items-center whitespace-nowrap">
+                    <div className="animate-marquee-slow flex flex-1 items-center whitespace-nowrap">
                         {[...Array(3)].map((_, copyIndex) => (
                             <div key={copyIndex} className="flex min-w-max items-center gap-1.5 px-4 sm:gap-2 sm:px-6">
-                                <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-[var(--theme-secondary)] sm:text-sm">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold tracking-wide text-[var(--theme-secondary)] uppercase sm:text-sm">
                                     <MapPinned className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
                                     We deliver to
                                 </span>
-                                <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-[var(--theme-secondary)] sm:text-sm">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold tracking-wide text-[var(--theme-secondary)] uppercase sm:text-sm">
                                     <MapPinned className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
                                     Ernakulam
                                 </span>
-                                {['Kaloor', 'Panampilly Nagar', 'High Court (Kochi)', 'Nayarambalam'].map(
-                                    (location) => (
-                                        <span key={`ern-${copyIndex}-${location}`} className="inline-flex items-center gap-1 text-xs font-medium text-white/70 sm:text-sm">
-                                            <MapPin className="h-3 w-3 shrink-0" strokeWidth={2} />
-                                            {location}
-                                        </span>
-                                    ),
-                                )}
-                                <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-[var(--theme-secondary)] sm:text-sm">
+                                {['Kaloor', 'Panampilly Nagar', 'High Court (Kochi)', 'Nayarambalam'].map((location) => (
+                                    <span
+                                        key={`ern-${copyIndex}-${location}`}
+                                        className="inline-flex items-center gap-1 text-xs font-medium text-white/70 sm:text-sm"
+                                    >
+                                        <MapPin className="h-3 w-3 shrink-0" strokeWidth={2} />
+                                        {location}
+                                    </span>
+                                ))}
+                                <span className="inline-flex items-center gap-1 text-xs font-bold tracking-wide text-[var(--theme-secondary)] uppercase sm:text-sm">
                                     <MapPinned className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
                                     Malappuram
                                 </span>
                                 {['Malipuram', 'Alathurpadi'].map((location) => (
-                                    <span key={`mal-${copyIndex}-${location}`} className="inline-flex items-center gap-1 text-xs font-medium text-white/70 sm:text-sm">
+                                    <span
+                                        key={`mal-${copyIndex}-${location}`}
+                                        className="inline-flex items-center gap-1 text-xs font-medium text-white/70 sm:text-sm"
+                                    >
                                         <MapPin className="h-3 w-3 shrink-0" strokeWidth={2} />
                                         {location}
                                     </span>
@@ -311,7 +327,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
             </section>
 
             {/* Trending Product Categories - Slider with Navigation */}
-            <section className="py-10 bg-white sm:py-12 lg:py-14" aria-labelledby="trending-categories-heading">
+            <section className="bg-white py-10 sm:py-12 lg:py-14" aria-labelledby="trending-categories-heading">
                 <div className="container mx-auto px-3 sm:px-4 lg:px-6">
                     {/* Compact Header with Icon and Nav Buttons */}
                     <div className="mb-6 flex items-center justify-between sm:mb-5">
@@ -323,9 +339,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                 <h2 id="trending-categories-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
                                     Browse Categories
                                 </h2>
-                                <p className="text-xs text-gray-400 sm:text-sm">
-                                    Fresh dairy delivered
-                                </p>
+                                <p className="text-xs text-gray-400 sm:text-sm">Fresh dairy delivered</p>
                             </div>
                         </div>
 
@@ -364,7 +378,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                         {/* Mobile: View All only */}
                         <Link
                             href="/products"
-                            className="rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white lg:hidden sm:text-sm"
+                            className="rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white sm:text-sm lg:hidden"
                         >
                             View All
                         </Link>
@@ -409,9 +423,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                 </div>
                                 {/* Overlay with name */}
                                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 sm:p-2">
-                                    <h3 className="truncate text-center text-[10px] font-medium text-white sm:text-xs">
-                                        {category.name}
-                                    </h3>
+                                    <h3 className="truncate text-center text-[10px] font-medium text-white sm:text-xs">{category.name}</h3>
                                 </div>
                             </Link>
                         ))}
@@ -436,7 +448,12 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
 
                         {/* Pagination Dots */}
                         <div className="flex items-center gap-1.5">
-                            {Array.from({ length: Math.min(5, Math.ceil(categories.length / (typeof window !== 'undefined' && window.innerWidth < 640 ? 2 : 3))) }).map((_, i) => (
+                            {Array.from({
+                                length: Math.min(
+                                    5,
+                                    Math.ceil(categories.length / (typeof window !== 'undefined' && window.innerWidth < 640 ? 2 : 3)),
+                                ),
+                            }).map((_, i) => (
                                 <button
                                     key={i}
                                     type="button"
@@ -447,10 +464,9 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                             slider.scrollTo({ left: i * cardWidth * (window.innerWidth < 640 ? 2 : 3), behavior: 'smooth' });
                                         }
                                     }}
-                                    className={`h-2 w-2 rounded-full transition-colors ${i === categoryActivePage
-                                        ? 'bg-[var(--theme-primary-1)]'
-                                        : 'bg-gray-300 hover:bg-gray-400'
-                                        }`}
+                                    className={`h-2 w-2 rounded-full transition-colors ${
+                                        i === categoryActivePage ? 'bg-[var(--theme-primary-1)]' : 'bg-gray-300 hover:bg-gray-400'
+                                    }`}
                                     aria-label={`Go to page ${i + 1}`}
                                 />
                             ))}
@@ -475,15 +491,48 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
             </section>
 
             {/* How Subscription Works Section - Compact Enhanced */}
-            <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 py-10 sm:py-12 lg:py-14" aria-labelledby="subscription-steps-heading">
+            <section
+                className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 py-10 sm:py-12 lg:py-14"
+                aria-labelledby="subscription-steps-heading"
+            >
                 {/* Background decorative icons */}
-                <div className="section-icon-bg absolute inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden>
-                    <img src="/images/icons/milk-bottle.png" alt="" className="absolute left-[2%] top-[12%] h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14" style={{ opacity: 0.05, transform: 'rotate(-18deg)' }} />
-                    <img src="/images/icons/farm.png" alt="" className="absolute right-[4%] top-[10%] h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12" style={{ opacity: 0.04, transform: 'rotate(14deg)' }} />
-                    <img src="/images/icons/animal.png" alt="" className="absolute bottom-[18%] left-[1%] h-8 w-8 sm:h-10 sm:w-10" style={{ opacity: 0.04, transform: 'rotate(10deg)' }} />
-                    <img src="/images/icons/milk-bottle%20(1).png" alt="" className="absolute bottom-[12%] right-[7%] h-10 w-10 sm:h-12 sm:w-12" style={{ opacity: 0.05, transform: 'rotate(-12deg)' }} />
-                    <img src="/images/icons/discount.png" alt="" className="absolute left-[18%] top-1/2 h-6 w-6 -translate-y-1/2 sm:h-8 sm:w-8" style={{ opacity: 0.03, transform: 'rotate(18deg)' }} />
-                    <img src="/images/icons/milk%20(1).png" alt="" className="absolute right-[20%] top-1/2 h-6 w-6 -translate-y-1/2 sm:h-8 sm:w-8" style={{ opacity: 0.04, transform: 'rotate(-10deg)' }} />
+                <div className="section-icon-bg pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
+                    <img
+                        src="/images/icons/milk-bottle.png"
+                        alt=""
+                        className="absolute top-[12%] left-[2%] h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14"
+                        style={{ opacity: 0.05, transform: 'rotate(-18deg)' }}
+                    />
+                    <img
+                        src="/images/icons/farm.png"
+                        alt=""
+                        className="absolute top-[10%] right-[4%] h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12"
+                        style={{ opacity: 0.04, transform: 'rotate(14deg)' }}
+                    />
+                    <img
+                        src="/images/icons/animal.png"
+                        alt=""
+                        className="absolute bottom-[18%] left-[1%] h-8 w-8 sm:h-10 sm:w-10"
+                        style={{ opacity: 0.04, transform: 'rotate(10deg)' }}
+                    />
+                    <img
+                        src="/images/icons/milk-bottle%20(1).png"
+                        alt=""
+                        className="absolute right-[7%] bottom-[12%] h-10 w-10 sm:h-12 sm:w-12"
+                        style={{ opacity: 0.05, transform: 'rotate(-12deg)' }}
+                    />
+                    <img
+                        src="/images/icons/discount.png"
+                        alt=""
+                        className="absolute top-1/2 left-[18%] h-6 w-6 -translate-y-1/2 sm:h-8 sm:w-8"
+                        style={{ opacity: 0.03, transform: 'rotate(18deg)' }}
+                    />
+                    <img
+                        src="/images/icons/milk%20(1).png"
+                        alt=""
+                        className="absolute top-1/2 right-[20%] h-6 w-6 -translate-y-1/2 sm:h-8 sm:w-8"
+                        style={{ opacity: 0.04, transform: 'rotate(-10deg)' }}
+                    />
                 </div>
                 <style>{`
                         @keyframes blob-bounce {
@@ -549,21 +598,29 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                             }
                         }
                     `}</style>
-                <div className="container relative z-10 mx-auto px-3 sm:px-4 lg:px-6">
+                <div className="relative z-10 container mx-auto px-3 sm:px-4 lg:px-6">
                     {/* Compact Header with Icon - Row Layout */}
                     <div className="mb-6 flex flex-row items-center justify-center gap-3 sm:mb-5 sm:gap-4">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
-                            <svg className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            <svg
+                                className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
                             </svg>
                         </div>
                         <div className="text-left">
                             <h2 id="subscription-steps-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
                                 How Subscription Works
                             </h2>
-                            <p className="text-xs text-gray-400 sm:text-sm">
-                                Simple steps to get fresh dairy
-                            </p>
+                            <p className="text-xs text-gray-400 sm:text-sm">Simple steps to get fresh dairy</p>
                         </div>
                     </div>
 
@@ -605,24 +662,21 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                         ].map((item, index) => (
                             <article
                                 key={`step-${index}`}
-                                className="subscription-card group relative h-full w-full min-h-[200px] overflow-hidden sm:min-h-[240px] lg:min-h-[280px]"
+                                className="subscription-card group relative h-full min-h-[200px] w-full overflow-hidden sm:min-h-[240px] lg:min-h-[280px]"
                             >
                                 {/* Animated Blob Background */}
-                                <div
-                                    className="subscription-card-blob"
-                                    style={{ backgroundColor: item.blobColor }}
-                                />
+                                <div className="subscription-card-blob" style={{ backgroundColor: item.blobColor }} />
                                 {/* Step Number Badge */}
-                                <div className="absolute left-3 top-3 z-30 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-[var(--theme-primary-1)] shadow-sm sm:left-4 sm:top-4 sm:h-7 sm:w-7 sm:text-sm">
+                                <div className="absolute top-3 left-3 z-30 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-[var(--theme-primary-1)] shadow-sm sm:top-4 sm:left-4 sm:h-7 sm:w-7 sm:text-sm">
                                     {item.step}
                                 </div>
                                 {/* Card Content */}
                                 <div className="subscription-card-bg flex flex-col items-center justify-center p-4 sm:p-5">
                                     {/* Image Container with Enhanced Hover */}
                                     <div className="mb-4 flex flex-shrink-0 flex-col items-center">
-                                        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--theme-primary-1)]/10 to-[var(--theme-primary-1)]/5 p-2.5 shadow-inner transition-all duration-400 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-[var(--theme-primary-1)]/10 sm:h-24 sm:w-24 sm:p-3 lg:h-28 lg:w-28">
+                                        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--theme-primary-1)]/10 to-[var(--theme-primary-1)]/5 p-2.5 shadow-inner transition-all duration-400 group-hover:scale-110 group-hover:shadow-[var(--theme-primary-1)]/10 group-hover:shadow-lg sm:h-24 sm:w-24 sm:p-3 lg:h-28 lg:w-28">
                                             {/* Subtle ring on hover */}
-                                            <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/5 group-hover:ring-[var(--theme-primary-1)]/20" />
+                                            <div className="absolute inset-0 rounded-2xl ring-1 ring-black/5 ring-inset group-hover:ring-[var(--theme-primary-1)]/20" />
                                             <img
                                                 src={item.image}
                                                 alt={item.imageAlt}
@@ -632,11 +686,11 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                         </div>
                                     </div>
                                     {/* Title with Enhanced Typography */}
-                                    <h3 className="mb-2 text-center text-sm font-bold leading-tight text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
+                                    <h3 className="mb-2 text-center text-sm leading-tight font-bold text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
                                         {item.title}
                                     </h3>
                                     {/* Description with Better Visual Hierarchy */}
-                                    <p className="text-center text-[11px] font-medium leading-relaxed text-gray-500 transition-colors duration-300 group-hover:text-gray-700 sm:text-xs">
+                                    <p className="text-center text-[11px] leading-relaxed font-medium text-gray-500 transition-colors duration-300 group-hover:text-gray-700 sm:text-xs">
                                         {item.description}
                                     </p>
                                 </div>
@@ -647,7 +701,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
             </section>
 
             {/* Our Products – Slider with Navigation (Same layout as Categories) */}
-            <section id="products" className="py-10 bg-gradient-to-b from-white to-gray-50/30 sm:py-12 lg:py-14" aria-labelledby="products-heading">
+            <section id="products" className="bg-gradient-to-b from-white to-gray-50/30 py-10 sm:py-12 lg:py-14" aria-labelledby="products-heading">
                 <div className="container mx-auto px-3 sm:px-4 lg:px-6">
                     {/* Compact Header with Icon and Nav Buttons */}
                     <div className="mb-6 flex items-center justify-between sm:mb-5">
@@ -659,9 +713,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                 <h2 id="products-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
                                     Our Products
                                 </h2>
-                                <p className="text-xs text-gray-400 sm:text-sm">
-                                    Fresh dairy delivered
-                                </p>
+                                <p className="text-xs text-gray-400 sm:text-sm">Fresh dairy delivered</p>
                             </div>
                         </div>
 
@@ -700,7 +752,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                         {/* Mobile: View All only */}
                         <Link
                             href="/products"
-                            className="rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white lg:hidden sm:text-sm"
+                            className="rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white sm:text-sm lg:hidden"
                         >
                             View All
                         </Link>
@@ -729,7 +781,19 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                             const activeVariantId = getSelectedVariantId(product);
                             const hasVariants = product.variants.length > 0;
                             const hasDiscount = product.compare_at_price && product.compare_at_price > displayPrice;
-                            const discountPct = hasDiscount ? Math.round(((product.compare_at_price! - displayPrice) / product.compare_at_price!) * 100) : 0;
+                            const discountPct = hasDiscount
+                                ? Math.round(((product.compare_at_price! - displayPrice) / product.compare_at_price!) * 100)
+                                : 0;
+                            const isPlan = product.is_subscription_eligible;
+
+                            const mediaList: MediaItem[] = [];
+                            if (product.images && product.images.length > 0) {
+                                product.images.forEach((img) => mediaList.push({ type: 'image', url: getSafeUrl(img) }));
+                            } else if (product.image) {
+                                mediaList.push({ type: 'image', url: getSafeUrl(product.image) });
+                            } else {
+                                mediaList.push({ type: 'image', url: '/placeholder.png' });
+                            }
 
                             return (
                                 <article
@@ -737,28 +801,38 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                     className="group relative flex w-[calc(50%-6px)] flex-shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-[var(--theme-primary-1)]/40 hover:shadow-lg sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)]"
                                 >
                                     {/* ── Image area ── */}
-                                    <Link href={`/products/${product.slug}`} className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-                                        <img
-                                            src={product.image}
+                                    <Link
+                                        href={productRoute(product.slug)}
+                                        className="relative aspect-square w-full overflow-hidden bg-[var(--theme-secondary)]/10 sm:aspect-[4/3]"
+                                    >
+                                        <ProductCardMedia
+                                            media={mediaList}
                                             alt={product.name}
-                                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                            loading="lazy"
+                                            productKey={product.id.toString()}
+                                            currentIndexMap={similarCardMediaIndex}
+                                            onIndexChange={setSimilarCardMediaIndexForKey}
+                                            className="h-full w-full"
+                                            imageClassName="group-hover:scale-105"
                                         />
                                         {/* Discount badge */}
                                         {hasDiscount && (
-                                            <span className="absolute left-2 top-2 z-10 rounded-md bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white shadow sm:text-[10px]">
+                                            <span className="absolute top-2 left-2 z-10 rounded-md bg-red-500 px-1.5 py-0.5 text-[9px] font-bold text-white shadow sm:text-[10px]">
                                                 {discountPct}% OFF
                                             </span>
                                         )}
                                         {/* Wishlist */}
                                         <button
                                             type="button"
-                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleProductWishlist(product.id); }}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                toggleProductWishlist(product.id);
+                                            }}
                                             aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                                            className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white sm:h-8 sm:w-8"
+                                            className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white sm:h-8 sm:w-8"
                                         >
                                             <Heart
-                                                className={`h-3.5 w-3.5 transition-all duration-200 sm:h-4 sm:w-4 ${isWishlisted ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-400 group-hover:text-red-400'}`}
+                                                className={`h-3.5 w-3.5 transition-all duration-200 sm:h-4 sm:w-4 ${isWishlisted ? 'scale-110 fill-red-500 text-red-500' : 'text-gray-400 group-hover:text-red-400'}`}
                                                 strokeWidth={2}
                                             />
                                         </button>
@@ -767,58 +841,77 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                     {/* ── Card body ── */}
                                     <div className="flex flex-1 flex-col p-2.5 sm:p-3">
                                         {/* Product name */}
-                                        <Link href={`/products/${product.slug}`}>
+                                        <Link href={productRoute(product.slug)}>
                                             <h3 className="mb-1 line-clamp-1 text-xs font-semibold text-gray-800 transition-colors group-hover:text-[var(--theme-primary-1)] sm:text-sm">
                                                 {product.name}
                                             </h3>
                                         </Link>
 
-                                        {/* Unit / weight */}
-                                        {product.unit && (
+                                        {/* Unit / weight / Subscription info */}
+                                        {isPlan ? (
+                                            <p className="mb-1.5 text-[10px] font-medium text-gray-600 sm:text-xs">Subscription Available</p>
+                                        ) : product.unit ? (
                                             <p className="mb-1.5 text-[10px] text-gray-400 sm:text-xs">
                                                 {product.weight ? `${product.weight} ${product.unit}` : product.unit}
                                             </p>
-                                        )}
+                                        ) : null}
 
                                         {/* Variant selector pills */}
-                                        {hasVariants && (
+                                        {hasVariants && !isPlan && (
                                             <div className="mb-2 flex flex-wrap gap-1">
-                                                {product.variants.filter(v => v.is_active).map((v) => (
-                                                    <button
-                                                        key={v.id}
-                                                        type="button"
-                                                        onClick={() => setSelectedVariants(prev => ({ ...prev, [product.id]: v.id }))}
-                                                        className={`rounded-md border px-2 py-0.5 text-[9px] font-medium transition-all sm:text-[10px] ${activeVariantId === v.id
-                                                            ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
-                                                            : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
+                                                {product.variants
+                                                    .filter((v) => v.is_active)
+                                                    .map((v) => (
+                                                        <button
+                                                            key={v.id}
+                                                            type="button"
+                                                            onClick={() => setSelectedVariants((prev) => ({ ...prev, [product.id]: v.id }))}
+                                                            className={`rounded-md border px-2 py-0.5 text-[9px] font-medium transition-all sm:text-[10px] ${
+                                                                activeVariantId === v.id
+                                                                    ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
+                                                                    : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
                                                             }`}
-                                                    >
-                                                        {v.name}
-                                                    </button>
-                                                ))}
+                                                        >
+                                                            {v.name}
+                                                        </button>
+                                                    ))}
                                             </div>
                                         )}
 
                                         {/* Price row */}
-                                        <div className="mt-auto mb-2 flex items-baseline gap-1.5">
-                                            <span className="text-sm font-bold text-[var(--theme-primary-1)] sm:text-base">
-                                                {formatPrice(displayPrice)}
-                                            </span>
-                                            {hasDiscount && (
-                                                <span className="text-[10px] text-gray-400 line-through sm:text-xs">
-                                                    {formatPrice(product.compare_at_price!)}
+                                        {!isPlan && (
+                                            <div className="mt-auto mb-2 flex items-baseline gap-1.5">
+                                                <span className="text-sm font-bold text-[var(--theme-primary-1)] sm:text-base">
+                                                    {formatPrice(displayPrice)}
                                                 </span>
-                                            )}
-                                        </div>
+                                                {hasDiscount && (
+                                                    <span className="text-[10px] text-gray-400 line-through sm:text-xs">
+                                                        {formatPrice(product.compare_at_price!)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                        {isPlan && (
+                                            <div className="mt-auto mb-2 flex items-baseline gap-1.5">
+                                                <span className="text-sm font-bold text-[var(--theme-primary-1)] sm:text-base">
+                                                    {formatPrice(displayPrice)}/ Unit
+                                                </span>
+                                            </div>
+                                        )}
 
-                                        {/* Add to Cart button */}
-                                        <button
-                                            type="button"
-                                            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--theme-primary-1)] py-2 text-[10px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[var(--theme-primary-1-dark)] hover:shadow-md active:scale-[0.97] sm:py-2.5 sm:text-xs"
+                                        <Link
+                                            href={isPlan ? `/subscription?product=${product.id}` : productRoute(product.slug)}
+                                            className="mt-auto flex w-full items-center justify-center gap-1.5 rounded-md bg-[var(--theme-primary-1)] py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[var(--theme-primary-1-dark)] hover:shadow-md active:scale-[0.97] sm:py-2.5 sm:text-xs"
                                         >
-                                            <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2.5} />
-                                            Add to Cart
-                                        </button>
+                                            {isPlan ? (
+                                                'Subscribe'
+                                            ) : (
+                                                <>
+                                                    <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2.5} />
+                                                    Add to Cart
+                                                </>
+                                            )}
+                                        </Link>
                                     </div>
                                 </article>
                             );
@@ -844,7 +937,9 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
 
                         {/* Pagination Dots */}
                         <div className="flex items-center gap-1.5">
-                            {Array.from({ length: Math.min(5, Math.ceil(products.length / (typeof window !== 'undefined' && window.innerWidth < 640 ? 2 : 2))) }).map((_, i) => (
+                            {Array.from({
+                                length: Math.min(5, Math.ceil(products.length / (typeof window !== 'undefined' && window.innerWidth < 640 ? 2 : 2))),
+                            }).map((_, i) => (
                                 <button
                                     key={i}
                                     type="button"
@@ -855,10 +950,9 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                             slider.scrollTo({ left: i * cardWidth * 2, behavior: 'smooth' });
                                         }
                                     }}
-                                    className={`h-2 w-2 rounded-full transition-colors ${i === productActivePage
-                                        ? 'bg-[var(--theme-primary-1)]'
-                                        : 'bg-gray-300 hover:bg-gray-400'
-                                        }`}
+                                    className={`h-2 w-2 rounded-full transition-colors ${
+                                        i === productActivePage ? 'bg-[var(--theme-primary-1)]' : 'bg-gray-300 hover:bg-gray-400'
+                                    }`}
                                     aria-label={`Go to products page ${i + 1}`}
                                 />
                             ))}
@@ -883,13 +977,19 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
             </section>
 
             {/* Why Choose Us – Auto-scrolling Slider with Consistent Pattern */}
-            <section className="py-10 bg-gradient-to-b from-white via-gray-50/50 to-white sm:py-12 lg:py-14" aria-labelledby="why-choose-heading">
+            <section className="bg-gradient-to-b from-white via-gray-50/50 to-white py-10 sm:py-12 lg:py-14" aria-labelledby="why-choose-heading">
                 <div className="container mx-auto px-3 sm:px-4 lg:px-6">
                     {/* Centered Header with Icon */}
                     <div className="mb-6 flex flex-col items-center justify-center sm:mb-5">
                         <div className="flex items-center gap-2">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
-                                <svg className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <svg
+                                    className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
@@ -897,9 +997,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                 <h2 id="why-choose-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
                                     Why Choose Us
                                 </h2>
-                                <p className="text-xs text-gray-400 sm:text-sm">
-                                    Building trust through quality
-                                </p>
+                                <p className="text-xs text-gray-400 sm:text-sm">Building trust through quality</p>
                             </div>
                         </div>
                     </div>
@@ -920,25 +1018,28 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                             `}</style>
                         <div className="why-choose-scroll flex gap-3 sm:gap-4 lg:gap-4">
                             {/* Duplicate items for seamless loop */}
-                            {[...[
-                                { title: 'Sourced from local Kerala farms', image: '/images/why-choose-us/Sourced from local Kerala farms.png' },
-                                { title: 'No preservatives', image: '/images/why-choose-us/no-preservatives.png' },
-                                { title: 'Hygienic processing', image: '/images/why-choose-us/Hygienic processing.png' },
-                                { title: 'Morning delivery before 7 AM', image: '/images/why-choose-us/morning-delivery.png' },
-                                { title: 'Cancel / pause anytime', image: '/images/why-choose-us/Cancel-pause anytime.png' },
-                                { title: 'Quality checked daily', image: '/images/why-choose-us/Quality checked daily.png' },
-                                { title: 'Cold-chain maintained', image: '/images/why-choose-us/Cold-chain maintained.png' },
-                                { title: 'Transparent pricing', image: '/images/why-choose-us/transparent-pricing.png' },
-                            ], ...[
-                                { title: 'Sourced from local Kerala farms', image: '/images/why-choose-us/Sourced from local Kerala farms.png' },
-                                { title: 'No preservatives', image: '/images/why-choose-us/no-preservatives.png' },
-                                { title: 'Hygienic processing', image: '/images/why-choose-us/Hygienic processing.png' },
-                                { title: 'Morning delivery before 7 AM', image: '/images/why-choose-us/morning-delivery.png' },
-                                { title: 'Cancel / pause anytime', image: '/images/why-choose-us/Cancel-pause anytime.png' },
-                                { title: 'Quality checked daily', image: '/images/why-choose-us/Quality checked daily.png' },
-                                { title: 'Cold-chain maintained', image: '/images/why-choose-us/Cold-chain maintained.png' },
-                                { title: 'Transparent pricing', image: '/images/why-choose-us/transparent-pricing.png' },
-                            ]].map((item, index) => (
+                            {[
+                                ...[
+                                    { title: 'Sourced from local Kerala farms', image: '/images/why-choose-us/Sourced from local Kerala farms.png' },
+                                    { title: 'No preservatives', image: '/images/why-choose-us/no-preservatives.png' },
+                                    { title: 'Hygienic processing', image: '/images/why-choose-us/Hygienic processing.png' },
+                                    { title: 'Morning delivery before 7 AM', image: '/images/why-choose-us/morning-delivery.png' },
+                                    { title: 'Cancel / pause anytime', image: '/images/why-choose-us/Cancel-pause anytime.png' },
+                                    { title: 'Quality checked daily', image: '/images/why-choose-us/Quality checked daily.png' },
+                                    { title: 'Cold-chain maintained', image: '/images/why-choose-us/Cold-chain maintained.png' },
+                                    { title: 'Transparent pricing', image: '/images/why-choose-us/transparent-pricing.png' },
+                                ],
+                                ...[
+                                    { title: 'Sourced from local Kerala farms', image: '/images/why-choose-us/Sourced from local Kerala farms.png' },
+                                    { title: 'No preservatives', image: '/images/why-choose-us/no-preservatives.png' },
+                                    { title: 'Hygienic processing', image: '/images/why-choose-us/Hygienic processing.png' },
+                                    { title: 'Morning delivery before 7 AM', image: '/images/why-choose-us/morning-delivery.png' },
+                                    { title: 'Cancel / pause anytime', image: '/images/why-choose-us/Cancel-pause anytime.png' },
+                                    { title: 'Quality checked daily', image: '/images/why-choose-us/Quality checked daily.png' },
+                                    { title: 'Cold-chain maintained', image: '/images/why-choose-us/Cold-chain maintained.png' },
+                                    { title: 'Transparent pricing', image: '/images/why-choose-us/transparent-pricing.png' },
+                                ],
+                            ].map((item, index) => (
                                 <div
                                     key={`${item.title}-${index}`}
                                     className="group flex w-[calc(33.333%-8px)] flex-shrink-0 flex-col items-center sm:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)]"
@@ -954,7 +1055,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                     </div>
 
                                     {/* Title - centered, compact */}
-                                    <h3 className="text-center text-[10px] font-semibold leading-tight text-gray-700 transition-colors duration-200 group-hover:text-[var(--theme-primary-1)] sm:text-xs">
+                                    <h3 className="text-center text-[10px] leading-tight font-semibold text-gray-700 transition-colors duration-200 group-hover:text-[var(--theme-primary-1)] sm:text-xs">
                                         {item.title}
                                     </h3>
                                 </div>
@@ -968,11 +1069,11 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
             <section className="relative overflow-hidden bg-[var(--theme-primary-1)] py-8 sm:py-10 lg:py-12">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10" aria-hidden>
-                    <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/20 blur-3xl sm:h-96 sm:w-96" />
+                    <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-white/20 blur-3xl sm:h-96 sm:w-96" />
                     <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-white/20 blur-3xl sm:h-96 sm:w-96" />
                 </div>
 
-                <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Main Content Card */}
                     <div className="overflow-hidden rounded-xl bg-white shadow-xl lg:rounded-2xl">
                         <div className="flex flex-col lg:flex-row">
@@ -987,13 +1088,14 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                 </span>
 
                                 {/* Heading */}
-                                <h2 className="mb-3 text-xl font-bold leading-tight text-gray-900 sm:text-2xl lg:text-3xl">
+                                <h2 className="mb-3 text-xl leading-tight font-bold text-gray-900 sm:text-2xl lg:text-3xl">
                                     Wake Up to <span className="text-[var(--theme-primary-1)]">Freshness</span> Every Day
                                 </h2>
 
                                 {/* Description */}
                                 <p className="mb-4 text-xs leading-relaxed text-gray-600 sm:text-sm">
-                                    Milk delivered before your day starts—no store visits, no forgetting. Start your morning with the freshest dairy products right at your doorstep.
+                                    Milk delivered before your day starts—no store visits, no forgetting. Start your morning with the freshest dairy
+                                    products right at your doorstep.
                                 </p>
 
                                 {/* Feature Grid */}
@@ -1004,26 +1106,69 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                         { text: 'Never miss milk', icon: 'check', desc: 'Reliable supply' },
                                         { text: 'Farm to door', icon: 'truck', desc: 'Fresh & pure' },
                                     ].map((point) => (
-                                        <div key={point.text} className="group rounded-lg bg-gray-50 p-2.5 transition-all hover:bg-[var(--theme-primary-1)]/5 hover:shadow-md sm:p-3">
+                                        <div
+                                            key={point.text}
+                                            className="group rounded-lg bg-gray-50 p-2.5 transition-all hover:bg-[var(--theme-primary-1)]/5 hover:shadow-md sm:p-3"
+                                        >
                                             <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-md bg-[var(--theme-primary-1)] text-white shadow-sm transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
                                                 {point.icon === 'clock' && (
-                                                    <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    <svg
+                                                        className="h-4 w-4 sm:h-5 sm:w-5"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                        strokeWidth={2}
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        />
                                                     </svg>
                                                 )}
                                                 {point.icon === 'home' && (
-                                                    <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                                    <svg
+                                                        className="h-4 w-4 sm:h-5 sm:w-5"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                        strokeWidth={2}
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                                                        />
                                                     </svg>
                                                 )}
                                                 {point.icon === 'check' && (
-                                                    <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    <svg
+                                                        className="h-4 w-4 sm:h-5 sm:w-5"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                        strokeWidth={2}
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        />
                                                     </svg>
                                                 )}
                                                 {point.icon === 'truck' && (
-                                                    <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                                                    <svg
+                                                        className="h-4 w-4 sm:h-5 sm:w-5"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                        strokeWidth={2}
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
+                                                        />
                                                     </svg>
                                                 )}
                                             </div>
@@ -1037,7 +1182,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                 <div className="flex flex-wrap gap-2.5 sm:gap-3">
                                     <a
                                         href="/login"
-                                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[var(--theme-primary-1)]/30 transition-all hover:-translate-y-0.5 hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg active:scale-95 sm:px-5 sm:py-3 sm:text-sm"
+                                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2.5 text-xs font-bold text-white shadow-[var(--theme-primary-1)]/30 shadow-md transition-all hover:-translate-y-0.5 hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg active:scale-95 sm:px-5 sm:py-3 sm:text-sm"
                                     >
                                         Subscribe Now
                                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1065,13 +1210,22 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                     className="h-full w-full object-cover"
                                     aria-label="Fresh milk delivery"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-transparent lg:from-white/30" aria-hidden />
+                                <div
+                                    className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-transparent lg:from-white/30"
+                                    aria-hidden
+                                />
 
                                 {/* Floating Stats Card */}
                                 <div className="absolute bottom-3 left-3 rounded-lg bg-white/95 p-2 shadow-lg backdrop-blur-sm sm:bottom-4 sm:left-4 sm:p-3 lg:bottom-6 lg:left-6">
                                     <div className="flex items-center gap-2">
                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] sm:h-10 sm:w-10">
-                                            <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <svg
+                                                className="h-4 w-4 sm:h-5 sm:w-5"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                                strokeWidth={2}
+                                            >
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                             </svg>
                                         </div>
@@ -1088,7 +1242,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
             </section>
 
             {/* Our Stories – Slider with Navigation (Same layout as Categories/Products) */}
-            <section className="py-10 bg-[var(--theme-primary-1)] sm:py-12 lg:py-14" aria-labelledby="our-stories-heading">
+            <section className="bg-[var(--theme-primary-1)] py-10 sm:py-12 lg:py-14" aria-labelledby="our-stories-heading">
                 <div className="container mx-auto px-3 sm:px-4 lg:px-6">
                     {/* Compact Header with Icon and Nav Buttons */}
                     <div className="mb-6 flex items-center justify-between sm:mb-5">
@@ -1100,9 +1254,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                 <h2 id="our-stories-heading" className="text-lg font-bold text-white sm:text-xl">
                                     Our Stories
                                 </h2>
-                                <p className="text-xs text-white/70 sm:text-sm">
-                                    Freshtick Shorts — fresh updates
-                                </p>
+                                <p className="text-xs text-white/70 sm:text-sm">Freshtick Shorts — fresh updates</p>
                             </div>
                         </div>
 
@@ -1155,7 +1307,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                 key={story.id}
                                 type="button"
                                 onClick={() => setStoryViewerIndex(index)}
-                                className="group flex w-[calc(33.333%-8px)] flex-shrink-0 snap-start flex-col focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[var(--theme-primary-1)] rounded-xl text-left sm:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)]"
+                                className="group flex w-[calc(33.333%-8px)] flex-shrink-0 snap-start flex-col rounded-xl text-left focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[var(--theme-primary-1)] focus:outline-none sm:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)]"
                                 aria-label={`Watch short: ${story.label}`}
                             >
                                 {/* Short video preview – vertical 9:16 */}
@@ -1172,10 +1324,14 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                         />
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity group-hover:bg-black/30">
                                             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md sm:h-12 sm:w-12">
-                                                <Play className="h-5 w-5 text-[var(--theme-primary-1)] sm:h-6 sm:w-6" strokeWidth={2} fill="currentColor" />
+                                                <Play
+                                                    className="h-5 w-5 text-[var(--theme-primary-1)] sm:h-6 sm:w-6"
+                                                    strokeWidth={2}
+                                                    fill="currentColor"
+                                                />
                                             </span>
                                         </div>
-                                        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur sm:text-xs">
+                                        <span className="absolute right-1.5 bottom-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur sm:text-xs">
                                             {story.views} views
                                         </span>
                                     </div>
@@ -1218,10 +1374,9 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                         const slider = document.getElementById('stories-slider');
                                         if (slider) slider.scrollTo({ left: i * slider.offsetWidth, behavior: 'smooth' });
                                     }}
-                                    className={`h-2 w-2 rounded-full transition-all ${i === storiesActivePage
-                                        ? 'bg-white'
-                                        : 'bg-white/40 hover:bg-white/60'
-                                        }`}
+                                    className={`h-2 w-2 rounded-full transition-all ${
+                                        i === storiesActivePage ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
+                                    }`}
                                     aria-label={`Go to stories page ${i + 1}`}
                                 />
                             ))}
@@ -1261,7 +1416,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                         />
                     </div>
                     {/* Progress bars – above video, above tap zones so close is clickable */}
-                    <div className="absolute left-0 right-0 top-0 z-20 flex gap-1 px-2 pt-3 sm:gap-1.5 sm:px-3 sm:pt-4">
+                    <div className="absolute top-0 right-0 left-0 z-20 flex gap-1 px-2 pt-3 sm:gap-1.5 sm:px-3 sm:pt-4">
                         {STORIES.map((_, i) => (
                             <div key={i} className="h-0.5 flex-1 overflow-hidden rounded-full bg-white/30">
                                 <div
@@ -1272,7 +1427,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                         ))}
                     </div>
                     {/* Brand + close – z-20 so button is clickable (above tap zones) */}
-                    <div className="absolute left-0 right-0 top-10 z-20 flex items-center justify-between px-4 sm:top-12 sm:px-6">
+                    <div className="absolute top-10 right-0 left-0 z-20 flex items-center justify-between px-4 sm:top-12 sm:px-6">
                         <span className="text-sm font-semibold text-white/90">Freshtick</span>
                         <button
                             type="button"
@@ -1281,7 +1436,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                 e.stopPropagation();
                                 setStoryViewerIndex(null);
                             }}
-                            className="relative z-20 rounded-full p-2 text-white/90 transition-colors hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                            className="relative z-20 rounded-full p-2 text-white/90 transition-colors hover:bg-white/20 hover:text-white focus:ring-2 focus:ring-white/50 focus:outline-none"
                             aria-label="Close story"
                         >
                             <X className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} />
@@ -1306,11 +1461,9 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
             )}
 
             {/* Subscription Plans – white cards, 480ml/1L tabs, primary outline */}
-            <section id="subscriptions" className="py-12 bg-white sm:py-16 lg:py-20">
+            <section id="subscriptions" className="bg-white py-12 sm:py-16 lg:py-20">
                 <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-                    <h2 className="mb-6 text-center text-2xl font-bold text-gray-900 sm:text-3xl lg:text-4xl">
-                        Subscription Plans
-                    </h2>
+                    <h2 className="mb-6 text-center text-2xl font-bold text-gray-900 sm:text-3xl lg:text-4xl">Subscription Plans</h2>
 
                     {/* Variant tabs */}
                     <div className="mb-8 flex justify-center gap-2">
@@ -1319,10 +1472,11 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                 key={v}
                                 type="button"
                                 onClick={() => setSubVariant(v)}
-                                className={`rounded-lg border-2 px-5 py-2.5 text-sm font-semibold transition-all sm:px-6 sm:py-3 sm:text-base ${subVariant === v
-                                    ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)] text-white'
-                                    : 'border-gray-300 bg-white text-gray-700 hover:border-[var(--theme-primary-1)] hover:text-[var(--theme-primary-1)]'
-                                    }`}
+                                className={`rounded-lg border-2 px-5 py-2.5 text-sm font-semibold transition-all sm:px-6 sm:py-3 sm:text-base ${
+                                    subVariant === v
+                                        ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)] text-white'
+                                        : 'border-gray-300 bg-white text-gray-700 hover:border-[var(--theme-primary-1)] hover:text-[var(--theme-primary-1)]'
+                                }`}
                             >
                                 {v}
                             </button>
@@ -1347,15 +1501,9 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                             </span>
                                         )}
                                     </div>
-                                    <p className="mb-2 text-sm text-gray-600">
-                                        {variant.units} Unit(s)
-                                    </p>
-                                    <p className="mb-1 text-xl font-bold text-[var(--theme-primary-1)] sm:text-2xl">
-                                        {variant.total}
-                                    </p>
-                                    <p className="mb-3 text-sm font-medium text-gray-700">
-                                        {variant.perUnit}
-                                    </p>
+                                    <p className="mb-2 text-sm text-gray-600">{variant.units} Unit(s)</p>
+                                    <p className="mb-1 text-xl font-bold text-[var(--theme-primary-1)] sm:text-2xl">{variant.total}</p>
+                                    <p className="mb-3 text-sm font-medium text-gray-700">{variant.perUnit}</p>
                                     <ul className="mb-4 space-y-1.5 border-t border-gray-100 pt-3" role="list">
                                         {SUBSCRIPTION_FEATURES.map((feature) => (
                                             <li key={feature} className="flex items-center gap-2 text-sm text-gray-700">
@@ -1382,31 +1530,67 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
             </section>
 
             {/* Customer Testimonials – Slider with Navigation (Same layout as Categories/Products) */}
-            <section className="relative overflow-hidden py-10 bg-gray-50 sm:py-12 lg:py-14" aria-label="Customer testimonials">
-                <div className="section-icon-bg absolute inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden>
-                    <img src="/images/icons/milk-bottle.png" alt="" className="absolute left-[2%] top-[8%] h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16" style={{ opacity: 0.06, transform: 'rotate(-15deg)' }} />
-                    <img src="/images/icons/farm.png" alt="" className="absolute right-[4%] top-[5%] h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14" style={{ opacity: 0.05, transform: 'rotate(10deg)' }} />
-                    <img src="/images/icons/animal.png" alt="" className="absolute bottom-[15%] left-[1%] h-10 w-10 sm:h-12 sm:w-12" style={{ opacity: 0.05, transform: 'rotate(8deg)' }} />
-                    <img src="/images/icons/milk-bottle%20(1).png" alt="" className="absolute bottom-[10%] right-[8%] h-12 w-12 sm:h-14 sm:w-14" style={{ opacity: 0.06, transform: 'rotate(-8deg)' }} />
-                    <img src="/images/icons/discount.png" alt="" className="absolute left-[15%] top-1/2 h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10" style={{ opacity: 0.04, transform: 'rotate(12deg)' }} />
-                    <img src="/images/icons/milk%20(1).png" alt="" className="absolute right-[18%] top-1/2 h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10" style={{ opacity: 0.05, transform: 'rotate(-6deg)' }} />
+            <section className="relative overflow-hidden bg-gray-50 py-10 sm:py-12 lg:py-14" aria-label="Customer testimonials">
+                <div className="section-icon-bg pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
+                    <img
+                        src="/images/icons/milk-bottle.png"
+                        alt=""
+                        className="absolute top-[8%] left-[2%] h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16"
+                        style={{ opacity: 0.06, transform: 'rotate(-15deg)' }}
+                    />
+                    <img
+                        src="/images/icons/farm.png"
+                        alt=""
+                        className="absolute top-[5%] right-[4%] h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14"
+                        style={{ opacity: 0.05, transform: 'rotate(10deg)' }}
+                    />
+                    <img
+                        src="/images/icons/animal.png"
+                        alt=""
+                        className="absolute bottom-[15%] left-[1%] h-10 w-10 sm:h-12 sm:w-12"
+                        style={{ opacity: 0.05, transform: 'rotate(8deg)' }}
+                    />
+                    <img
+                        src="/images/icons/milk-bottle%20(1).png"
+                        alt=""
+                        className="absolute right-[8%] bottom-[10%] h-12 w-12 sm:h-14 sm:w-14"
+                        style={{ opacity: 0.06, transform: 'rotate(-8deg)' }}
+                    />
+                    <img
+                        src="/images/icons/discount.png"
+                        alt=""
+                        className="absolute top-1/2 left-[15%] h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10"
+                        style={{ opacity: 0.04, transform: 'rotate(12deg)' }}
+                    />
+                    <img
+                        src="/images/icons/milk%20(1).png"
+                        alt=""
+                        className="absolute top-1/2 right-[18%] h-8 w-8 -translate-y-1/2 sm:h-10 sm:w-10"
+                        style={{ opacity: 0.05, transform: 'rotate(-6deg)' }}
+                    />
                 </div>
                 <div className="relative z-10 container mx-auto px-3 sm:px-4 lg:px-6">
                     {/* Compact Header with Icon and Nav Buttons */}
                     <div className="mb-6 flex items-center justify-between sm:mb-5">
                         <div className="flex items-center gap-2">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
-                                <svg className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                <svg
+                                    className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                                    />
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
-                                    What Our Customers Say
-                                </h2>
-                                <p className="text-xs text-gray-400 sm:text-sm">
-                                    Real feedback from Kerala
-                                </p>
+                                <h2 className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">What Our Customers Say</h2>
+                                <p className="text-xs text-gray-400 sm:text-sm">Real feedback from Kerala</p>
                             </div>
                         </div>
 
@@ -1471,9 +1655,7 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                     </div>
                                     <span className="text-[10px] font-medium text-[var(--theme-primary-1)] sm:text-xs">{t.recent}</span>
                                 </div>
-                                <p className="mb-3 flex-1 text-sm leading-relaxed text-gray-700 line-clamp-3 sm:text-base">
-                                    "{t.quote}"
-                                </p>
+                                <p className="mb-3 line-clamp-3 flex-1 text-sm leading-relaxed text-gray-700 sm:text-base">"{t.quote}"</p>
                                 <div className="flex items-center gap-2 border-t border-gray-100 pt-2 sm:pt-3">
                                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--theme-primary-1)]/15 text-xs font-bold text-[var(--theme-primary-1)] sm:h-9 sm:w-9 sm:text-sm">
                                         {t.name.charAt(0)}
@@ -1514,10 +1696,9 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                         const slider = document.getElementById('testimonials-slider');
                                         if (slider) slider.scrollTo({ left: i * slider.offsetWidth * 0.7, behavior: 'smooth' });
                                     }}
-                                    className={`h-2 w-2 rounded-full transition-all ${i === testimonialsActivePage
-                                        ? 'bg-[var(--theme-primary-1)]'
-                                        : 'bg-gray-300 hover:bg-gray-400'
-                                        }`}
+                                    className={`h-2 w-2 rounded-full transition-all ${
+                                        i === testimonialsActivePage ? 'bg-[var(--theme-primary-1)]' : 'bg-gray-300 hover:bg-gray-400'
+                                    }`}
                                     aria-label={`Go to testimonials page ${i + 1}`}
                                 />
                             ))}
@@ -1539,9 +1720,9 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
             </section>
 
             {/* Support – enhanced compact design */}
-            <section className="py-8 bg-gradient-to-b from-white to-gray-50/30 sm:py-10 lg:py-12">
+            <section className="bg-gradient-to-b from-white to-gray-50/30 py-8 sm:py-10 lg:py-12">
                 <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 lg:items-stretch">
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch lg:gap-6">
                         {/* Col 1: Active Support GIF + App CTA */}
                         <div className="flex w-full flex-col gap-4">
                             <div className="group relative flex h-[160px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/10 to-[var(--theme-primary-1)]/5 shadow-md transition-all duration-500 hover:shadow-lg sm:h-[200px] lg:h-[220px]">
@@ -1557,10 +1738,16 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                     Manage subscriptions from your phone — pause, increase, decrease anytime.
                                 </p>
                                 <div className="mt-3 flex flex-wrap gap-2">
-                                    <a href="/login" className="rounded-lg bg-white px-4 py-2 text-xs font-semibold text-[var(--theme-primary-1)] shadow-sm transition-all duration-300 hover:scale-105 hover:bg-white/95 hover:shadow-md active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm">
+                                    <a
+                                        href="/login"
+                                        className="rounded-lg bg-white px-4 py-2 text-xs font-semibold text-[var(--theme-primary-1)] shadow-sm transition-all duration-300 hover:scale-105 hover:bg-white/95 hover:shadow-md active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm"
+                                    >
                                         Get Started
                                     </a>
-                                    <a href="/login" className="rounded-lg border-2 border-white/80 bg-transparent px-4 py-2 text-xs font-semibold text-white transition-all duration-300 hover:border-white hover:bg-white/10 hover:scale-105 active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm">
+                                    <a
+                                        href="/login"
+                                        className="rounded-lg border-2 border-white/80 bg-transparent px-4 py-2 text-xs font-semibold text-white transition-all duration-300 hover:scale-105 hover:border-white hover:bg-white/10 active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm"
+                                    >
                                         Subscribe Now
                                     </a>
                                 </div>
@@ -1570,45 +1757,70 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                         {/* Col 2: Support contact card */}
                         <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition-all duration-300 hover:shadow-lg">
                             <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 py-3 sm:px-5 sm:py-3.5">
-                                <h2 className="text-lg font-bold text-gray-900 sm:text-xl">
-                                    Support
-                                </h2>
-                                <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">
-                                    We're here to help you
-                                </p>
+                                <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Support</h2>
+                                <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">We're here to help you</p>
                             </div>
                             <div className="divide-y divide-gray-100">
-                                <a href="tel:7736121233" className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5">
+                                <a
+                                    href="tel:7736121233"
+                                    className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5"
+                                >
                                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/20 to-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-[var(--theme-primary-1)]/30 group-hover:to-[var(--theme-primary-1)]/20 sm:h-10 sm:w-10">
                                         <Phone className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
                                     </span>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">Call Us</p>
+                                        <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
+                                            Call Us
+                                        </p>
                                         <p className="text-xs text-gray-600 sm:text-sm">7736121233</p>
                                     </div>
-                                    <ExternalLink className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--theme-primary-1)] sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
+                                    <ExternalLink
+                                        className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--theme-primary-1)] sm:h-5 sm:w-5"
+                                        strokeWidth={2}
+                                        aria-hidden
+                                    />
                                 </a>
-                                <a href="https://wa.me/917736121233" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5">
+                                <a
+                                    href="https://wa.me/917736121233"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5"
+                                >
                                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#25D366]/20 to-[#25D366]/10 text-[#25D366] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-[#25D366]/30 group-hover:to-[#25D366]/20 sm:h-10 sm:w-10">
                                         <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
                                         </svg>
                                     </span>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[#25D366] sm:text-base">Chat With Us</p>
+                                        <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[#25D366] sm:text-base">
+                                            Chat With Us
+                                        </p>
                                         <p className="text-xs text-gray-600 sm:text-sm">7736121233</p>
                                     </div>
-                                    <ExternalLink className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[#25D366] sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
+                                    <ExternalLink
+                                        className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[#25D366] sm:h-5 sm:w-5"
+                                        strokeWidth={2}
+                                        aria-hidden
+                                    />
                                 </a>
-                                <a href="mailto:support@freshtick.in" className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5">
+                                <a
+                                    href="mailto:support@freshtick.in"
+                                    className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5"
+                                >
                                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/20 to-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-[var(--theme-primary-1)]/30 group-hover:to-[var(--theme-primary-1)]/20 sm:h-10 sm:w-10">
                                         <Mail className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
                                     </span>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">Email Us</p>
+                                        <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
+                                            Email Us
+                                        </p>
                                         <p className="text-xs text-gray-600 sm:text-sm">support@freshtick.in</p>
                                     </div>
-                                    <ExternalLink className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--theme-primary-1)] sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
+                                    <ExternalLink
+                                        className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--theme-primary-1)] sm:h-5 sm:w-5"
+                                        strokeWidth={2}
+                                        aria-hidden
+                                    />
                                 </a>
                                 <div className="flex items-start gap-3 px-4 py-3 sm:px-5 sm:py-3.5">
                                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/20 to-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] shadow-sm sm:h-10 sm:w-10">
@@ -1617,7 +1829,8 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                                     <div className="min-w-0 flex-1">
                                         <p className="text-sm font-semibold text-gray-900 sm:text-base">Address</p>
                                         <p className="mt-0.5 text-xs leading-relaxed text-gray-600 sm:text-sm">
-                                            Door No: VI / 404K, 2nd floor Karakattu Building, Nayarambalam PO, Nayarambalam, Puduvypin, Kochi, Kerala, India, 682509
+                                            Door No: VI / 404K, 2nd floor Karakattu Building, Nayarambalam PO, Nayarambalam, Puduvypin, Kochi, Kerala,
+                                            India, 682509
                                         </p>
                                     </div>
                                 </div>
@@ -1626,7 +1839,6 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                     </div>
                 </div>
             </section>
-
         </UserLayout>
     );
 }

@@ -11,10 +11,17 @@ export type AppTheme = {
     tertiary: string;
 };
 
+export type Zone = {
+    id: number;
+    name: string;
+    code: string;
+};
+
 export type SharedData = {
     name: string;
     auth: Auth;
     theme: AppTheme;
     csrf_token?: string;
+    zone?: Zone | null;
     [key: string]: unknown;
 };

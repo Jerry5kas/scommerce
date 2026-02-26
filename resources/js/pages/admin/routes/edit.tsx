@@ -1,7 +1,7 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
+import * as L from 'leaflet';
 import { ArrowLeft, Search, X, GripVertical, Plus, Check } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import AdminLayout from '@/layouts/AdminLayout';
 

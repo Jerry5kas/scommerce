@@ -65,6 +65,7 @@ Route::get('/', function () {
             'image' => $product->image,
             'price' => (float) $product->price,
             'compare_at_price' => $product->compare_at_price ? (float) $product->compare_at_price : null,
+            'is_subscription_eligible' => (bool) $product->is_subscription_eligible,
             'unit' => $product->unit,
             'weight' => $product->weight ? (float) $product->weight : null,
             'variants' => $product->variants->map(fn ($v) => [
@@ -144,6 +145,10 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // wishlist
+    Route::get('/wishlist', [\App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/toggle/{product}', [\App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle');
 
     Route::get('/profile', [UserController::class, 'show'])->name('profile.index');
     Route::put('/profile', [UserController::class, 'update'])->name('profile.update');

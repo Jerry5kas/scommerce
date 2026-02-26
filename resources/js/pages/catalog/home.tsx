@@ -163,7 +163,7 @@ export default function CatalogHome({
                                 {featuredProducts.map((product) => (
                                     <Link
                                         key={product.id}
-                                        href={`/products/${product.slug}?vertical=${selectedVertical}`}
+                                        href={productRoute(product.slug, { query: { vertical: selectedVertical } })}
                                         className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow"
                                     >
                                         {product.image && (

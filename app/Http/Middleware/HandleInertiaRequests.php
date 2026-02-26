@@ -36,6 +36,20 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        // compute user's default zone for sharing (nullable)
+        $zone = null;
+        if ($request->user()) {
+            $defaultAddress = $request->user()
+                ->addresses()
+                ->active()
+                ->where('is_default', true)
+                ->first();
+
+            if ($defaultAddress && $defaultAddress->zone) {
+                $zone = $defaultAddress->zone->only(['id', 'name', 'code']);
+            }
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -43,11 +57,14 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'admin' => $request->user('admin'),
+                'wishlisted_products' => $request->user() ? $request->user()->wishlists()->pluck('product_id')->toArray() : [],
             ],
             'theme' => ThemeSetting::getTheme(),
             'flash' => [
                 'message' => session('message'),
             ],
+            // zone is null when user is unauthenticated or has no default address
+            'zone' => $zone,
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,6 +12,8 @@ use Illuminate\Support\Str;
 
 class Product extends Model
 {
+    use HasFactory;
+
     public const VERTICAL_BOTH = 'both';
 
     protected $fillable = [
@@ -99,6 +102,14 @@ class Product extends Model
         return $this->belongsToMany(Product::class, 'product_relations', 'product_id', 'related_product_id')
             ->withPivot(['relation_type', 'display_order'])
             ->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<Wishlist, $this>
+     */
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
     }
 
     public function scopeActive(Builder $query): Builder

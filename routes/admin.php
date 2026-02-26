@@ -1,10 +1,6 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Admin routes (prefixed /admin, web middleware)
-|--------------------------------------------------------------------------
-*/
+/* |-------------------------------------------------------------------------- | Admin routes (prefixed /admin, web middleware) |-------------------------------------------------------------------------- */
 
 use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
@@ -30,6 +26,7 @@ use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionContro
 use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\WalletController as AdminWalletController;
+use App\Http\Controllers\Admin\WishlistController as AdminWishlistController;
 use App\Http\Controllers\Admin\ZoneController as AdminZoneController;
 use App\Http\Controllers\Admin\ZoneOverrideController as AdminZoneOverrideController;
 use Illuminate\Support\Facades\Route;
@@ -38,7 +35,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('admin.guest')->group(function () {
         Route::get('/login', [AdminLoginController::class, 'showLoginForm'])->name('login');
         Route::post('/login', [AdminLoginController::class, 'login'])->name('login.store');
-    });
+    }
+    );
 
     Route::middleware('admin.auth')->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -178,6 +176,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('notifications/{notification}/retry', [AdminNotificationController::class, 'retry'])->name('notifications.retry');
         Route::get('notifications/stats', [AdminNotificationController::class, 'stats'])->name('notifications.stats');
 
+        // Wishlist Insights
+        Route::get('wishlist-insights', [AdminWishlistController::class, 'index'])->name('wishlist-insights.index');
+
         // Analytics (Phase 13)
         Route::get('analytics', [AdminAnalyticsController::class, 'dashboard'])->name('analytics.dashboard');
         Route::get('analytics/events', [AdminAnalyticsController::class, 'events'])->name('analytics.events');
@@ -190,5 +191,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Activity Logs (Phase 14)
         Route::get('activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');
-    });
+    }
+    );
 });

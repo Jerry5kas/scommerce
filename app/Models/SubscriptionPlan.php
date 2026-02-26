@@ -32,6 +32,7 @@ class SubscriptionPlan extends Model
         'frequency_value',
         'days_of_week',
         'discount_percent',
+        'prices',
         'min_deliveries',
         'is_active',
         'display_order',
@@ -43,12 +44,13 @@ class SubscriptionPlan extends Model
     protected function casts(): array
     {
         return [
-            'days_of_week' => 'array',
+            'days_of_week'     => 'array',
+            'prices'           => 'array',
             'discount_percent' => 'decimal:2',
-            'min_deliveries' => 'integer',
-            'is_active' => 'boolean',
-            'display_order' => 'integer',
-            'frequency_value' => 'integer',
+            'min_deliveries'   => 'integer',
+            'is_active'        => 'boolean',
+            'display_order'    => 'integer',
+            'frequency_value'  => 'integer',
         ];
     }
 

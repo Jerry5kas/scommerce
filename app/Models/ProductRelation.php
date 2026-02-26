@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductRelation extends Model
 {
+    use HasFactory;
+
     public const TYPE_CROSS_SELL = 'cross_sell';
 
     public const TYPE_UPSELL = 'upsell';

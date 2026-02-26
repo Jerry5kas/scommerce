@@ -15,16 +15,13 @@ use Inertia\Response;
 
 class CatalogController extends Controller
 {
-    public function __construct(
-        private CatalogService $catalogService,
-        private LocationService $locationService,
-        private FreeSampleService $freeSampleService
+    public function __construct(private CatalogService $catalogService, private LocationService $locationService, private FreeSampleService $freeSampleService
     ) {}
 
     /**
      * Home page with banners, categories, featured products
      */
-    public function index(Request $request): Response
+    public function index(Request $request): Response|\Illuminate\Http\RedirectResponse
     {
         $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
 
@@ -60,7 +57,7 @@ class CatalogController extends Controller
     /**
      * Show category page with products
      */
-    public function showCategory(Request $request, Category $category): Response
+    public function showCategory(Request $request, Category $category): Response|\Illuminate\Http\RedirectResponse
     {
         $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
         if (! in_array($vertical, array_merge(BusinessVertical::values(), ['both']), true)) {
@@ -102,7 +99,7 @@ class CatalogController extends Controller
     /**
      * Show collection page
      */
-    public function showCollection(Request $request, Collection $collection): Response
+    public function showCollection(Request $request, Collection $collection): Response|\Illuminate\Http\RedirectResponse
     {
         $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
         if (! in_array($vertical, array_merge(BusinessVertical::values(), ['both']), true)) {
@@ -138,20 +135,24 @@ class CatalogController extends Controller
     /**
      * Show product detail page
      */
-    public function showProduct(Request $request, Product $product): Response
+    public function showProduct(Request $request, Product $product): Response|\Illuminate\Http\RedirectResponse
     {
-        $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
-        if (! in_array($vertical, array_merge(BusinessVertical::values(), ['both']), true)) {
-            $vertical = BusinessVertical::DailyFresh->value;
+        $requestedVertical = $request->string('vertical', '')->toString();
+        if (! in_array($requestedVertical, array_merge(BusinessVertical::values(), ['both']), true)) {
+            $requestedVertical = '';
         }
+
+        $vertical = $requestedVertical !== ''
+            ? $requestedVertical
+            : ($product->vertical === Product::VERTICAL_BOTH ? BusinessVertical::DailyFresh->value : $product->vertical);
 
         $zone = $this->getUserZone($request);
         if ($zone === null) {
             return redirect()->route('location.select');
         }
 
-        // Verify product is for this vertical
-        if ($product->vertical !== $vertical && $product->vertical !== Product::VERTICAL_BOTH) {
+        // Only enforce vertical check when explicitly requested
+        if ($requestedVertical !== '' && $product->vertical !== $vertical && $product->vertical !== Product::VERTICAL_BOTH) {
             abort(404);
         }
 
@@ -191,7 +192,7 @@ class CatalogController extends Controller
 
         $product->load(['category:id,name,slug', 'collection:id,name,slug', 'variants']);
 
-        return Inertia::render('catalog/product', [
+        return Inertia::render('product-detail', [
             'product' => $product,
             'vertical' => $vertical,
             'zone' => $zone->only(['id', 'name', 'code']),
@@ -206,7 +207,7 @@ class CatalogController extends Controller
     /**
      * Search products
      */
-    public function search(Request $request): Response
+    public function search(Request $request): Response|\Illuminate\Http\RedirectResponse
     {
         $query = $request->string('q', '')->toString();
         $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();

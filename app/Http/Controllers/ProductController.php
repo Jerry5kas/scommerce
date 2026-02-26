@@ -13,9 +13,7 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function __construct(
-        private CatalogService $catalogService,
-        private FreeSampleService $freeSampleService
+    public function __construct(private CatalogService $catalogService, private FreeSampleService $freeSampleService
     ) {}
 
     /**
@@ -46,18 +44,22 @@ class ProductController extends Controller
      */
     public function show(Request $request, Product $product): Response|RedirectResponse
     {
-        $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
-        if (! in_array($vertical, array_merge(BusinessVertical::values(), ['both']), true)) {
-            $vertical = BusinessVertical::DailyFresh->value;
+        $requestedVertical = $request->string('vertical', '')->toString();
+        if (! in_array($requestedVertical, array_merge(BusinessVertical::values(), ['both']), true)) {
+            $requestedVertical = '';
         }
+
+        $vertical = $requestedVertical !== ''
+            ? $requestedVertical
+            : ($product->vertical === Product::VERTICAL_BOTH ? BusinessVertical::DailyFresh->value : $product->vertical);
 
         $zone = $this->getUserZone($request);
         if ($zone === null) {
             return redirect()->route('location.select');
         }
 
-        // Verify product is for this vertical
-        if ($product->vertical !== $vertical && $product->vertical !== Product::VERTICAL_BOTH) {
+        // Only enforce vertical check when explicitly requested
+        if ($requestedVertical !== '' && $product->vertical !== $vertical && $product->vertical !== Product::VERTICAL_BOTH) {
             abort(404);
         }
 
@@ -95,7 +97,7 @@ class ProductController extends Controller
 
         $product->load(['category:id,name,slug', 'collection:id,name,slug', 'variants']);
 
-        return Inertia::render('catalog/product', [
+        return Inertia::render('product-detail', [
             'product' => $product,
             'vertical' => $vertical,
             'zone' => $zone->only(['id', 'name', 'code']),

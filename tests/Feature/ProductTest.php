@@ -131,4 +131,26 @@ class ProductTest extends TestCase
             ->has('upsellProducts', 1)
         );
     }
+
+    public function test_zone_is_shared_to_product_detail(): void
+    {
+        $product = Product::factory()->create([
+            'vertical' => BusinessVertical::DailyFresh->value,
+            'is_active' => true,
+            'is_in_stock' => true,
+        ]);
+
+        $product->zones()->attach($this->zone->id, ['is_available' => true, 'stock_quantity' => 100]);
+
+        $response = $this->actingAs($this->user)->get(route('catalog.product', [
+            'product' => $product->slug,
+            'vertical' => BusinessVertical::DailyFresh->value,
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->has('zone')
+            ->where('zone.id', $this->zone->id)
+        );
+    }
 }

@@ -21,6 +21,8 @@ import {
     UserPlus,
     Users,
     Building2,
+    Heart,
+    ListChecks,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -45,6 +47,7 @@ export const navGroups: NavGroup[] = [
         items: [
             { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
             { label: 'Subscriptions', href: '/admin/subscriptions', icon: Calendar },
+            { label: 'Subscription Plans', href: '/admin/subscription-plans', icon: ListChecks },
             { label: 'Payments', href: '/admin/payments', icon: CreditCard },
             { label: 'Wallets', href: '/admin/wallets', icon: Wallet },
         ],
@@ -81,6 +84,7 @@ export const navGroups: NavGroup[] = [
         label: 'Growth',
         items: [
             { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+            { label: 'Wishlist Insights', href: '/admin/wishlist-insights', icon: Heart },
             { label: 'Reports', href: '/admin/reports', icon: FileText },
             { label: 'Loyalty', href: '/admin/loyalty', icon: Award },
             { label: 'Referrals', href: '/admin/referrals', icon: UserPlus },

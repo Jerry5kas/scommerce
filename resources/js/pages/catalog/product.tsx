@@ -1,4 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
+import { product as productRoute } from '@/routes/catalog';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
 
@@ -66,11 +67,7 @@ export default function ProductPage({
         return `/storage/${url}`;
     };
 
-    const images = product.images && product.images.length > 0 
-        ? product.images.map(getSafeUrl)
-        : product.image 
-            ? [getSafeUrl(product.image)]
-            : [];
+    const images = product.images && product.images.length > 0 ? product.images.map(getSafeUrl) : product.image ? [getSafeUrl(product.image)] : [];
 
     const [selectedImage, setSelectedImage] = useState(images.length > 0 ? images[0] : '');
     const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
@@ -94,24 +91,18 @@ export default function ProductPage({
         });
     };
 
-    const currentPrice = selectedVariant
-        ? product.variants?.find((v) => v.id === selectedVariant)?.price || price
-        : price;
+    const currentPrice = selectedVariant ? product.variants?.find((v) => v.id === selectedVariant)?.price || price : price;
 
     return (
         <UserLayout>
             <Head title={product.name} />
             <div className="min-h-screen bg-gray-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                    <div className="mb-12 grid grid-cols-1 gap-8 lg:grid-cols-2">
                         {/* Product Images */}
                         <div>
                             <div className="mb-4">
-                                <img
-                                    src={selectedImage || '/placeholder.png'}
-                                    alt={product.name}
-                                    className="w-full h-96 object-cover rounded-lg"
-                                />
+                                <img src={selectedImage || '/placeholder.png'} alt={product.name} className="h-96 w-full rounded-lg object-cover" />
                             </div>
                             {images.length > 1 && (
                                 <div className="flex gap-2 overflow-x-auto">
@@ -119,11 +110,11 @@ export default function ProductPage({
                                         <button
                                             key={idx}
                                             onClick={() => setSelectedImage(img)}
-                                            className={`flex-shrink-0 w-20 h-20 rounded border-2 ${
+                                            className={`h-20 w-20 flex-shrink-0 rounded border-2 ${
                                                 selectedImage === img ? 'border-blue-500' : 'border-gray-300'
                                             }`}
                                         >
-                                            <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover rounded" />
+                                            <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full rounded object-cover" />
                                         </button>
                                     ))}
                                 </div>
@@ -132,31 +123,25 @@ export default function ProductPage({
 
                         {/* Product Details */}
                         <div>
-                            <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-                            <div className="flex items-center gap-4 mb-6">
+                            <h1 className="mb-4 text-3xl font-bold">{product.name}</h1>
+                            <div className="mb-6 flex items-center gap-4">
                                 <span className="text-3xl font-bold">₹{currentPrice}</span>
-                                {product.compare_at_price && (
-                                    <span className="text-xl text-gray-500 line-through">₹{product.compare_at_price}</span>
-                                )}
+                                {product.compare_at_price && <span className="text-xl text-gray-500 line-through">₹{product.compare_at_price}</span>}
                             </div>
 
-                            {product.short_description && (
-                                <p className="text-gray-600 mb-6">{product.short_description}</p>
-                            )}
+                            {product.short_description && <p className="mb-6 text-gray-600">{product.short_description}</p>}
 
                             {/* Variants */}
                             {product.variants && product.variants.length > 0 && (
                                 <div className="mb-6">
-                                    <label className="block text-sm font-medium mb-2">Select Variant</label>
+                                    <label className="mb-2 block text-sm font-medium">Select Variant</label>
                                     <div className="flex flex-wrap gap-2">
                                         {product.variants.map((variant) => (
                                             <button
                                                 key={variant.id}
                                                 onClick={() => setSelectedVariant(variant.id)}
-                                                className={`px-4 py-2 rounded border ${
-                                                    selectedVariant === variant.id
-                                                        ? 'border-blue-500 bg-blue-50'
-                                                        : 'border-gray-300'
+                                                className={`rounded border px-4 py-2 ${
+                                                    selectedVariant === variant.id ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
                                                 }`}
                                             >
                                                 {variant.name} - ₹{variant.price}
@@ -168,35 +153,29 @@ export default function ProductPage({
 
                             {/* Quantity */}
                             <div className="mb-6">
-                                <label className="block text-sm font-medium mb-2">Quantity</label>
+                                <label className="mb-2 block text-sm font-medium">Quantity</label>
                                 <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                        className="px-3 py-1 border rounded"
-                                    >
+                                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="rounded border px-3 py-1">
                                         -
                                     </button>
                                     <input
                                         type="number"
                                         value={quantity}
                                         onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                        className="w-20 px-3 py-1 border rounded text-center"
+                                        className="w-20 rounded border px-3 py-1 text-center"
                                         min="1"
                                     />
-                                    <button
-                                        onClick={() => setQuantity(quantity + 1)}
-                                        className="px-3 py-1 border rounded"
-                                    >
+                                    <button onClick={() => setQuantity(quantity + 1)} className="rounded border px-3 py-1">
                                         +
                                     </button>
                                 </div>
                             </div>
 
                             {/* Actions */}
-                            <div className="flex gap-4 mb-6">
+                            <div className="mb-6 flex gap-4">
                                 <button
                                     onClick={handleAddToCart}
-                                    className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="flex-1 rounded-lg bg-blue-600 px-6 py-3 text-white transition-colors hover:bg-blue-700"
                                 >
                                     Add to Cart
                                 </button>
@@ -204,7 +183,7 @@ export default function ProductPage({
                                     <button
                                         onClick={handleFreeSample}
                                         disabled={processing}
-                                        className="px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50"
+                                        className="rounded-lg border-2 border-blue-600 px-6 py-3 text-blue-600 transition-colors hover:bg-blue-50 disabled:opacity-50"
                                     >
                                         {processing ? 'Claiming...' : 'Try Free'}
                                     </button>
@@ -214,24 +193,22 @@ export default function ProductPage({
                             {product.is_subscription_eligible && (
                                 <Link
                                     href={`/subscription?product=${product.id}`}
-                                    className="block w-full text-center bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+                                    className="block w-full rounded-lg bg-green-600 px-6 py-3 text-center text-white transition-colors hover:bg-green-700"
                                 >
                                     Subscribe & Save
                                 </Link>
                             )}
 
                             {product.requires_bottle && product.bottle_deposit && (
-                                <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
-                                    <p className="text-sm text-yellow-800">
-                                        Bottle deposit: ₹{product.bottle_deposit} (refundable)
-                                    </p>
+                                <div className="mt-4 rounded-lg bg-yellow-50 p-4">
+                                    <p className="text-sm text-yellow-800">Bottle deposit: ₹{product.bottle_deposit} (refundable)</p>
                                 </div>
                             )}
 
                             {/* Description */}
                             {product.description && (
                                 <div className="mt-8">
-                                    <h2 className="text-xl font-bold mb-4">Description</h2>
+                                    <h2 className="mb-4 text-xl font-bold">Description</h2>
                                     <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: product.description }} />
                                 </div>
                             )}
@@ -241,19 +218,17 @@ export default function ProductPage({
                     {/* Upsell Products */}
                     {upsellProducts.length > 0 && (
                         <section className="mb-12">
-                            <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            <h2 className="mb-6 text-2xl font-bold">You May Also Like</h2>
+                            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
                                 {upsellProducts.map((item) => (
                                     <Link
                                         key={item.id}
-                                        href={`/products/${item.slug}?vertical=${vertical}`}
-                                        className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                                        href={productRoute(item.slug, { query: { vertical } })}
+                                        className="overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                     >
-                                        {item.image && (
-                                            <img src={getSafeUrl(item.image)} alt={item.name} className="w-full h-48 object-cover" />
-                                        )}
+                                        {item.image && <img src={getSafeUrl(item.image)} alt={item.name} className="h-48 w-full object-cover" />}
                                         <div className="p-4">
-                                            <h3 className="font-medium text-sm mb-2">{item.name}</h3>
+                                            <h3 className="mb-2 text-sm font-medium">{item.name}</h3>
                                             <span className="text-lg font-bold">₹{item.price}</span>
                                         </div>
                                     </Link>
@@ -265,19 +240,17 @@ export default function ProductPage({
                     {/* Cross-sell Products */}
                     {crossSellProducts.length > 0 && (
                         <section className="mb-12">
-                            <h2 className="text-2xl font-bold mb-6">Frequently Bought Together</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            <h2 className="mb-6 text-2xl font-bold">Frequently Bought Together</h2>
+                            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
                                 {crossSellProducts.map((item) => (
                                     <Link
                                         key={item.id}
-                                        href={`/products/${item.slug}?vertical=${vertical}`}
-                                        className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                                        href={productRoute(item.slug, { query: { vertical } })}
+                                        className="overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                     >
-                                        {item.image && (
-                                            <img src={getSafeUrl(item.image)} alt={item.name} className="w-full h-48 object-cover" />
-                                        )}
+                                        {item.image && <img src={getSafeUrl(item.image)} alt={item.name} className="h-48 w-full object-cover" />}
                                         <div className="p-4">
-                                            <h3 className="font-medium text-sm mb-2">{item.name}</h3>
+                                            <h3 className="mb-2 text-sm font-medium">{item.name}</h3>
                                             <span className="text-lg font-bold">₹{item.price}</span>
                                         </div>
                                     </Link>
@@ -289,19 +262,17 @@ export default function ProductPage({
                     {/* Related Products */}
                     {relatedProducts.length > 0 && (
                         <section>
-                            <h2 className="text-2xl font-bold mb-6">Related Products</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            <h2 className="mb-6 text-2xl font-bold">Related Products</h2>
+                            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
                                 {relatedProducts.map((item) => (
                                     <Link
                                         key={item.id}
-                                        href={`/products/${item.slug}?vertical=${vertical}`}
-                                        className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                                        href={productRoute(item.slug, { query: { vertical } })}
+                                        className="overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                     >
-                                        {item.image && (
-                                            <img src={getSafeUrl(item.image)} alt={item.name} className="w-full h-48 object-cover" />
-                                        )}
+                                        {item.image && <img src={getSafeUrl(item.image)} alt={item.name} className="h-48 w-full object-cover" />}
                                         <div className="p-4">
-                                            <h3 className="font-medium text-sm mb-2">{item.name}</h3>
+                                            <h3 className="mb-2 text-sm font-medium">{item.name}</h3>
                                             <span className="text-lg font-bold">₹{item.price}</span>
                                         </div>
                                     </Link>
@@ -314,4 +285,3 @@ export default function ProductPage({
         </UserLayout>
     );
 }
-
