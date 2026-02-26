@@ -60,11 +60,21 @@ export default function ProductPage({
     upsellProducts = [],
     isFreeSampleEligible,
 }: ProductPageProps) {
+    const getSafeUrl = (url: string | null | undefined) => {
+        if (!url) return '';
+        if (url.startsWith('http') || url.startsWith('/')) return url;
+        return `/storage/${url}`;
+    };
+
+    const images = product.images && product.images.length > 0 
+        ? product.images.map(getSafeUrl)
+        : product.image 
+            ? [getSafeUrl(product.image)]
+            : [];
+
+    const [selectedImage, setSelectedImage] = useState(images.length > 0 ? images[0] : '');
     const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
     const [quantity, setQuantity] = useState(1);
-    const [selectedImage, setSelectedImage] = useState(product.image || '');
-
-    const images = product.images && product.images.length > 0 ? product.images : product.image ? [product.image] : [];
 
     const { post, processing } = useForm({});
 
@@ -240,7 +250,7 @@ export default function ProductPage({
                                         className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow"
                                     >
                                         {item.image && (
-                                            <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
+                                            <img src={getSafeUrl(item.image)} alt={item.name} className="w-full h-48 object-cover" />
                                         )}
                                         <div className="p-4">
                                             <h3 className="font-medium text-sm mb-2">{item.name}</h3>
@@ -264,7 +274,7 @@ export default function ProductPage({
                                         className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow"
                                     >
                                         {item.image && (
-                                            <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
+                                            <img src={getSafeUrl(item.image)} alt={item.name} className="w-full h-48 object-cover" />
                                         )}
                                         <div className="p-4">
                                             <h3 className="font-medium text-sm mb-2">{item.name}</h3>
@@ -288,7 +298,7 @@ export default function ProductPage({
                                         className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow"
                                     >
                                         {item.image && (
-                                            <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
+                                            <img src={getSafeUrl(item.image)} alt={item.name} className="w-full h-48 object-cover" />
                                         )}
                                         <div className="p-4">
                                             <h3 className="font-medium text-sm mb-2">{item.name}</h3>

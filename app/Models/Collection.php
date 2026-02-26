@@ -75,6 +75,10 @@ class Collection extends Model
 
     public function scopeForVertical(Builder $query, string $vertical): Builder
     {
+        if ($vertical === 'all') {
+            return $query;
+        }
+
         return $query->where(function (Builder $q) use ($vertical) {
             $q->where('vertical', $vertical)->orWhere('vertical', self::VERTICAL_BOTH);
         });

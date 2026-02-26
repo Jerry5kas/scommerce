@@ -1,6 +1,8 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { MapPin, Plus, User, Pencil, Trash2, Star } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import * as L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { MapPin, Plus, User, Pencil, Trash2, Star, Map as MapIcon, Search, Crosshair, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
 import type { SharedData } from '@/types';
 
@@ -292,8 +294,194 @@ function AddressFormFields({
     form: ReturnType<typeof useForm<typeof emptyAddress & { address_line_1?: string; city?: string; state?: string; pincode?: string }>>;
     formId?: string;
 }) {
+    const [isMapOpen, setIsMapOpen] = useState(false);
+    const mapContainerRef = useRef<HTMLDivElement | null>(null);
+    const mapInstanceRef = useRef<L.Map | null>(null);
+    const markerRef = useRef<L.Marker | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
+
+    useEffect(() => {
+        if (!isMapOpen || !mapContainerRef.current) return;
+        if (mapInstanceRef.current) return;
+
+        const map = L.map(mapContainerRef.current).setView([10.081, 76.205], 13);
+        mapInstanceRef.current = map;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors',
+        }).addTo(map);
+
+        map.on('click', (e: L.LeafletMouseEvent) => {
+            const { lat, lng } = e.latlng;
+            setMapLocation({ lat, lng });
+            if (markerRef.current) {
+                markerRef.current.setLatLng(e.latlng);
+            } else {
+                markerRef.current = L.marker(e.latlng).addTo(map);
+            }
+        });
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+               map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+            }, () => {});
+        }
+
+        return () => {
+            map.remove();
+            mapInstanceRef.current = null;
+            markerRef.current = null;
+        };
+    }, [isMapOpen]);
+
+    useEffect(() => {
+        if (mapInstanceRef.current && mapLocation) {
+            mapInstanceRef.current.setView([mapLocation.lat, mapLocation.lng], 15);
+            if (markerRef.current) {
+                markerRef.current.setLatLng([mapLocation.lat, mapLocation.lng]);
+            } else {
+                markerRef.current = L.marker([mapLocation.lat, mapLocation.lng]).addTo(mapInstanceRef.current);
+            }
+        }
+    }, [mapLocation]);
+
+    const handleSearchLocation = async () => {
+        if (!searchQuery.trim()) return;
+        setIsSearching(true);
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
+            const data = await res.json();
+            setSearchResults(data);
+        } catch (error) {
+            console.error('Error fetching location:', error);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleSelectSearchResult = (result: any) => {
+        const lat = parseFloat(result.lat);
+        const lng = parseFloat(result.lon);
+        setMapLocation({ lat, lng });
+        setSearchQuery(result.display_name);
+        setSearchResults([]);
+    };
+
+    const handleConfirmMapLocation = async () => {
+        if (!mapLocation) return;
+        setIsReverseGeocoding(true);
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${mapLocation.lat}&lon=${mapLocation.lng}`);
+            const data = await res.json();
+            
+            if (data && data.address) {
+                const add = data.address;
+                const road = add.road || add.neighbourhood || add.suburb || '';
+                const city = add.city || add.town || add.village || add.county || add.state_district || '';
+                const state = add.state || '';
+                const postcode = add.postcode || '';
+
+                form.setData({
+                    ...form.data,
+                    address_line_1: road ? `${add.building ? add.building + ', ' : ''}${road}, ${data.display_name.split(',')[0]}` : data.display_name,
+                    city: city,
+                    state: state,
+                    pincode: postcode,
+                });
+            }
+        } catch (error) {
+            console.error('Error reverse geocoding:', error);
+        } finally {
+            setIsReverseGeocoding(false);
+            setIsMapOpen(false);
+        }
+    };
+
     return (
         <>
+            <div className="mb-4">
+                {!isMapOpen ? (
+                    <button
+                        type="button"
+                        onClick={() => setIsMapOpen(true)}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 hover:text-[var(--theme-primary-1)] transition-colors shadow-sm"
+                    >
+                        <MapIcon className="h-4 w-4" />
+                        Pick on map (Auto-fill address)
+                    </button>
+                ) : (
+                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 relative ring-1 ring-gray-900/5 shadow-inner">
+                        <button
+                            type="button"
+                            onClick={() => setIsMapOpen(false)}
+                            className="absolute right-2 top-2 z-10 p-1.5 rounded-md bg-white text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                        <h3 className="text-sm font-bold text-gray-800 mb-3">Find your location</h3>
+                        
+                        <div className="relative mb-3 flex gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search area..."
+                                    className="block w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm text-gray-900 shadow-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)]"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearchLocation())}
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleSearchLocation}
+                                disabled={isSearching || !searchQuery.trim()}
+                                className="shrink-0 rounded-lg bg-gray-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black disabled:opacity-50"
+                            >
+                                {isSearching ? '...' : 'Search'}
+                            </button>
+                        </div>
+
+                        {searchResults.length > 0 && (
+                            <div className="absolute z-[1001] mt-1 max-h-40 w-[calc(100%-2rem)] overflow-auto rounded-lg bg-white shadow-xl border border-gray-100">
+                                <ul className="py-1">
+                                    {searchResults.map((res: any) => (
+                                        <li
+                                            key={res.place_id}
+                                            onClick={() => handleSelectSearchResult(res)}
+                                            className="cursor-pointer py-2 pl-3 pr-4 text-gray-800 hover:bg-gray-50 hover:text-[var(--theme-primary-1)] text-xs border-b border-gray-50 last:border-0"
+                                        >
+                                            <span className="block truncate font-medium">{res.display_name}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        <div className="relative w-full rounded-lg overflow-hidden border border-gray-300 shadow-sm h-[240px] z-0">
+                            <div ref={mapContainerRef} className="h-full w-full" />
+                            
+                            <div className="absolute bottom-3 left-0 right-0 z-[1000] flex justify-center pointer-events-none px-3">
+                                <button
+                                    type="button"
+                                    onClick={handleConfirmMapLocation}
+                                    disabled={isReverseGeocoding || !mapLocation}
+                                    className="pointer-events-auto shadow-md bg-[var(--theme-primary-1)] rounded-full px-5 py-2.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-0 disabled:translate-y-4 transition-all duration-300 flex items-center gap-2"
+                                >
+                                    <Crosshair className="h-3.5 w-3.5" />
+                                    {isReverseGeocoding ? 'Fetching...' : 'Confirm Location'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Type</label>

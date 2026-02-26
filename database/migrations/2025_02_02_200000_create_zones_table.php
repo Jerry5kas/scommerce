@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('zones', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('hub_id')->nullable()->constrained('hubs')->nullOnDelete();
             $table->string('name')->unique();
             $table->string('code')->unique();
             $table->text('description')->nullable();

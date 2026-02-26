@@ -14,6 +14,7 @@ class Zone extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'hub_id',
         'name',
         'code',
         'description',
@@ -69,6 +70,11 @@ class Zone extends Model
         return $this->belongsToMany(Product::class, 'product_zones')
             ->withPivot(['is_available', 'price_override', 'stock_quantity'])
             ->withTimestamps();
+    }
+
+    public function hub(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Hub::class);
     }
 
     public function scopeActive(Builder $query): Builder

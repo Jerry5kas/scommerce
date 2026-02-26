@@ -57,6 +57,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('zones/{zone}/toggle-status', [AdminZoneController::class, 'toggleStatus'])->name('zones.toggle-status');
         Route::get('zones/{zone}/overrides/create', [AdminZoneOverrideController::class, 'create'])->name('zones.overrides.create');
         Route::post('zones/{zone}/overrides', [AdminZoneOverrideController::class, 'store'])->name('zones.overrides.store');
+
+        Route::resource('hubs', \App\Http\Controllers\Admin\HubController::class)->names('hubs');
+        Route::post('hubs/{hub}/toggle-status', [\App\Http\Controllers\Admin\HubController::class, 'toggleStatus'])->name('hubs.toggle-status');
+
+        Route::resource('routes', \App\Http\Controllers\Admin\RouteController::class)->names('routes');
+        Route::post('routes/{route}/toggle-status', [\App\Http\Controllers\Admin\RouteController::class, 'toggleStatus'])->name('routes.toggle-status');
+        Route::put('routes/{route}/addresses', [\App\Http\Controllers\Admin\RouteController::class, 'updateAddresses'])->name('routes.update-addresses');
+        Route::get('routes-search-addresses', [\App\Http\Controllers\Admin\RouteController::class, 'searchAddresses'])->name('routes.search-addresses');
         Route::get('zone-overrides/{zoneOverride}/edit', [AdminZoneOverrideController::class, 'edit'])->name('zone-overrides.edit');
         Route::put('zone-overrides/{zoneOverride}', [AdminZoneOverrideController::class, 'update'])->name('zone-overrides.update');
         Route::delete('zone-overrides/{zoneOverride}', [AdminZoneOverrideController::class, 'destroy'])->name('zone-overrides.destroy');

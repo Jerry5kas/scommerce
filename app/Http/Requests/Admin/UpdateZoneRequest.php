@@ -41,6 +41,7 @@ class UpdateZoneRequest extends FormRequest
         $zone = $this->route('zone');
 
         return [
+            'hub_id' => ['required', 'exists:hubs,id'],
             'name' => ['sometimes', 'string', 'max:255', Rule::unique('zones', 'name')->ignore($zone->id)],
             'code' => ['sometimes', 'string', 'max:50', Rule::unique('zones', 'code')->ignore($zone->id)],
             'description' => ['nullable', 'string', 'max:1000'],

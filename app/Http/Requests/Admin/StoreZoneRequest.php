@@ -39,6 +39,7 @@ class StoreZoneRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'hub_id' => ['required', 'exists:hubs,id'],
             'name' => ['required', 'string', 'max:255', 'unique:zones,name'],
             'code' => ['required', 'string', 'max:50', 'unique:zones,code'],
             'description' => ['nullable', 'string', 'max:1000'],

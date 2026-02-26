@@ -23,14 +23,22 @@ class ProductController extends Controller
      */
     public function index(Request $request): Response|RedirectResponse
     {
-        // This page uses hardcoded products, so we just need to ensure user has location
-        // The location middleware already handles this, but we keep it for consistency
         $zone = $this->getUserZone($request);
         if ($zone === null) {
             return redirect()->route('location.select');
         }
 
-        return Inertia::render('products');
+        $vertical = $request->string('vertical', 'all')->toString();
+
+        $categories = $this->catalogService->getCategoriesWithProducts($zone, $vertical);
+        $products = $this->catalogService->getProductsForZone($zone, $vertical);
+
+        return Inertia::render('products', [
+            'categories' => $categories,
+            'products' => $products,
+            'vertical' => $vertical,
+            'zone' => $zone->only(['id', 'name', 'code']),
+        ]);
     }
 
     /**

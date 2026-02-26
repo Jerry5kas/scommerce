@@ -8,7 +8,7 @@ const VERTICAL_DEFAULT = ['daily_fresh', 'society_fresh'];
 
 interface ZoneData {
     id: number; name: string; code: string; city: string; state: string;
-    description: string | null; is_active: boolean;
+    description: string | null; is_active: boolean; hub_id?: number | null;
     verticals?: string[] | null; pincodes?: string[] | null;
     boundary_coordinates?: [number, number][] | null;
     service_days?: number[] | null;
@@ -16,7 +16,7 @@ interface ZoneData {
     delivery_charge?: string | number | null; min_order_amount?: string | number | null;
 }
 
-interface AdminZonesEditProps { zone: ZoneData; verticalOptions: Record<string, string>; }
+interface AdminZonesEditProps { zone: ZoneData; verticalOptions: Record<string, string>; hubs: { id: number; name: string }[]; }
 
 function formatTime(d: string | null | undefined): string { if (!d) return ''; const m = String(d).match(/(\d{2}):(\d{2})/); return m ? `${m[1]}:${m[2]}` : ''; }
 
@@ -35,8 +35,9 @@ function Section({ title, description, children }: { title: string; description?
 const inputCls = 'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[var(--admin-dark-primary)] focus:ring-1 focus:ring-[var(--admin-dark-primary)]';
 const labelCls = 'block text-sm font-medium text-gray-700';
 
-export default function AdminZonesEdit({ zone, verticalOptions }: AdminZonesEditProps) {
+export default function AdminZonesEdit({ zone, verticalOptions, hubs }: AdminZonesEditProps) {
     const form = useForm({
+        hub_id: zone.hub_id || (hubs.length > 0 ? hubs[0].id : ''),
         name: zone.name, code: zone.code, description: zone.description ?? '',
         city: zone.city, state: zone.state, is_active: zone.is_active,
         verticals: (zone.verticals && zone.verticals.length > 0 ? zone.verticals : VERTICAL_DEFAULT) as string[],
@@ -69,6 +70,16 @@ export default function AdminZonesEdit({ zone, verticalOptions }: AdminZonesEdit
                     <div className="grid gap-5 sm:grid-cols-2">
                         <div><label className={labelCls}>City *</label><input type="text" required className={inputCls} value={form.data.city} onChange={(e) => form.setData('city', e.target.value)} />{form.errors.city && <p className="mt-1 text-sm text-red-600">{form.errors.city}</p>}</div>
                         <div><label className={labelCls}>State *</label><input type="text" required className={inputCls} value={form.data.state} onChange={(e) => form.setData('state', e.target.value)} />{form.errors.state && <p className="mt-1 text-sm text-red-600">{form.errors.state}</p>}</div>
+                    </div>
+                    <div>
+                        <label className={labelCls}>Select Hub *</label>
+                        <select required className={inputCls} value={form.data.hub_id} onChange={(e) => form.setData('hub_id', Number(e.target.value))}>
+                            <option value="" disabled>Select a hub</option>
+                            {hubs.map(h => (
+                                <option key={h.id} value={h.id}>{h.name}</option>
+                            ))}
+                        </select>
+                        {form.errors.hub_id && <p className="mt-1 text-sm text-red-600">{form.errors.hub_id}</p>}
                     </div>
                 </Section>
 

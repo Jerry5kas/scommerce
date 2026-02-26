@@ -6,6 +6,7 @@ use App\Enums\BusinessVertical;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreZoneRequest;
 use App\Http\Requests\Admin\UpdateZoneRequest;
+use App\Models\Hub;
 use App\Models\Zone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class ZoneController extends Controller
     {
         $zones = Zone::query()
             ->withCount('drivers', 'addresses')
+            ->with('hub:id,name')
             ->orderBy('name')
             ->get();
 
@@ -43,6 +45,7 @@ class ZoneController extends Controller
     {
         return Inertia::render('admin/zones/create', [
             'verticalOptions' => BusinessVertical::options(),
+            'hubs' => Hub::active()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -60,6 +63,7 @@ class ZoneController extends Controller
         return Inertia::render('admin/zones/edit', [
             'zone' => $zone,
             'verticalOptions' => BusinessVertical::options(),
+            'hubs' => Hub::active()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

@@ -6,7 +6,10 @@ import AdminLayout from '@/layouts/AdminLayout';
 const DAY_LABELS: Record<number, string> = { 0: 'Sun', 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat' };
 const VERTICAL_DEFAULT = ['daily_fresh', 'society_fresh'];
 
-interface AdminZonesCreateProps { verticalOptions: Record<string, string>; }
+interface AdminZonesCreateProps { 
+    verticalOptions: Record<string, string>;
+    hubs: { id: number; name: string }[];
+}
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
     return (
@@ -23,8 +26,9 @@ function Section({ title, description, children }: { title: string; description?
 const inputCls = 'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[var(--admin-dark-primary)] focus:ring-1 focus:ring-[var(--admin-dark-primary)]';
 const labelCls = 'block text-sm font-medium text-gray-700';
 
-export default function AdminZonesCreate({ verticalOptions }: AdminZonesCreateProps) {
+export default function AdminZonesCreate({ verticalOptions, hubs }: AdminZonesCreateProps) {
     const form = useForm({
+        hub_id: hubs.length > 0 ? hubs[0].id : '',
         name: '', code: '', description: '', city: '', state: '',
         is_active: true, verticals: VERTICAL_DEFAULT as string[],
         delivery_charge: '', min_order_amount: '',
@@ -56,6 +60,16 @@ export default function AdminZonesCreate({ verticalOptions }: AdminZonesCreatePr
                             <input type="text" required className={inputCls} value={form.data.code} onChange={(e) => form.setData('code', e.target.value)} />
                             {form.errors.code && <p className="mt-1 text-sm text-red-600">{form.errors.code}</p>}
                         </div>
+                    </div>
+                    <div>
+                        <label className={labelCls}>Select Hub *</label>
+                        <select required className={inputCls} value={form.data.hub_id} onChange={(e) => form.setData('hub_id', Number(e.target.value))}>
+                            <option value="" disabled>Select a hub</option>
+                            {hubs.map(h => (
+                                <option key={h.id} value={h.id}>{h.name}</option>
+                            ))}
+                        </select>
+                        {form.errors.hub_id && <p className="mt-1 text-sm text-red-600">{form.errors.hub_id}</p>}
                     </div>
                     <div>
                         <label className={labelCls}>Description</label>

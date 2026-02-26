@@ -32,7 +32,7 @@ class CatalogService
                     $q->where('zones.id', $zone->id)
                         ->where('product_zones.is_available', true);
                 })
-                ->with(['category:id,name,slug', 'collection:id,name,slug'])
+                ->with(['category:id,name,slug', 'collection:id,name,slug', 'variants'])
                 ->ordered();
 
             // Apply filters
@@ -153,7 +153,7 @@ class CatalogService
                     $q->where('zones.id', $zone->id)
                         ->where('product_zones.is_available', true);
                 })
-                ->with(['category:id,name,slug', 'collection:id,name,slug'])
+                ->with(['category:id,name,slug', 'collection:id,name,slug', 'variants'])
                 ->ordered()
                 ->get();
         });

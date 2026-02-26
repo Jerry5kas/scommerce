@@ -20,6 +20,7 @@ import {
     Award,
     UserPlus,
     Users,
+    Building2,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -59,6 +60,8 @@ export const navGroups: NavGroup[] = [
     {
         label: 'Logistics',
         items: [
+            { label: 'Hubs', href: '/admin/hubs', icon: Building2 },
+            { label: 'Routes', href: '/admin/routes', icon: MapPin },
             { label: 'Deliveries', href: '/admin/deliveries', icon: PackageCheck },
             { label: 'Zones', href: '/admin/zones', icon: MapPin },
             { label: 'Drivers', href: '/admin/drivers', icon: Truck },

@@ -14,11 +14,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(ThemeSettingSeeder::class);
         $this->call(AdminSeeder::class);
+        $this->call(HubSeeder::class);
         $this->call(ZoneSeeder::class);
         $this->call(CategorySeeder::class);
-        $this->call(CollectionSeeder::class);
         $this->call(ProductSeeder::class);
+        $this->call(CollectionSeeder::class);
         $this->call(UserSeeder::class);
         $this->call(DriverSeeder::class);
+        $this->call(RouteSeeder::class);
     }
 }

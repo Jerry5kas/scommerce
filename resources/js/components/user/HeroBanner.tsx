@@ -31,21 +31,24 @@ export default function HeroBanner({
         if (!autoPlay || banners.length <= 1 || isPaused) return;
         
         const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % banners.length);
+            setCurrentSlide((prev) => (prev + 1) % displayBanners.length);
         }, interval);
 
         return () => clearInterval(timer);
     }, [autoPlay, interval, banners.length, isPaused]);
 
     const goToSlide = (index: number) => setCurrentSlide(index);
-    const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % banners.length);
-    const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
+    const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % displayBanners.length);
+    const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + displayBanners.length) % displayBanners.length);
 
-    if (banners.length === 0) {
-        return null;
-    }
+    const displayBanners = banners.length > 0 ? banners : [{
+        id: 'default-banner',
+        title: 'Welcome',
+        description: '',
+        image: '/images/3 Milk Packs at Just @ 117 130.png',
+    }] as any;
 
-    const currentBanner = banners[currentSlide];
+    const currentBanner = displayBanners[currentSlide];
 
     return (
         <section className="relative w-full pt-[88px] sm:pt-[88px] lg:pt-[92px]">
@@ -56,7 +59,7 @@ export default function HeroBanner({
                     onMouseEnter={() => setIsPaused(true)}
                     onMouseLeave={() => setIsPaused(false)}
                 >
-                    {banners.map((banner, index) => (
+                    {displayBanners.map((banner: any, index: number) => (
                         <div
                             key={banner.id}
                             className={`transition-opacity duration-500 ease-in-out ${
@@ -84,9 +87,9 @@ export default function HeroBanner({
                     ))}
 
                     {/* Mobile Dot Indicators */}
-                    {banners.length > 1 && (
+                    {displayBanners.length > 1 && (
                         <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
-                            {banners.map((_, index) => (
+                            {displayBanners.map((_: any, index: number) => (
                                 <button
                                     key={index}
                                     onClick={() => goToSlide(index)}
@@ -110,7 +113,7 @@ export default function HeroBanner({
                     onMouseEnter={() => setIsPaused(true)}
                     onMouseLeave={() => setIsPaused(false)}
                 >
-                    {banners.map((banner, index) => (
+                    {displayBanners.map((banner: any, index: number) => (
                         <div
                             key={banner.id}
                             className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
@@ -138,7 +141,7 @@ export default function HeroBanner({
                     ))}
 
                     {/* Navigation Arrows */}
-                    {banners.length > 1 && (
+                    {displayBanners.length > 1 && (
                         <>
                             <button
                                 onClick={prevSlide}
@@ -158,9 +161,9 @@ export default function HeroBanner({
                     )}
 
                     {/* Thumbnails - Bottom Right on Image */}
-                    {banners.length > 1 && (
+                    {displayBanners.length > 1 && (
                         <div className="absolute bottom-4 right-4 z-20 flex gap-2">
-                            {banners.map((banner, index) => (
+                            {displayBanners.map((banner: any, index: number) => (
                                 <button
                                     key={banner.id}
                                     onClick={() => goToSlide(index)}

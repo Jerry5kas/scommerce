@@ -11,6 +11,7 @@ interface ZoneData {
     is_active: boolean;
     drivers_count: number;
     addresses_count: number;
+    hub?: { name: string; };
 }
 
 interface AdminZonesIndexProps {
@@ -41,6 +42,7 @@ export default function AdminZonesIndex({ zones }: AdminZonesIndexProps) {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Hub</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Code</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">City / State</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Drivers</th>
@@ -52,7 +54,7 @@ export default function AdminZonesIndex({ zones }: AdminZonesIndexProps) {
                         <tbody className="divide-y divide-gray-200 bg-white">
                             {zones.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-500">
+                                    <td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-500">
                                         No zones yet. Create one to get started.
                                     </td>
                                 </tr>
@@ -64,6 +66,7 @@ export default function AdminZonesIndex({ zones }: AdminZonesIndexProps) {
                                                 {zone.name}
                                             </Link>
                                         </td>
+                                        <td className="whitespace-nowrap px-4 py-3 text-sm text-[var(--admin-dark-primary)] font-medium bg-green-50/50">{zone.hub?.name || '-'}</td>
                                         <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{zone.code}</td>
                                         <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
                                             {zone.city}, {zone.state}

@@ -1,65 +1,44 @@
-import { Head, Link } from '@inertiajs/react';
-import { Heart, LayoutGrid, ChevronDown, Package } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { Heart, ChevronDown, Package } from 'lucide-react';
 import { useState } from 'react';
-import ProductCardMedia, { getMediaList, type MediaItem } from '@/components/user/ProductCardMedia';
+import ProductCardMedia, { getMediaList } from '@/components/user/ProductCardMedia';
 import UserLayout from '@/layouts/UserLayout';
+import type { SharedData } from '@/types';
 
-const CATEGORIES = [
-    { slug: 'all', label: 'All Products', image: '/images/dairy-products.png' },
-    { slug: 'cow-ghee', label: 'Cow Ghee', image: '/images/categories/Ghee.png' },
-    { slug: 'fresh-curd', label: 'Fresh Curd', image: '/images/categories/Fresh%20Curd.png' },
-    { slug: 'paneer', label: 'Paneer', image: '/images/categories/panneer.png' },
-    { slug: 'spiced-butter-milk', label: 'Spiced Butter Milk', image: '/images/categories/butter%20milk.png' },
-    { slug: 'country-butter', label: 'Country Butter', image: '/images/categories/butter.png' },
-    { slug: 'subscriptions', label: 'Subscriptions', image: '/images/dairy-products.png' },
-] as const;
-
-type CategorySlug = (typeof CATEGORIES)[number]['slug'];
-
-interface Product {
-    id: string;
+interface BackendCategory {
+    id: number;
     name: string;
-    variant: string;
-    price: string;
-    image: string;
-    media?: MediaItem[];
-    isPlan: boolean;
-    bestSeller?: boolean;
-    category: CategorySlug;
+    slug: string;
+    image: string | null;
+    products_count: number;
 }
 
-const PRODUCTS: Product[] = [
-    { id: 'ghee-100', name: 'Cow Ghee', variant: '100g', price: '₹150', image: '/demo/Ghee.png', isPlan: false, category: 'cow-ghee' },
-    { id: 'ghee-200', name: 'Cow Ghee', variant: '200g', price: '₹375', image: '/demo/Ghee.png', isPlan: false, category: 'cow-ghee' },
-    { id: 'ghee-500', name: 'Cow Ghee', variant: '500g', price: '₹750', image: '/demo/Ghee.png', media: [{ type: 'image', url: '/demo/Ghee.png' }, { type: 'image', url: '/images/dairy-products.png' }], isPlan: false, bestSeller: true, category: 'cow-ghee' },
-    { id: 'ghee-1l', name: 'Cow Ghee', variant: '1L', price: '₹1,500', image: '/demo/Ghee.png', isPlan: false, category: 'cow-ghee' },
-    { id: 'curd-1l', name: 'Fresh Curd', variant: '1L', price: '₹80', image: '/demo/Fresh Curd.png', isPlan: false, bestSeller: true, category: 'fresh-curd' },
-    { id: 'curd-500', name: 'Fresh Curd', variant: '500g', price: '₹40', image: '/demo/Fresh Curd.png', isPlan: false, category: 'fresh-curd' },
-    { id: 'paneer-200', name: 'Paneer', variant: '200g', price: '₹120', image: '/demo/panneer.png', isPlan: false, bestSeller: true, category: 'paneer' },
-    { id: 'bm-200', name: 'Spiced Butter Milk', variant: '200ML', price: '₹15', image: '/demo/butter milk.png', isPlan: false, category: 'spiced-butter-milk' },
-    { id: 'butter-250', name: 'Country Butter', variant: '250g', price: '₹250', image: '/demo/butter.png', isPlan: false, bestSeller: true, category: 'country-butter' },
-    { id: 'butter-100', name: 'Country Butter', variant: '100g', price: '₹100', image: '/demo/butter.png', isPlan: false, category: 'country-butter' },
-    { id: 'butter-500', name: 'Country Butter', variant: '500g', price: '₹500', image: '/demo/butter.png', isPlan: false, category: 'country-butter' },
-    { id: 'butter-1kg', name: 'Country Butter', variant: '1kg', price: '₹1,000', image: '/demo/butter.png', isPlan: false, category: 'country-butter' },
-    { id: 'plan-90', name: '90-Packs Plan', variant: 'Starts from ₹40/ Unit', price: '', image: '/images/dairy-products.png', isPlan: true, category: 'subscriptions' },
-    { id: 'plan-30', name: '30-Packs Plan', variant: 'Starts from ₹41/ Unit', price: '', image: '/images/dairy-products.png', isPlan: true, bestSeller: true, category: 'subscriptions' },
-    { id: 'plan-15', name: '15-Pack Plan', variant: 'Starts from ₹42/ Unit', price: '', image: '/images/dairy-products.png', isPlan: true, category: 'subscriptions' },
-    { id: 'plan-welcome', name: 'Welcome Offer Plan', variant: '₹39/ Unit', price: '', image: '/images/dairy-products.png', isPlan: true, category: 'subscriptions' },
-];
-
-function getCategoryCount(slug: CategorySlug): number {
-    if (slug === 'all') return PRODUCTS.length;
-    return PRODUCTS.filter((p) => p.category === slug).length;
+interface BackendProduct {
+    id: number;
+    name: string;
+    slug: string;
+    unit: string;
+    weight: string;
+    price: string | number;
+    image: string | null;
+    images: string[] | null;
+    category?: { slug: string };
+    is_subscription_eligible: boolean;
+    cost_price?: string | number; // maybe used to show a fake best seller tag
 }
 
-const CATEGORIES_WITH_COUNT = CATEGORIES.map((c) => ({
-    ...c,
-    count: getCategoryCount(c.slug),
-}));
+interface PageProps extends SharedData {
+    categories: BackendCategory[];
+    products: BackendProduct[];
+    vertical: string;
+    zone: any;
+}
 
 export default function Products() {
-    const [selectedCategory, setSelectedCategory] = useState<CategorySlug>('all');
-    const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(new Set());
+    const { categories, products } = usePage<PageProps>().props;
+
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [wishlistedIds, setWishlistedIds] = useState<Set<number>>(new Set());
     const [cardMediaIndex, setCardMediaIndex] = useState<Record<string, number>>({});
     const [mobileCategoryOpen, setMobileCategoryOpen] = useState(false);
 
@@ -67,12 +46,7 @@ export default function Products() {
         setCardMediaIndex((prev) => ({ ...prev, [key]: index }));
     };
 
-    const filteredProducts =
-        selectedCategory === 'all'
-            ? PRODUCTS
-            : PRODUCTS.filter((p) => p.category === selectedCategory);
-
-    const toggleWishlist = (id: string) => {
+    const toggleWishlist = (id: number) => {
         setWishlistedIds((prev) => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
@@ -81,7 +55,40 @@ export default function Products() {
         });
     };
 
-    const currentCategoryLabel = CATEGORIES_WITH_COUNT.find((c) => c.slug === selectedCategory)?.label ?? 'All Products';
+    // Make "All Products" category dynamically
+    const allProductsCount = Array.isArray(products) ? products.length : 0;
+    
+    // Sort categories (you could sort by product count or name, or keep default)
+    const validCategories = Array.isArray(categories) ? categories : [];
+    
+    const categoriesWithCount = [
+        {
+            id: 0,
+            slug: 'all',
+            name: 'All Products',
+            image: '/images/dairy-products.png',
+            products_count: allProductsCount,
+        },
+        ...validCategories.map(c => {
+            let safeImage = '/images/dairy-products.png';
+            if (c.image) {
+                if (c.image.startsWith('http') || c.image.startsWith('/')) safeImage = c.image;
+                else safeImage = `/storage/${c.image}`;
+            }
+            return {
+                ...c,
+                image: safeImage
+            };
+        })
+    ];
+
+    const currentCategoryLabel = categoriesWithCount.find((c) => c.slug === selectedCategory)?.name ?? 'All Products';
+
+    const safeProducts = Array.isArray(products) ? products : [];
+    const filteredProducts =
+        selectedCategory === 'all'
+            ? safeProducts
+            : safeProducts.filter((p) => p.category?.slug === selectedCategory);
 
     return (
         <UserLayout>
@@ -110,7 +117,7 @@ export default function Products() {
                                     Categories
                                 </h2>
                                 <nav className="flex flex-col gap-1">
-                                    {CATEGORIES_WITH_COUNT.map((cat) => (
+                                    {categoriesWithCount.map((cat) => (
                                         <button
                                             key={cat.slug}
                                             type="button"
@@ -123,13 +130,13 @@ export default function Products() {
                                         >
                                             <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200/80 bg-gray-50">
                                                 <img
-                                                    src={cat.image}
+                                                    src={cat.image || '/images/dairy-products.png'}
                                                     alt=""
                                                     className="h-full w-full object-cover"
                                                     loading="lazy"
                                                 />
                                             </span>
-                                            <span className="min-w-0 flex-1 truncate">{cat.label}</span>
+                                            <span className="min-w-0 flex-1 truncate">{cat.name}</span>
                                             <span
                                                 className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                                     selectedCategory === cat.slug
@@ -137,7 +144,7 @@ export default function Products() {
                                                         : 'bg-gray-100 text-gray-500'
                                                 }`}
                                             >
-                                                {cat.count}
+                                                {cat.products_count}
                                             </span>
                                         </button>
                                     ))}
@@ -160,7 +167,7 @@ export default function Products() {
                                     <span className="flex min-w-0 flex-1 items-center gap-3">
                                         <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
                                             <img
-                                                src={CATEGORIES_WITH_COUNT.find((c) => c.slug === selectedCategory)?.image ?? '/images/dairy-products.png'}
+                                                src={categoriesWithCount.find((c) => c.slug === selectedCategory)?.image ?? '/images/dairy-products.png'}
                                                 alt=""
                                                 className="h-full w-full object-cover"
                                             />
@@ -177,7 +184,7 @@ export default function Products() {
                                         className="mt-2 rounded-xl border border-gray-200 bg-white py-2 shadow-lg"
                                         role="listbox"
                                     >
-                                        {CATEGORIES_WITH_COUNT.map((cat) => (
+                                        {categoriesWithCount.map((cat) => (
                                             <button
                                                 key={cat.slug}
                                                 type="button"
@@ -194,10 +201,10 @@ export default function Products() {
                                                 }`}
                                             >
                                                 <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                                                    <img src={cat.image} alt="" className="h-full w-full object-cover" loading="lazy" />
+                                                    <img src={cat.image || '/images/dairy-products.png'} alt="" className="h-full w-full object-cover" loading="lazy" />
                                                 </span>
-                                                <span className="min-w-0 flex-1 truncate">{cat.label}</span>
-                                                <span className="shrink-0 text-xs text-gray-500">({cat.count})</span>
+                                                <span className="min-w-0 flex-1 truncate">{cat.name}</span>
+                                                <span className="shrink-0 text-xs text-gray-500">({cat.products_count})</span>
                                             </button>
                                         ))}
                                     </div>
@@ -208,6 +215,28 @@ export default function Products() {
                             <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
                                 {filteredProducts.map((product) => {
                                     const isWishlisted = wishlistedIds.has(product.id);
+                                    
+                                    const getSafeUrl = (url: string | null | undefined) => {
+                                        if (!url) return '';
+                                        if (url.startsWith('http') || url.startsWith('/')) return url;
+                                        return `/storage/${url}`;
+                                    };
+
+                                    const safeImage = getSafeUrl(product.image) || '/images/dairy-products.png';
+                                    const safeImages = (product.images || []).map(url => ({ type: 'image' as const, url: getSafeUrl(url) }));
+                                    
+                                    const media = getMediaList({
+                                        id: product.id.toString(),
+                                        image: safeImage,
+                                        media: safeImages.length > 0 ? safeImages : undefined
+                                    });
+
+                                    const isBestSeller = (typeof product.price === 'number' ? product.price > 100 : parseFloat(product.price as string) > 100);
+                                    const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
+                                    const mainPrice = hasVariants 
+                                        ? Math.min(...product.variants!.map(v => parseFloat(v.price || '0'))) 
+                                        : parseFloat(product.price as string || '0');
+
                                     return (
                                         <article
                                             key={product.id}
@@ -216,15 +245,15 @@ export default function Products() {
                                         >
                                             <div className="relative aspect-square w-full overflow-hidden bg-[var(--theme-secondary)]/10 sm:aspect-[4/3]">
                                                 <ProductCardMedia
-                                                    media={getMediaList(product)}
-                                                    alt={`${product.name} ${product.variant}`}
-                                                    productKey={product.id}
+                                                    media={media}
+                                                    alt={product.name}
+                                                    productKey={product.id.toString()}
                                                     currentIndexMap={cardMediaIndex}
                                                     onIndexChange={setCardMediaIndexForKey}
                                                     className="h-full w-full"
                                                     imageClassName="group-hover:scale-105"
                                                 />
-                                                {product.bestSeller && (
+                                                {isBestSeller && (
                                                     <span className="absolute left-1 top-1 rounded-full bg-[#cf992c] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white sm:left-1.5 sm:top-1.5 sm:px-2 sm:text-[10px]">
                                                         Best Seller
                                                     </span>
@@ -246,23 +275,23 @@ export default function Products() {
                                                 </button>
                                             </div>
                                             <div className="flex flex-1 flex-col p-2 sm:p-2.5">
-                                                <Link href={`/products/${product.id}`} className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors hover:text-[var(--theme-primary-1)] sm:text-sm">
-                                                    {product.name} {!product.isPlan && `- (${product.variant})`}
+                                                <Link href={`/products/${product.slug}`} className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors hover:text-[var(--theme-primary-1)] sm:text-sm">
+                                                    {product.name} {(!product.is_subscription_eligible && !hasVariants && product.weight) && `- (${parseFloat(product.weight)} ${product.unit})`}
                                                 </Link>
-                                                {product.isPlan ? (
+                                                {product.is_subscription_eligible || hasVariants ? (
                                                     <p className="mb-1 text-[10px] font-medium text-gray-600 sm:text-xs">
-                                                        {product.variant}
+                                                        Starts from ₹{mainPrice}/ Unit
                                                     </p>
                                                 ) : (
                                                     <p className="mb-1 text-xs font-semibold text-[var(--theme-primary-1)] sm:text-sm">
-                                                        {product.price}/ Unit
+                                                        ₹{mainPrice}/ Unit
                                                     </p>
                                                 )}
                                                 <Link
-                                                    href={product.isPlan ? `/subscription?plan=${encodeURIComponent(product.id)}` : '#'}
+                                                    href={product.is_subscription_eligible ? `/subscription?plan=${encodeURIComponent(product.slug)}` : `/products/${product.slug}`}
                                                     className="mt-auto w-full rounded-md bg-[var(--theme-primary-1)] py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:py-2 sm:text-xs"
                                                 >
-                                                    {product.isPlan ? 'Subscribe' : 'Add'}
+                                                    {product.is_subscription_eligible ? 'Subscribe' : 'View Details'}
                                                 </Link>
                                             </div>
                                         </article>
