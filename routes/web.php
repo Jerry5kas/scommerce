@@ -127,6 +127,7 @@ Route::get('/welcome', function () {
 Route::get('/location', [ZoneController::class, 'index'])->name('location.select');
 Route::post('/location/check-serviceability', [ZoneController::class, 'checkServiceability'])->name('location.check-serviceability');
 Route::get('/location/zone/{pincode}', [ZoneController::class, 'getZoneByPincode'])->name('location.zone-by-pincode')->where('pincode', '[0-9]+');
+Route::post('/location/set', [ZoneController::class, 'setLocation'])->middleware('auth')->name('location.set');
 
 /*
 |--------------------------------------------------------------------------

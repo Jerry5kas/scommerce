@@ -7,11 +7,13 @@ import type { SharedData } from '@/types';
 
 interface UserLayoutProps {
     children: React.ReactNode;
+    showHeader?: boolean;
+    showTopBanner?: boolean;
 }
 
-export default function UserLayout({ children }: UserLayoutProps) {
+export default function UserLayout({ children, showHeader = true, showTopBanner = true }: UserLayoutProps) {
     const { theme } = (usePage().props as unknown as SharedData) ?? {};
-    const [showTopBanner, setShowTopBanner] = useState(true);
+    const [isTopBannerVisible, setIsTopBannerVisible] = useState(true);
     const [isScrolled, setIsScrolled] = useState(false);
     const [navigating, setNavigating] = useState(false);
 
@@ -26,14 +28,20 @@ export default function UserLayout({ children }: UserLayoutProps) {
     }, [theme]);
 
     useEffect(() => {
+        if (!showTopBanner) {
+            setIsTopBannerVisible(false);
+
+            return;
+        }
+
         const handleScroll = () => {
             const scrollY = window.scrollY;
-            setShowTopBanner(scrollY < 10);
+            setIsTopBannerVisible(scrollY < 10);
             setIsScrolled(scrollY >= 10);
         };
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    }, [showTopBanner]);
 
     useEffect(() => {
         const startHandler = router.on('start', () => setNavigating(true));
@@ -45,9 +53,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
     }, []);
 
     return (
-        <div className={`min-h-screen bg-white${navigating ? ' cursor-wait' : ''}`}>
-            <TopBanner visible={showTopBanner} />
-            <Header showTopBanner={showTopBanner} isScrolled={isScrolled} />
+        <div className={`min-h-screen bg-white${navigating ? 'cursor-wait' : ''}`}>
+            {showTopBanner && <TopBanner visible={isTopBannerVisible} />}
+            {showHeader && <Header showTopBanner={isTopBannerVisible} isScrolled={isScrolled} />}
             <main>{children}</main>
             <Footer />
         </div>

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CheckServiceabilityRequest;
+use App\Http\Requests\SetLocationRequest;
+use App\Models\UserAddress;
 use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -68,5 +71,63 @@ class ZoneController extends Controller
         return response()->json([
             'zone' => $zone?->only(['id', 'name', 'code', 'city', 'state', 'delivery_charge', 'min_order_amount']),
         ]);
+    }
+
+    public function setLocation(SetLocationRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+        $user = $request->user();
+
+        $zone = $this->locationService->findZoneByCoordinates((float) $data['latitude'], (float) $data['longitude']);
+        if ($zone !== null && ! $zone->isServiceableAtTime()) {
+            $zone = null;
+        }
+
+        if ($zone === null) {
+            $zone = $this->locationService->validateAddress([
+                'pincode' => $data['pincode'],
+            ], $user->id);
+        }
+
+        if ($zone === null) {
+            return back()->withErrors([
+                'location' => 'Selected location is outside our delivery zones.',
+            ]);
+        }
+
+        $user->addresses()->update(['is_default' => false]);
+
+        $defaultAddress = $user->addresses()
+            ->active()
+            ->latest('id')
+            ->first();
+
+        $addressData = [
+            'type' => $data['type'] ?? UserAddress::TYPE_HOME,
+            'label' => $data['label'] ?? 'Selected location',
+            'address_line_1' => $data['address_line_1'],
+            'address_line_2' => $data['address_line_2'] ?? null,
+            'landmark' => $data['landmark'] ?? null,
+            'city' => $data['city'],
+            'state' => $data['state'],
+            'pincode' => $data['pincode'],
+            'latitude' => $data['latitude'],
+            'longitude' => $data['longitude'],
+            'zone_id' => $zone->id,
+            'is_default' => true,
+            'is_active' => true,
+        ];
+
+        if ($defaultAddress !== null) {
+            $defaultAddress->update($addressData);
+        } else {
+            $user->addresses()->create($addressData);
+        }
+
+        if ((bool) ($data['from_navbar'] ?? false)) {
+            return back()->with('message', 'Delivery location updated.');
+        }
+
+        return redirect()->route('catalog.home')->with('message', 'Delivery location updated.');
     }
 }

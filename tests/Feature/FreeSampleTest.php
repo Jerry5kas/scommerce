@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\Zone;
 use App\Services\FreeSampleService;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -25,6 +26,8 @@ class FreeSampleTest extends TestCase
     {
         parent::setUp();
 
+        $this->withoutMiddleware(ValidateCsrfToken::class);
+
         $this->zone = Zone::factory()->create([
             'is_active' => true,
             'verticals' => [BusinessVertical::DailyFresh->value],
@@ -32,6 +35,8 @@ class FreeSampleTest extends TestCase
 
         $this->user = User::factory()->create([
             'free_sample_used' => false,
+            'phone' => '9876543210',
+            'device_fingerprint_hash' => 'device-001',
         ]);
 
         UserAddress::factory()->create([
@@ -106,10 +111,7 @@ class FreeSampleTest extends TestCase
 
     public function test_free_sample_eligibility_endpoint(): void
     {
-        $response = $this->actingAs($this->user)->get(route('products.free-sample.check', $this->product->id), [
-            'phone' => '9876543210',
-            'device_fingerprint' => 'device-001',
-        ]);
+        $response = $this->actingAs($this->user)->get(route('products.free-sample.check', $this->product->id).'?phone=9876543210&device_fingerprint=device-001');
 
         $response->assertOk();
         $response->assertJson(['eligible' => true]);

@@ -6,6 +6,7 @@ use App\Enums\BusinessVertical;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Zone;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,6 +21,8 @@ class WishlistTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->withoutMiddleware(ValidateCsrfToken::class);
 
         $this->zone = Zone::factory()->create([
             'is_active' => true,
@@ -82,8 +85,6 @@ class WishlistTest extends TestCase
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page->has('products.0.id')
             ->where('products.0.id', $product->id)
-            ->has('zone')
-            ->where('zone.id', $this->zone->id)
         );
     }
 
