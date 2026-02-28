@@ -23,7 +23,13 @@ class ProductController extends Controller
     {
         $zone = $this->getUserZone($request);
         if ($zone === null) {
-            return redirect()->route('location.select');
+            // Return view with empty data
+            return Inertia::render('products', [
+                'categories' => collect([]),
+                'products' => collect([]),
+                'vertical' => $request->string('vertical', 'all')->toString(),
+                'zone' => null,
+            ]);
         }
 
         $vertical = $request->string('vertical', 'all')->toString();

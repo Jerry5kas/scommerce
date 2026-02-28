@@ -38,6 +38,8 @@ class HandleInertiaRequests extends Middleware
     {
         // compute user's default zone for sharing (nullable)
         $zone = null;
+        $location = null;
+
         if ($request->user()) {
             $defaultAddress = $request->user()
                 ->addresses()
@@ -45,8 +47,26 @@ class HandleInertiaRequests extends Middleware
                 ->where('is_default', true)
                 ->first();
 
-            if ($defaultAddress && $defaultAddress->zone) {
-                $zone = $defaultAddress->zone->only(['id', 'name', 'code']);
+            if ($defaultAddress) {
+                if ($defaultAddress->zone) {
+                    $zone = $defaultAddress->zone->only(['id', 'name', 'code']);
+                }
+                $location = [
+                    'address_line_1' => $defaultAddress->address_line_1,
+                    'city' => $defaultAddress->city,
+                    'state' => $defaultAddress->state,
+                    'pincode' => $defaultAddress->pincode,
+                    'latitude' => (float) $defaultAddress->latitude,
+                    'longitude' => (float) $defaultAddress->longitude,
+                ];
+            }
+        } elseif (session('guest_zone_id')) {
+            $guestZone = \App\Models\Zone::find(session('guest_zone_id'));
+            if ($guestZone) {
+                $zone = $guestZone->only(['id', 'name', 'code']);
+            }
+            if (session('guest_address')) {
+                $location = session('guest_address');
             }
         }
 
@@ -65,6 +85,7 @@ class HandleInertiaRequests extends Middleware
             ],
             // zone is null when user is unauthenticated or has no default address
             'zone' => $zone,
+            'location' => $location,
         ];
     }
 }

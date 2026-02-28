@@ -1,68 +1,106 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
+import { useState } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
+
+interface Product {
+    id: number;
+    name: string;
+}
+
+interface SubscriptionPlanItem {
+    id?: number;
+    product_id: number | string;
+    units: number;
+    total_price: number;
+    per_unit_price: number;
+}
+
+interface SubscriptionPlanFeature {
+    id?: number;
+    title: string;
+    highlight: boolean;
+}
 
 interface SubscriptionPlan {
     id: number;
     name: string;
     description: string | null;
     frequency_type: string;
-    frequency_value: number | null;
-    days_of_week: number[] | null;
-    discount_percent: string;
-    min_deliveries: number | null;
+    discount_type: string;
+    discount_value: number;
     is_active: boolean;
-    display_order: number;
+    sort_order: number;
     subscriptions_count: number;
+    items: SubscriptionPlanItem[];
+    features: SubscriptionPlanFeature[];
 }
 
 interface EditSubscriptionPlanProps {
     plan: SubscriptionPlan;
+    products: Product[];
     frequencyOptions: Record<string, string>;
-    dayOptions: Record<number, string>;
+    discountOptions: Record<string, string>;
 }
 
-export default function EditSubscriptionPlan({ plan, frequencyOptions, dayOptions }: EditSubscriptionPlanProps) {
+export default function EditSubscriptionPlan({ plan, products, frequencyOptions, discountOptions }: EditSubscriptionPlanProps) {
     const { data, setData, put, processing, errors } = useForm({
         name: plan.name,
         description: plan.description ?? '',
         frequency_type: plan.frequency_type,
-        frequency_value: plan.frequency_value?.toString() ?? '',
-        days_of_week: plan.days_of_week ?? ([] as number[]),
-        discount_percent: plan.discount_percent ?? '',
-        min_deliveries: plan.min_deliveries?.toString() ?? '',
+        discount_type: plan.discount_type,
+        discount_value: plan.discount_value,
         is_active: plan.is_active,
-        display_order: plan.display_order,
+        sort_order: plan.sort_order,
+        items: plan.items.map(item => ({
+            product_id: item.product_id,
+            units: item.units,
+            total_price: item.total_price,
+            per_unit_price: item.per_unit_price
+        })),
+        features: plan.features.map(feature => ({
+            title: feature.title,
+            highlight: feature.highlight
+        })),
     });
 
-    const handleDayToggle = (day: number) => {
-        setData('days_of_week', data.days_of_week.includes(day)
-            ? data.days_of_week.filter((d) => d !== day)
-            : [...data.days_of_week, day].sort());
+    // Items management
+    const addItem = () => {
+        setData('items', [...data.items, { product_id: '', units: 1, total_price: 0, per_unit_price: 0 }]);
+    };
+
+    const removeItem = (index: number) => {
+        const newItems = [...data.items];
+        newItems.splice(index, 1);
+        setData('items', newItems);
+    };
+
+    const updateItem = (index: number, field: string, value: any) => {
+        const newItems = [...data.items];
+        newItems[index] = { ...newItems[index], [field]: value };
+        setData('items', newItems);
+    };
+
+    // Features management
+    const addFeature = () => {
+        setData('features', [...data.features, { title: '', highlight: false }]);
+    };
+
+    const removeFeature = (index: number) => {
+        const newFeatures = [...data.features];
+        newFeatures.splice(index, 1);
+        setData('features', newFeatures);
+    };
+
+    const updateFeature = (index: number, field: string, value: any) => {
+        const newFeatures = [...data.features];
+        newFeatures[index] = { ...newFeatures[index], [field]: value };
+        setData('features', newFeatures);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         put(`/admin/subscription-plans/${plan.id}`);
-    };
-
-    const getPreviewDescription = () => {
-        switch (data.frequency_type) {
-            case 'daily':
-                return 'Delivered every day.';
-            case 'alternate_days':
-                return 'Delivered every 2 days (alternate days).';
-            case 'weekly': {
-                const selected = data.days_of_week.map((d) => dayOptions[d]).join(', ');
-                return selected ? `Delivered every week on: ${selected}.` : 'Select at least one day of the week.';
-            }
-            case 'custom':
-                return data.frequency_value
-                    ? `Delivered every ${data.frequency_value} day(s).`
-                    : 'Enter a custom interval in days.';
-            default:
-                return '';
-        }
     };
 
     return (
@@ -133,154 +171,202 @@ export default function EditSubscriptionPlan({ plan, frequencyOptions, dayOption
                             </div>
                         </div>
 
-                        {/* Frequency */}
+                        {/* Configuration */}
                         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Delivery Frequency</h2>
+                            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Configuration</h2>
 
-                            <div className="space-y-4">
+                            <div className="grid gap-4 sm:grid-cols-2">
                                 <div>
-                                    <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                                        Frequency Type <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Frequency Type</label>
+                                    <select
+                                        value={data.frequency_type}
+                                        onChange={(e) => setData('frequency_type', e.target.value)}
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--admin-dark-primary)] focus:ring-2 focus:ring-[var(--admin-dark-primary)]/20 focus:outline-none"
+                                    >
                                         {Object.entries(frequencyOptions).map(([value, label]) => (
-                                            <button
-                                                key={value}
-                                                type="button"
-                                                onClick={() => setData('frequency_type', value)}
-                                                className={`rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-colors ${
-                                                    data.frequency_type === value
-                                                        ? 'border-[var(--admin-dark-primary)] bg-[var(--admin-dark-primary)]/10 text-[var(--admin-dark-primary)]'
-                                                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                                                }`}
-                                            >
-                                                {label}
-                                            </button>
+                                            <option key={value} value={value}>{label}</option>
                                         ))}
-                                    </div>
-                                    {errors.frequency_type && (
-                                        <p className="mt-1 text-xs text-red-600">{errors.frequency_type}</p>
-                                    )}
+                                    </select>
+                                    {errors.frequency_type && <p className="mt-1 text-xs text-red-600">{errors.frequency_type}</p>}
                                 </div>
 
-                                {data.frequency_type === 'weekly' && (
-                                    <div>
-                                        <label className="mb-2 block text-sm font-medium text-gray-700">
-                                            Days of Week <span className="text-red-500">*</span>
-                                        </label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {Object.entries(dayOptions).map(([day, label]) => {
-                                                const dayNum = Number(day);
-                                                const isSelected = data.days_of_week.includes(dayNum);
-                                                return (
-                                                    <button
-                                                        key={day}
-                                                        type="button"
-                                                        onClick={() => handleDayToggle(dayNum)}
-                                                        className={`rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors ${
-                                                            isSelected
-                                                                ? 'border-[var(--admin-dark-primary)] bg-[var(--admin-dark-primary)] text-white'
-                                                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                                                        }`}
-                                                    >
-                                                        {label.slice(0, 3)}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                        {errors.days_of_week && (
-                                            <p className="mt-1 text-xs text-red-600">{errors.days_of_week}</p>
-                                        )}
-                                    </div>
-                                )}
+                                <div>
+                                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Sort Order</label>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        value={data.sort_order}
+                                        onChange={(e) => setData('sort_order', parseInt(e.target.value))}
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--admin-dark-primary)] focus:ring-2 focus:ring-[var(--admin-dark-primary)]/20 focus:outline-none"
+                                    />
+                                    {errors.sort_order && <p className="mt-1 text-xs text-red-600">{errors.sort_order}</p>}
+                                </div>
 
-                                {data.frequency_type === 'custom' && (
-                                    <div>
-                                        <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                                            Every N Days <span className="text-red-500">*</span>
-                                        </label>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm text-gray-500">Every</span>
-                                            <input
-                                                type="number"
-                                                min={1}
-                                                max={30}
-                                                value={data.frequency_value}
-                                                onChange={(e) => setData('frequency_value', e.target.value)}
-                                                className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--admin-dark-primary)] focus:ring-2 focus:ring-[var(--admin-dark-primary)]/20 focus:outline-none"
-                                            />
-                                            <span className="text-sm text-gray-500">day(s)</span>
-                                        </div>
-                                        {errors.frequency_value && (
-                                            <p className="mt-1 text-xs text-red-600">{errors.frequency_value}</p>
-                                        )}
-                                    </div>
-                                )}
+                                <div>
+                                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Discount Type</label>
+                                    <select
+                                        value={data.discount_type}
+                                        onChange={(e) => setData('discount_type', e.target.value)}
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--admin-dark-primary)] focus:ring-2 focus:ring-[var(--admin-dark-primary)]/20 focus:outline-none"
+                                    >
+                                        {Object.entries(discountOptions).map(([value, label]) => (
+                                            <option key={value} value={value}>{label}</option>
+                                        ))}
+                                    </select>
+                                    {errors.discount_type && <p className="mt-1 text-xs text-red-600">{errors.discount_type}</p>}
+                                </div>
 
-                                <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3">
-                                    <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">Preview</p>
-                                    <p className="text-sm text-blue-800">{getPreviewDescription()}</p>
+                                <div>
+                                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Discount Value</label>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        step={0.01}
+                                        value={data.discount_value}
+                                        onChange={(e) => setData('discount_value', parseFloat(e.target.value))}
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--admin-dark-primary)] focus:ring-2 focus:ring-[var(--admin-dark-primary)]/20 focus:outline-none"
+                                    />
+                                    {errors.discount_value && <p className="mt-1 text-xs text-red-600">{errors.discount_value}</p>}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Pricing & Constraints */}
+                        {/* Plan Items */}
                         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Pricing & Limits</h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Plan Items (Products)</h2>
+                                <button
+                                    type="button"
+                                    onClick={addItem}
+                                    className="flex items-center gap-1 text-xs font-medium text-[var(--admin-dark-primary)] hover:text-[var(--admin-dark-primary)]/80"
+                                >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Add Item
+                                </button>
+                            </div>
 
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Discount %</label>
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            max={100}
-                                            step={0.01}
-                                            value={data.discount_percent}
-                                            onChange={(e) => setData('discount_percent', e.target.value)}
-                                            className="w-full rounded-lg border border-gray-300 py-2.5 pl-3 pr-8 text-sm focus:border-[var(--admin-dark-primary)] focus:ring-2 focus:ring-[var(--admin-dark-primary)]/20 focus:outline-none"
-                                        />
-                                        <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-400">%</span>
+                            <div className="space-y-4">
+                                {data.items.map((item, index) => (
+                                    <div key={index} className="flex flex-col gap-3 rounded-lg border border-gray-100 bg-gray-50 p-3 sm:flex-row sm:items-start">
+                                        <div className="flex-1 space-y-3">
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                <div>
+                                                    <label className="mb-1 block text-xs font-medium text-gray-600">Product</label>
+                                                    <select
+                                                        value={item.product_id}
+                                                        onChange={(e) => updateItem(index, 'product_id', e.target.value)}
+                                                        className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                                                    >
+                                                        <option value="">Select Product</option>
+                                                        {products.map((p) => (
+                                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="mb-1 block text-xs font-medium text-gray-600">Units</label>
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        value={item.units}
+                                                        onChange={(e) => updateItem(index, 'units', parseInt(e.target.value))}
+                                                        className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                <div>
+                                                    <label className="mb-1 block text-xs font-medium text-gray-600">Total Price</label>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        step={0.01}
+                                                        value={item.total_price}
+                                                        onChange={(e) => updateItem(index, 'total_price', parseFloat(e.target.value))}
+                                                        className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="mb-1 block text-xs font-medium text-gray-600">Per Unit Price</label>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        step={0.01}
+                                                        value={item.per_unit_price}
+                                                        onChange={(e) => updateItem(index, 'per_unit_price', parseFloat(e.target.value))}
+                                                        className="w-full rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeItem(index)}
+                                            className="mt-6 text-gray-400 hover:text-red-500 sm:mt-1"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
                                     </div>
-                                    {errors.discount_percent && (
-                                        <p className="mt-1 text-xs text-red-600">{errors.discount_percent}</p>
-                                    )}
-                                </div>
+                                ))}
+                                {data.items.length === 0 && (
+                                    <p className="text-sm text-gray-500 italic">No items added yet.</p>
+                                )}
+                                {errors.items && <p className="text-xs text-red-600">{errors.items}</p>}
+                            </div>
+                        </div>
 
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Min. Deliveries</label>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        value={data.min_deliveries}
-                                        onChange={(e) => setData('min_deliveries', e.target.value)}
-                                        placeholder="Optional"
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--admin-dark-primary)] focus:ring-2 focus:ring-[var(--admin-dark-primary)]/20 focus:outline-none"
-                                    />
-                                    <p className="mt-1 text-xs text-gray-500">Minimum deliveries before cancellation</p>
-                                    {errors.min_deliveries && (
-                                        <p className="mt-1 text-xs text-red-600">{errors.min_deliveries}</p>
-                                    )}
-                                </div>
+                        {/* Plan Features */}
+                        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Features (Benefits)</h2>
+                                <button
+                                    type="button"
+                                    onClick={addFeature}
+                                    className="flex items-center gap-1 text-xs font-medium text-[var(--admin-dark-primary)] hover:text-[var(--admin-dark-primary)]/80"
+                                >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Add Feature
+                                </button>
+                            </div>
 
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-medium text-gray-700">Display Order</label>
-                                    <input
-                                        type="number"
-                                        min={0}
-                                        value={data.display_order}
-                                        onChange={(e) => setData('display_order', Number(e.target.value))}
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-[var(--admin-dark-primary)] focus:ring-2 focus:ring-[var(--admin-dark-primary)]/20 focus:outline-none"
-                                    />
-                                    <p className="mt-1 text-xs text-gray-500">Lower number = shown first</p>
-                                </div>
+                            <div className="space-y-3">
+                                {data.features.map((feature, index) => (
+                                    <div key={index} className="flex items-center gap-3">
+                                        <input
+                                            type="text"
+                                            value={feature.title}
+                                            onChange={(e) => updateFeature(index, 'title', e.target.value)}
+                                            placeholder="Feature title"
+                                            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                        />
+                                        <label className="flex items-center gap-2 text-xs text-gray-600">
+                                            <input
+                                                type="checkbox"
+                                                checked={feature.highlight}
+                                                onChange={(e) => updateFeature(index, 'highlight', e.target.checked)}
+                                                className="rounded border-gray-300 text-[var(--admin-dark-primary)] focus:ring-[var(--admin-dark-primary)]"
+                                            />
+                                            Highlight
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeFeature(index)}
+                                            className="text-gray-400 hover:text-red-500"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                                {data.features.length === 0 && (
+                                    <p className="text-sm text-gray-500 italic">No features added yet.</p>
+                                )}
                             </div>
                         </div>
                     </div>
 
                     {/* Sidebar */}
                     <div className="space-y-4">
+                        {/* Status */}
                         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
                             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Status</h2>
                             <label className="flex cursor-pointer items-center justify-between gap-3">
@@ -303,45 +389,25 @@ export default function EditSubscriptionPlan({ plan, frequencyOptions, dayOption
                             </label>
                         </div>
 
-                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-5">
-                            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Summary</h2>
-                            <dl className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-500">Name</dt>
-                                    <dd className="font-medium text-gray-900 truncate max-w-[140px]">{data.name || '—'}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-500">Frequency</dt>
-                                    <dd className="font-medium text-gray-900">{frequencyOptions[data.frequency_type]}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-500">Discount</dt>
-                                    <dd className="font-medium text-gray-900">
-                                        {data.discount_percent ? `${data.discount_percent}%` : 'None'}
-                                    </dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-500">Subscribers</dt>
-                                    <dd className="font-medium text-gray-900">{plan.subscriptions_count}</dd>
-                                </div>
-                            </dl>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--admin-dark-primary)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--admin-dark-primary)]/90 disabled:opacity-60"
-                            >
-                                <Save className="h-4 w-4" />
-                                {processing ? 'Saving…' : 'Save Changes'}
-                            </button>
-                            <Link
-                                href="/admin/subscription-plans"
-                                className="flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
-                            >
-                                Cancel
-                            </Link>
+                        {/* Actions */}
+                        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+                            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Actions</h2>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--admin-dark-primary)] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-[var(--admin-dark-primary)]/90 disabled:opacity-50"
+                                >
+                                    <Save className="h-4 w-4" />
+                                    {processing ? 'Saving...' : 'Save Changes'}
+                                </button>
+                                <Link
+                                    href="/admin/subscription-plans"
+                                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </form>

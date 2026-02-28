@@ -5,15 +5,12 @@ import AdminLayout from '@/layouts/AdminLayout';
 interface SubscriptionPlan {
     id: number;
     name: string;
-    slug: string;
     description: string | null;
     frequency_type: string;
-    frequency_value: number | null;
-    days_of_week: number[] | null;
-    discount_percent: string;
-    min_deliveries: number | null;
+    discount_type: 'none' | 'percentage' | 'flat';
+    discount_value: number;
     is_active: boolean;
-    display_order: number;
+    sort_order: number;
     subscriptions_count: number;
 }
 
@@ -98,16 +95,16 @@ export default function AdminSubscriptionPlansIndex({
                             )}
 
                             <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                                {parseFloat(plan.discount_percent) > 0 && (
+                                {plan.discount_type !== 'none' && (
                                     <span className="rounded-full bg-green-100 px-2 py-1 text-green-800">
-                                        {plan.discount_percent}% off
+                                        {plan.discount_type === 'percentage' 
+                                            ? `${Math.round(plan.discount_value)}% off` 
+                                            : `₹${Math.round(plan.discount_value)} off`}
                                     </span>
                                 )}
-                                {plan.min_deliveries && (
-                                    <span className="rounded-full bg-blue-100 px-2 py-1 text-blue-800">
-                                        Min {plan.min_deliveries} deliveries
-                                    </span>
-                                )}
+                                <span className="rounded-full bg-blue-100 px-2 py-1 text-blue-800">
+                                    Order: {plan.sort_order}
+                                </span>
                                 <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-700">
                                     {plan.subscriptions_count} subscriptions
                                 </span>

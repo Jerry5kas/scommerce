@@ -76,10 +76,37 @@ Route::get('/', function () {
             ])->values(),
         ]);
 
+    $subscriptionPlans = \App\Models\SubscriptionPlan::with(['items.product', 'features'])
+        ->active()
+        ->ordered()
+        ->get()
+        ->map(fn (\App\Models\SubscriptionPlan $plan) => [
+            'id' => $plan->id,
+            'name' => $plan->name,
+            'description' => $plan->description,
+            'frequency_type' => $plan->frequency_type,
+            'discount_type' => $plan->discount_type,
+            'discount_value' => (float) $plan->discount_value,
+            'items' => $plan->items->map(fn ($item) => [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'product_name' => $item->product ? $item->product->name : 'Unknown Product',
+                'units' => $item->units,
+                'total_price' => (float) $item->total_price,
+                'per_unit_price' => (float) $item->per_unit_price,
+            ]),
+            'features' => $plan->features->map(fn ($feature) => [
+                'id' => $feature->id,
+                'title' => $feature->title,
+                'highlight' => $feature->highlight,
+            ]),
+        ]);
+
     return Inertia::render('home', [
         'banners' => $banners,
         'categories' => $categories,
         'products' => $products,
+        'subscriptionPlans' => $subscriptionPlans,
     ]);
 })->name('home');
 
@@ -110,9 +137,7 @@ Route::middleware('location')->group(function () {
     Route::delete('/cart/items/{cartItem}', [CartController::class, 'removeItem'])->name('cart.remove');
     Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
-    Route::get('/subscription', function () {
-        return Inertia::render('subscription', ['planId' => request()->query('plan')]);
-    })->name('subscription');
+    Route::get('/subscription', [SubscriptionController::class, 'plans'])->name('subscription');
 });
 
 Route::get('/welcome', function () {
@@ -127,7 +152,7 @@ Route::get('/welcome', function () {
 Route::get('/location', [ZoneController::class, 'index'])->name('location.select');
 Route::post('/location/check-serviceability', [ZoneController::class, 'checkServiceability'])->name('location.check-serviceability');
 Route::get('/location/zone/{pincode}', [ZoneController::class, 'getZoneByPincode'])->name('location.zone-by-pincode')->where('pincode', '[0-9]+');
-Route::post('/location/set', [ZoneController::class, 'setLocation'])->middleware('auth')->name('location.set');
+Route::post('/location/set', [ZoneController::class, 'setLocation'])->name('location.set');
 
 /*
 |--------------------------------------------------------------------------

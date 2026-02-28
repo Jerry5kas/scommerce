@@ -86,7 +86,7 @@ class ZoneController extends Controller
         if ($zone === null) {
             $zone = $this->locationService->validateAddress([
                 'pincode' => $data['pincode'],
-            ], $user->id);
+            ], $user?->id);
         }
 
         if ($zone === null) {
@@ -95,33 +95,48 @@ class ZoneController extends Controller
             ]);
         }
 
-        $user->addresses()->update(['is_default' => false]);
+        if ($user) {
+            $user->addresses()->update(['is_default' => false]);
 
-        $defaultAddress = $user->addresses()
-            ->active()
-            ->latest('id')
-            ->first();
+            $defaultAddress = $user->addresses()
+                ->active()
+                ->latest('id')
+                ->first();
 
-        $addressData = [
-            'type' => $data['type'] ?? UserAddress::TYPE_HOME,
-            'label' => $data['label'] ?? 'Selected location',
-            'address_line_1' => $data['address_line_1'],
-            'address_line_2' => $data['address_line_2'] ?? null,
-            'landmark' => $data['landmark'] ?? null,
-            'city' => $data['city'],
-            'state' => $data['state'],
-            'pincode' => $data['pincode'],
-            'latitude' => $data['latitude'],
-            'longitude' => $data['longitude'],
-            'zone_id' => $zone->id,
-            'is_default' => true,
-            'is_active' => true,
-        ];
+            $addressData = [
+                'type' => $data['type'] ?? UserAddress::TYPE_HOME,
+                'label' => $data['label'] ?? 'Selected location',
+                'address_line_1' => $data['address_line_1'],
+                'address_line_2' => $data['address_line_2'] ?? null,
+                'landmark' => $data['landmark'] ?? null,
+                'city' => $data['city'],
+                'state' => $data['state'],
+                'pincode' => $data['pincode'],
+                'latitude' => $data['latitude'],
+                'longitude' => $data['longitude'],
+                'zone_id' => $zone->id,
+                'is_default' => true,
+                'is_active' => true,
+            ];
 
-        if ($defaultAddress !== null) {
-            $defaultAddress->update($addressData);
+            if ($defaultAddress !== null) {
+                $defaultAddress->update($addressData);
+            } else {
+                $user->addresses()->create($addressData);
+            }
         } else {
-            $user->addresses()->create($addressData);
+            // Guest user logic: store in session
+            session([
+                'guest_zone_id' => $zone->id,
+                'guest_address' => [
+                    'address_line_1' => $data['address_line_1'],
+                    'city' => $data['city'],
+                    'state' => $data['state'],
+                    'pincode' => $data['pincode'],
+                    'latitude' => $data['latitude'],
+                    'longitude' => $data['longitude'],
+                ],
+            ]);
         }
 
         if ((bool) ($data['from_navbar'] ?? false)) {

@@ -18,12 +18,17 @@ class SubscriptionPlanController extends Controller
     {
         $plans = SubscriptionPlan::query()
             ->withCount('subscriptions')
-            ->orderBy('display_order')
+            ->orderBy('sort_order')
             ->paginate(20);
 
         return Inertia::render('admin/subscription-plans/index', [
             'plans' => $plans,
-            'frequencyOptions' => SubscriptionPlan::frequencyOptions(),
+            'frequencyOptions' => [
+                SubscriptionPlan::FREQUENCY_DAILY => 'Daily',
+                SubscriptionPlan::FREQUENCY_ALTERNATE => 'Alternate Days',
+                SubscriptionPlan::FREQUENCY_WEEKLY => 'Weekly',
+                SubscriptionPlan::FREQUENCY_CUSTOM => 'Custom',
+            ],
         ]);
     }
 
@@ -33,15 +38,17 @@ class SubscriptionPlanController extends Controller
     public function create(): Response
     {
         return Inertia::render('admin/subscription-plans/create', [
-            'frequencyOptions' => SubscriptionPlan::frequencyOptions(),
-            'dayOptions' => [
-                0 => 'Sunday',
-                1 => 'Monday',
-                2 => 'Tuesday',
-                3 => 'Wednesday',
-                4 => 'Thursday',
-                5 => 'Friday',
-                6 => 'Saturday',
+            'products' => \App\Models\Product::select('id', 'name')->orderBy('name')->get(),
+            'frequencyOptions' => [
+                SubscriptionPlan::FREQUENCY_DAILY => 'Daily',
+                SubscriptionPlan::FREQUENCY_ALTERNATE => 'Alternate Days',
+                SubscriptionPlan::FREQUENCY_WEEKLY => 'Weekly',
+                SubscriptionPlan::FREQUENCY_CUSTOM => 'Custom',
+            ],
+            'discountOptions' => [
+                SubscriptionPlan::DISCOUNT_NONE => 'No Discount',
+                SubscriptionPlan::DISCOUNT_PERCENTAGE => 'Percentage',
+                SubscriptionPlan::DISCOUNT_FLAT => 'Flat Amount',
             ],
         ]);
     }
@@ -54,17 +61,40 @@ class SubscriptionPlanController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'frequency_type' => ['required', 'string', 'in:daily,alternate_days,weekly,custom'],
-            'frequency_value' => ['nullable', 'integer', 'min:1', 'max:30'],
-            'days_of_week' => ['nullable', 'array'],
-            'days_of_week.*' => ['integer', 'min:0', 'max:6'],
-            'discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'min_deliveries' => ['nullable', 'integer', 'min:1'],
+            'frequency_type' => ['required', 'string', 'in:daily,alternate,weekly,custom'],
+            'discount_type' => ['required', 'string', 'in:none,percentage,flat'],
+            'discount_value' => ['required', 'numeric', 'min:0'],
             'is_active' => ['boolean'],
-            'display_order' => ['nullable', 'integer', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.units' => ['required', 'integer', 'min:1'],
+            'items.*.total_price' => ['required', 'numeric', 'min:0'],
+            'items.*.per_unit_price' => ['required', 'numeric', 'min:0'],
+            'features' => ['nullable', 'array'],
+            'features.*.title' => ['required', 'string', 'max:255'],
+            'features.*.highlight' => ['boolean'],
         ]);
 
-        $plan = SubscriptionPlan::create($validated);
+        $plan = SubscriptionPlan::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'frequency_type' => $validated['frequency_type'],
+            'discount_type' => $validated['discount_type'],
+            'discount_value' => $validated['discount_value'],
+            'is_active' => $validated['is_active'] ?? true,
+            'sort_order' => $validated['sort_order'] ?? 0,
+        ]);
+
+        foreach ($validated['items'] as $item) {
+            $plan->items()->create($item);
+        }
+
+        if (!empty($validated['features'])) {
+            foreach ($validated['features'] as $feature) {
+                $plan->features()->create($feature);
+            }
+        }
 
         return redirect()->route('admin.subscription-plans.index')
             ->with('success', "Plan '{$plan->name}' created successfully.");
@@ -76,16 +106,18 @@ class SubscriptionPlanController extends Controller
     public function edit(SubscriptionPlan $subscriptionPlan): Response
     {
         return Inertia::render('admin/subscription-plans/edit', [
-            'plan' => $subscriptionPlan,
-            'frequencyOptions' => SubscriptionPlan::frequencyOptions(),
-            'dayOptions' => [
-                0 => 'Sunday',
-                1 => 'Monday',
-                2 => 'Tuesday',
-                3 => 'Wednesday',
-                4 => 'Thursday',
-                5 => 'Friday',
-                6 => 'Saturday',
+            'plan' => $subscriptionPlan->load(['items.product', 'features']),
+            'products' => \App\Models\Product::select('id', 'name')->orderBy('name')->get(),
+            'frequencyOptions' => [
+                SubscriptionPlan::FREQUENCY_DAILY => 'Daily',
+                SubscriptionPlan::FREQUENCY_ALTERNATE => 'Alternate Days',
+                SubscriptionPlan::FREQUENCY_WEEKLY => 'Weekly',
+                SubscriptionPlan::FREQUENCY_CUSTOM => 'Custom',
+            ],
+            'discountOptions' => [
+                SubscriptionPlan::DISCOUNT_NONE => 'No Discount',
+                SubscriptionPlan::DISCOUNT_PERCENTAGE => 'Percentage',
+                SubscriptionPlan::DISCOUNT_FLAT => 'Flat Amount',
             ],
         ]);
     }
@@ -98,17 +130,44 @@ class SubscriptionPlanController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'frequency_type' => ['required', 'string', 'in:daily,alternate_days,weekly,custom'],
-            'frequency_value' => ['nullable', 'integer', 'min:1', 'max:30'],
-            'days_of_week' => ['nullable', 'array'],
-            'days_of_week.*' => ['integer', 'min:0', 'max:6'],
-            'discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'min_deliveries' => ['nullable', 'integer', 'min:1'],
+            'frequency_type' => ['required', 'string', 'in:daily,alternate,weekly,custom'],
+            'discount_type' => ['required', 'string', 'in:none,percentage,flat'],
+            'discount_value' => ['required', 'numeric', 'min:0'],
             'is_active' => ['boolean'],
-            'display_order' => ['nullable', 'integer', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.units' => ['required', 'integer', 'min:1'],
+            'items.*.total_price' => ['required', 'numeric', 'min:0'],
+            'items.*.per_unit_price' => ['required', 'numeric', 'min:0'],
+            'features' => ['nullable', 'array'],
+            'features.*.title' => ['required', 'string', 'max:255'],
+            'features.*.highlight' => ['boolean'],
         ]);
 
-        $subscriptionPlan->update($validated);
+        $subscriptionPlan->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'frequency_type' => $validated['frequency_type'],
+            'discount_type' => $validated['discount_type'],
+            'discount_value' => $validated['discount_value'],
+            'is_active' => $validated['is_active'] ?? true,
+            'sort_order' => $validated['sort_order'] ?? 0,
+        ]);
+
+        // Sync items: Delete all and recreate
+        $subscriptionPlan->items()->delete();
+        foreach ($validated['items'] as $item) {
+            $subscriptionPlan->items()->create($item);
+        }
+
+        // Sync features: Delete all and recreate
+        $subscriptionPlan->features()->delete();
+        if (!empty($validated['features'])) {
+            foreach ($validated['features'] as $feature) {
+                $subscriptionPlan->features()->create($feature);
+            }
+        }
 
         return redirect()->route('admin.subscription-plans.index')
             ->with('success', "Plan '{$subscriptionPlan->name}' updated successfully.");

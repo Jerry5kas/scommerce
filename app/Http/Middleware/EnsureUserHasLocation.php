@@ -15,7 +15,20 @@ class EnsureUserHasLocation
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->user()) {
-            return $next($request);
+            if (session('guest_zone_id')) {
+                return $next($request);
+            }
+            
+            // Allow access to location selection page and catalog routes
+            if ($request->routeIs('location.*') || $request->routeIs('login') || $request->routeIs('welcome') || $request->routeIs('catalog.*') || $request->routeIs('products.*')) {
+                return $next($request);
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Please set a delivery location.'], 422);
+            }
+
+            return redirect()->route('location.select');
         }
 
         $defaultAddress = $request->user()
@@ -32,6 +45,11 @@ class EnsureUserHasLocation
                 if ($defaultAddress->zone_id !== null) {
                     return $next($request);
                 }
+            }
+
+            // Allow access to catalog routes without address for authenticated users too
+            if ($request->routeIs('location.*') || $request->routeIs('catalog.*') || $request->routeIs('products.*')) {
+                return $next($request);
             }
 
             if ($request->expectsJson()) {

@@ -2,131 +2,143 @@
 
 namespace Database\Seeders;
 
+use App\Models\Product;
 use App\Models\SubscriptionPlan;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class SubscriptionPlanSeeder extends Seeder
 {
     /**
-     * The five features shown on every plan card on the home page.
-     * Stored pipe-delimited so the front-end can split into a bullet list.
-     */
-    private const FEATURES = 'Daily Morning delivery|Free delivery|Pause/Resume anytime|Vacation hold|WhatsApp alerts';
-
-    /**
-     * Pricing reference (exact values from home.tsx SUBSCRIPTION_PLANS constant).
-     *
-     * MRP basis used for the "X% OFF" badge:
-     *   480ml MRP = ₹80 / unit
-     *   1L    MRP = ₹160 / unit
-     *
-     *  Plan          | 480ml p.u | 480ml total | 1L p.u | 1L total | discount badge
-     *  15-Pack Plan  |  ₹42      |  ₹630       | ₹84    | ₹1,260   | —
-     *  30-Packs Plan |  ₹41      |  ₹1,230     | ₹81    | ₹2,430   | 49% OFF
-     *  90-Packs Plan |  ₹40      |  ₹3,600     | ₹80    | ₹7,200   | 50% OFF
+     * Run the database seeds.
      */
     public function run(): void
     {
-        $plans = [
-
-            // ── 1. 15-Pack Plan ── starter · no discount ───────────────────────
+        // 1. Ensure Products Exist
+        $product480 = Product::firstOrCreate(
+            ['name' => 'Milk 480ml'],
             [
-                'name'             => '15-Pack Plan',
-                'slug'             => '15-pack-plan',
-                'description'      => 'Perfect starter plan — 15 days of fresh dairy delivered to your doorstep every morning before 7 AM. '
-                    . 'No store visits, no missed mornings. '
-                    . 'Features: ' . self::FEATURES,
-                'frequency_type'   => SubscriptionPlan::FREQUENCY_DAILY,
-                'frequency_value'  => null,
-                'days_of_week'     => null,
-                'discount_percent' => '0.00',
-                'prices'           => [
-                    '480ml' => [
-                        'units'          => 15,
-                        'price_per_unit' => 42.00,
-                        'total_price'    => 630.00,
-                        'mrp_per_unit'   => 80.00,
-                    ],
-                    '1L'    => [
-                        'units'          => 15,
-                        'price_per_unit' => 84.00,
-                        'total_price'    => 1260.00,
-                        'mrp_per_unit'   => 160.00,
-                    ],
-                ],
-                'min_deliveries'   => 15,
-                'is_active'        => true,
-                'display_order'    => 1,
-            ],
+                'sku' => 'MILK-480',
+                'slug' => 'milk-480ml',
+                'description' => 'Fresh Milk 480ml',
+                'price' => 45.00, // Assuming MRP is slightly higher than subscription price
+                'category_id' => 1, // Dummy
+                'image' => 'default.png',
+            ]
+        );
 
-            // ── 2. 30-Packs Plan ── most popular · 49% OFF ─────────────────────
+        $product1L = Product::firstOrCreate(
+            ['name' => 'Milk 1L'],
             [
-                'name'             => '30-Packs Plan',
-                'slug'             => '30-packs-plan',
-                'description'      => 'Our most popular plan — 30 days of daily fresh dairy at 49% off the retail price. '
-                    . 'Ideal for families who want consistent quality every single morning without the hassle. '
-                    . 'Features: ' . self::FEATURES,
-                'frequency_type'   => SubscriptionPlan::FREQUENCY_DAILY,
-                'frequency_value'  => null,
-                'days_of_week'     => null,
-                'discount_percent' => '49.00',
-                'prices'           => [
-                    '480ml' => [
-                        'units'          => 30,
-                        'price_per_unit' => 41.00,
-                        'total_price'    => 1230.00,
-                        'mrp_per_unit'   => 80.00,
-                    ],
-                    '1L'    => [
-                        'units'          => 30,
-                        'price_per_unit' => 81.00,
-                        'total_price'    => 2430.00,
-                        'mrp_per_unit'   => 160.00,
-                    ],
-                ],
-                'min_deliveries'   => 30,
-                'is_active'        => true,
-                'display_order'    => 2,
-            ],
+                'sku' => 'MILK-1L',
+                'slug' => 'milk-1l',
+                'description' => 'Fresh Milk 1L',
+                'price' => 90.00, // Assuming MRP
+                'category_id' => 1, // Dummy
+                'image' => 'default.png',
+            ]
+        );
 
-            // ── 3. 90-Packs Plan ── best value · 50% OFF ───────────────────────
-            [
-                'name'             => '90-Packs Plan',
-                'slug'             => '90-packs-plan',
-                'description'      => 'Maximum savings plan — 90 days of daily fresh dairy at our best-ever price with 50% off. '
-                    . 'Best value for long-term subscribers who never want to run out of farm-fresh goodness. '
-                    . 'Features: ' . self::FEATURES,
-                'frequency_type'   => SubscriptionPlan::FREQUENCY_DAILY,
-                'frequency_value'  => null,
-                'days_of_week'     => null,
-                'discount_percent' => '50.00',
-                'prices'           => [
-                    '480ml' => [
-                        'units'          => 90,
-                        'price_per_unit' => 40.00,
-                        'total_price'    => 3600.00,
-                        'mrp_per_unit'   => 80.00,
-                    ],
-                    '1L'    => [
-                        'units'          => 90,
-                        'price_per_unit' => 80.00,
-                        'total_price'    => 7200.00,
-                        'mrp_per_unit'   => 160.00,
-                    ],
-                ],
-                'min_deliveries'   => 90,
-                'is_active'        => true,
-                'display_order'    => 3,
-            ],
+        // 2. Clear existing plans
+        Schema::disableForeignKeyConstraints();
+        SubscriptionPlan::truncate();
+        DB::table('subscription_plan_items')->truncate();
+        DB::table('subscription_plan_features')->truncate();
+        Schema::enableForeignKeyConstraints();
+
+        // 3. Create Plans
+
+        $features = [
+            ['title' => 'Daily Morning delivery', 'highlight' => true],
+            ['title' => 'Free delivery', 'highlight' => true],
+            ['title' => 'Pause/Resume anytime', 'highlight' => false],
+            ['title' => 'Vacation hold', 'highlight' => false],
+            ['title' => 'Whatsapp alerts', 'highlight' => false],
         ];
 
-        foreach ($plans as $planData) {
-            SubscriptionPlan::updateOrCreate(
-                ['slug' => $planData['slug']],
-                $planData
-            );
-        }
+        // Plan 1: 15-Pack Plan
+        $plan15 = SubscriptionPlan::create([
+            'name' => '15-Pack Plan',
+            'description' => 'Best for trial',
+            'frequency_type' => 'daily',
+            'discount_type' => 'none',
+            'discount_value' => 0,
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
 
-        $this->command->info('Seeded ' . count($plans) . ' subscription plans with variant pricing.');
+        $plan15->items()->createMany([
+            [
+                'product_id' => $product480->id,
+                'units' => 15,
+                'total_price' => 630.00,
+                'per_unit_price' => 42.00,
+            ],
+            [
+                'product_id' => $product1L->id,
+                'units' => 15,
+                'total_price' => 1260.00,
+                'per_unit_price' => 84.00,
+            ],
+        ]);
+
+        $plan15->features()->createMany($features);
+
+        // Plan 2: 30-Pack Plan
+        $plan30 = SubscriptionPlan::create([
+            'name' => '30-Pack Plan',
+            'description' => 'Most Popular',
+            'frequency_type' => 'daily',
+            'discount_type' => 'percentage',
+            'discount_value' => 49.00, // Label says 49% OFF
+            'is_active' => true,
+            'sort_order' => 2,
+        ]);
+
+        $plan30->items()->createMany([
+            [
+                'product_id' => $product480->id,
+                'units' => 30,
+                'total_price' => 1230.00,
+                'per_unit_price' => 41.00,
+            ],
+            [
+                'product_id' => $product1L->id,
+                'units' => 30,
+                'total_price' => 2430.00,
+                'per_unit_price' => 81.00,
+            ],
+        ]);
+
+        $plan30->features()->createMany($features);
+
+        // Plan 3: 90-Pack Plan
+        $plan90 = SubscriptionPlan::create([
+            'name' => '90-Pack Plan',
+            'description' => 'Best Value',
+            'frequency_type' => 'daily',
+            'discount_type' => 'percentage',
+            'discount_value' => 50.00,
+            'is_active' => true,
+            'sort_order' => 3,
+        ]);
+
+        $plan90->items()->createMany([
+            [
+                'product_id' => $product480->id,
+                'units' => 90,
+                'total_price' => 3600.00,
+                'per_unit_price' => 40.00,
+            ],
+            [
+                'product_id' => $product1L->id,
+                'units' => 90,
+                'total_price' => 7200.00,
+                'per_unit_price' => 80.00,
+            ],
+        ]);
+
+        $plan90->features()->createMany($features);
     }
 }

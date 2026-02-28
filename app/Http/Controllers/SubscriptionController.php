@@ -31,6 +31,66 @@ class SubscriptionController extends Controller
     ) {}
 
     /**
+     * Show subscription plans page
+     */
+    public function plans(Request $request): Response
+    {
+        $user = $request->user();
+        $addresses = [];
+
+        if ($user) {
+            $addresses = $user->addresses()
+                ->active()
+                ->orderByDesc('is_default')
+                ->orderBy('created_at')
+                ->get()
+                ->map(fn ($addr) => [
+                    'id' => (string) $addr->id,
+                    'label' => $addr->label ?? 'Address',
+                    'line1' => $addr->address_line_1,
+                    'line2' => $addr->address_line_2,
+                    'city' => $addr->city,
+                    'state' => $addr->state,
+                    'pincode' => $addr->pincode,
+                    'isDefault' => (bool) $addr->is_default,
+                ]);
+        }
+
+        $subscriptionPlans = SubscriptionPlan::with(['items.product', 'features'])
+            ->active()
+            ->ordered()
+            ->get()
+            ->map(fn (SubscriptionPlan $plan) => [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'description' => $plan->description,
+                'frequency_type' => $plan->frequency_type,
+                'discount_type' => $plan->discount_type,
+                'discount_value' => (float) $plan->discount_value,
+                'items' => $plan->items->map(fn ($item) => [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product ? $item->product->name : 'Unknown Product',
+                    'product_image' => $item->product ? $item->product->image : null,
+                    'units' => $item->units,
+                    'total_price' => (float) $item->total_price,
+                    'per_unit_price' => (float) $item->per_unit_price,
+                ]),
+                'features' => $plan->features->map(fn ($feature) => [
+                    'id' => $feature->id,
+                    'title' => $feature->title,
+                    'highlight' => $feature->highlight,
+                ]),
+            ]);
+
+        return Inertia::render('subscription', [
+            'subscriptionPlans' => $subscriptionPlans,
+            'selectedPlanId' => $request->query('plan'),
+            'userAddresses' => $addresses,
+        ]);
+    }
+
+    /**
      * List user's subscriptions
      */
     public function index(Request $request): Response

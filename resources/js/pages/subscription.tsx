@@ -35,14 +35,20 @@ const DELIVERY_INSTRUCTIONS = [
     { id: 'other', label: 'Other', emoji: '' },
 ] as const;
 
-interface SubscriptionPlan {
-    id: string;
-    name: string;
-    image: string;
-    perUnit: number;
+interface SubscriptionPlanItem {
+    id: number;
+    product_id: number;
+    product_name: string;
+    product_image: string | null;
     units: number;
-    total: number;
-    discount?: string;
+    total_price: number;
+    per_unit_price: number;
+}
+
+interface SubscriptionPlanFeature {
+    id: number;
+    title: string;
+    highlight: boolean;
 }
 
 interface SavedAddress {
@@ -55,13 +61,6 @@ interface SavedAddress {
     pincode: string;
     isDefault?: boolean;
 }
-
-const PLANS: SubscriptionPlan[] = [
-    { id: 'plan-welcome', name: 'Welcome Offer Plan', image: '/images/dairy-products.png', perUnit: 39, units: 3, total: 117 },
-    { id: 'plan-15', name: '15-Pack Plan', image: '/images/dairy-products.png', perUnit: 42, units: 15, total: 630 },
-    { id: 'plan-30', name: '30-Packs Plan', image: '/images/dairy-products.png', perUnit: 41, units: 30, total: 1230, discount: '49% OFF' },
-    { id: 'plan-90', name: '90-Packs Plan', image: '/images/dairy-products.png', perUnit: 40, units: 90, total: 3600, discount: '50% OFF' },
-];
 
 const MOCK_ADDRESSES: SavedAddress[] = [
     { id: 'addr-1', label: 'Home', line1: '12, Green Valley Road', line2: 'Near City Mall', city: 'Kozhikode', state: 'Kerala', pincode: '673001', isDefault: true },
@@ -78,17 +77,50 @@ function formatEndDate(date: Date): string {
     return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-interface SubscriptionPageProps {
-    planId?: string;
+interface SubscriptionPlan {
+    id: number;
+    name: string;
+    description: string;
+    frequency_type: string;
+    discount_type: string;
+    discount_value: number;
+    items: SubscriptionPlanItem[];
+    features: SubscriptionPlanFeature[];
 }
 
-export default function Subscription({ planId }: SubscriptionPageProps) {
-    const defaultPlanId = planId && PLANS.some((p) => p.id === planId) ? planId : PLANS[0].id;
-    const [selectedPlanId, setSelectedPlanId] = useState<string>(defaultPlanId);
-    const [addresses, setAddresses] = useState<SavedAddress[]>(MOCK_ADDRESSES);
-    const [selectedAddressId, setSelectedAddressId] = useState<string | null>(MOCK_ADDRESSES[0]?.id ?? null);
+interface SubscriptionPageProps {
+    subscriptionPlans: SubscriptionPlan[];
+    selectedPlanId?: number;
+    userAddresses?: SavedAddress[];
+}
+
+export default function Subscription({ subscriptionPlans = [], selectedPlanId, userAddresses = [] }: SubscriptionPageProps) {
+    // Determine default plan
+    const defaultPlan = useMemo(() => {
+        if (selectedPlanId) {
+            const found = subscriptionPlans.find(p => p.id === Number(selectedPlanId));
+            if (found) return found;
+        }
+        return subscriptionPlans[0];
+    }, [subscriptionPlans, selectedPlanId]);
+
+    const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan>(defaultPlan);
+    
+    // Manage sub-variant selection (e.g., 480ml vs 1L)
+    // We'll track selection by product name substring for now, or just index
+    // Let's assume user picks a specific item from the plan items list
+    const [selectedItemIndex, setSelectedItemIndex] = useState(0);
+
+    const [addresses, setAddresses] = useState<SavedAddress[]>(userAddresses.length > 0 ? userAddresses : MOCK_ADDRESSES);
+    const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+        userAddresses.length > 0 
+            ? (userAddresses.find(a => a.isDefault)?.id || userAddresses[0].id)
+            : (MOCK_ADDRESSES[0]?.id ?? null)
+    );
     const [deliverySlot, setDeliverySlot] = useState<string>(DELIVERY_SLOTS[0].id);
-    const [pattern, setPattern] = useState<string>(PATTERNS[0].id);
+    // Pattern is now determined by the plan's frequency_type, but let's keep it flexible if plan allows custom
+    const [pattern, setPattern] = useState<string>(currentPlan?.frequency_type || 'daily');
+    
     const [quantityPerDelivery, setQuantityPerDelivery] = useState(1);
     const [startDate, setStartDate] = useState<string>(() => {
         const d = new Date();
@@ -104,13 +136,14 @@ export default function Subscription({ planId }: SubscriptionPageProps) {
     const [showAddInstruction, setShowAddInstruction] = useState(false);
     const [customInstruction, setCustomInstruction] = useState('');
 
-    const selectedPlan = PLANS.find((p) => p.id === selectedPlanId) ?? PLANS[0];
-    const mrp = selectedPlan.total;
+    // Derived values
+    const selectedItem = currentPlan?.items[selectedItemIndex] || currentPlan?.items[0];
+    const mrp = selectedItem ? selectedItem.total_price : 0;
     const deliveryFee = 0;
     const discount = appliedCoupon?.discount ?? 0;
     const toPay = Math.max(0, mrp + deliveryFee - discount);
 
-    const deliveriesCount = Math.ceil(selectedPlan.units / quantityPerDelivery);
+    const deliveriesCount = selectedItem ? Math.ceil(selectedItem.units / quantityPerDelivery) : 0;
     const endDate = useMemo(() => {
         const start = new Date(startDate);
         if (pattern === 'daily') return addDays(start, deliveriesCount - 1);
@@ -148,6 +181,15 @@ export default function Subscription({ planId }: SubscriptionPageProps) {
         setCouponError(null);
     };
 
+    // Helper to get unique product names across all items to show tabs
+    const productVariants = useMemo(() => {
+        if (!currentPlan) return [];
+        return currentPlan.items.map((item, index) => ({
+            index,
+            name: item.product_name
+        }));
+    }, [currentPlan]);
+
     return (
         <UserLayout>
             <Head title="Subscribe - Freshtick" />
@@ -172,153 +214,228 @@ export default function Subscription({ planId }: SubscriptionPageProps) {
                             <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="plans-heading">
                                 <h2 id="plans-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
                                     <Repeat className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
-                                    Available plans
+                                    1. Choose Plan & Product
                                 </h2>
+                                
+                                {/* Plan Selection Tabs */}
+                                <div className="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                    {subscriptionPlans.map(plan => (
+                                        <button
+                                            key={plan.id}
+                                            onClick={() => {
+                                                setCurrentPlan(plan);
+                                                setSelectedItemIndex(0); // Reset item selection
+                                                setPattern(plan.frequency_type);
+                                            }}
+                                            className={`relative flex-shrink-0 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-semibold transition-all border-2 ${
+                                                currentPlan.id === plan.id
+                                                    ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)] text-white shadow-md'
+                                                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            {plan.name}
+                                            {plan.discount_type !== 'none' && plan.discount_value > 0 && (
+                                                <span className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                                                    currentPlan.id === plan.id 
+                                                        ? 'bg-white/20 text-white' 
+                                                        : 'bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
+                                                }`}>
+                                                    {plan.discount_type === 'percentage' ? `${Math.round(plan.discount_value)}% OFF` : `₹${Math.round(plan.discount_value)} OFF`}
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Plan Features */}
+                                <div className="mb-6 rounded-xl bg-[var(--theme-primary-1)]/5 p-4 border border-[var(--theme-primary-1)]/10">
+                                    <h3 className="mb-3 text-sm font-bold text-[var(--theme-primary-1)] uppercase tracking-wide">Plan Benefits</h3>
+                                    <ul className="grid gap-2 sm:grid-cols-2">
+                                        {currentPlan.features.map((feature) => (
+                                            <li key={feature.id} className="flex items-start gap-2 text-sm text-gray-700">
+                                                <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 ${feature.highlight ? 'text-[var(--theme-primary-1)]' : 'text-gray-400'}`} />
+                                                <span className={feature.highlight ? 'font-medium text-gray-900' : ''}>{feature.title}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Variant Selection */}
+                                <h3 className="mb-3 text-sm font-bold text-gray-900">Select Product</h3>
                                 <div className="grid gap-3 sm:grid-cols-2">
-                                    {PLANS.map((plan) => {
-                                        const isSelected = selectedPlanId === plan.id;
+                                    {currentPlan.items.map((item, index) => {
+                                        const isSelected = selectedItemIndex === index;
                                         return (
                                             <button
-                                                key={plan.id}
+                                                key={item.id}
                                                 type="button"
-                                                onClick={() => setSelectedPlanId(plan.id)}
-                                                className={`flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-colors sm:gap-4 sm:p-4 ${
+                                                onClick={() => setSelectedItemIndex(index)}
+                                                className={`group relative flex items-start gap-3 rounded-xl border-2 p-3 text-left transition-all sm:gap-4 sm:p-4 ${
                                                     isSelected
-                                                        ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/5'
-                                                        : 'border-gray-200 bg-gray-50/50 hover:border-gray-300'
+                                                        ? 'border-[var(--theme-primary-1)] bg-white shadow-md ring-1 ring-[var(--theme-primary-1)]'
+                                                        : 'border-gray-200 bg-gray-50/50 hover:border-gray-300 hover:bg-white'
                                                 }`}
                                             >
-                                                <span className="flex h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--theme-secondary)]/20 sm:h-14 sm:w-14">
-                                                    <img src={plan.image} alt="" className="h-full w-full object-contain p-1" />
-                                                </span>
+                                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-white p-1 border border-gray-100">
+                                                    <img 
+                                                        src={item.product_image ? `/storage/${item.product_image}` : '/images/dairy-products.png'} 
+                                                        alt={item.product_name} 
+                                                        className="h-full w-full object-contain"
+                                                    />
+                                                </div>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="font-semibold text-gray-900 sm:text-base">{plan.name}</span>
-                                                        {plan.discount && (
-                                                            <span className="rounded bg-[var(--theme-tertiary)]/20 px-1.5 py-0.5 text-[10px] font-bold text-[var(--theme-tertiary)]">
-                                                                {plan.discount}
-                                                            </span>
-                                                        )}
+                                                        <span className={`font-bold transition-colors ${isSelected ? 'text-[var(--theme-primary-1)]' : 'text-gray-900'}`}>
+                                                            {item.product_name}
+                                                        </span>
                                                     </div>
-                                                    <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">
-                                                        {plan.units} unit(s) · ₹{plan.total} total
+                                                    <p className="mt-1 text-xs text-gray-500">
+                                                        {item.units} unit(s) per delivery
                                                     </p>
-                                                    <p className="mt-1 text-sm font-semibold text-[var(--theme-primary-1)]">₹{plan.perUnit}/unit</p>
+                                                    <div className="mt-2 flex items-baseline gap-2">
+                                                        <span className="text-lg font-bold text-gray-900">₹{Math.round(item.total_price)}</span>
+                                                        <span className="text-xs text-gray-500">
+                                                            (₹{Math.round(item.per_unit_price)}/unit)
+                                                        </span>
+                                                    </div>
                                                 </div>
+                                                {isSelected && (
+                                                    <div className="absolute top-3 right-3 text-[var(--theme-primary-1)]">
+                                                        <CheckCircle2 className="h-5 w-5 fill-[var(--theme-primary-1)] text-white" />
+                                                    </div>
+                                                )}
                                             </button>
                                         );
                                     })}
                                 </div>
                             </section>
 
-                            {/* Delivery time */}
-                            <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="delivery-heading">
-                                <h2 id="delivery-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
+                            {/* Delivery Schedule (Grouped) */}
+                            <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="schedule-heading">
+                                <h2 id="schedule-heading" className="mb-6 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
                                     <Clock className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
-                                    Delivery time
+                                    2. Delivery Schedule
                                 </h2>
-                                <div className="flex flex-wrap gap-2 sm:gap-3">
-                                    {DELIVERY_SLOTS.map((slot) => {
-                                        const isSelected = deliverySlot === slot.id;
-                                        return (
-                                            <button
-                                                key={slot.id}
-                                                type="button"
-                                                onClick={() => setDeliverySlot(slot.id)}
-                                                className={`flex flex-1 min-w-[120px] items-center gap-2 rounded-xl border-2 px-4 py-3 text-left transition-colors sm:min-w-0 ${
-                                                    isSelected
-                                                        ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
-                                                        : 'border-gray-200 bg-gray-50/80 text-gray-700 hover:border-gray-300'
-                                                }`}
-                                            >
-                                                <Clock className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                <div>
-                                                    <span className="block text-sm font-semibold">{slot.label}</span>
-                                                    <span className="block text-[10px] text-gray-500 sm:text-xs">{slot.time}</span>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </section>
 
-                            {/* Pattern */}
-                            <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="pattern-heading">
-                                <h2 id="pattern-heading" className="mb-4 text-base font-bold text-gray-900 sm:text-lg">Pattern</h2>
-                                <p className="mb-3 text-xs text-gray-600 sm:text-sm">How often should we deliver?</p>
-                                <div className="flex flex-wrap gap-2 sm:gap-3">
-                                    {PATTERNS.map((p) => {
-                                        const isSelected = pattern === p.id;
-                                        return (
-                                            <button
-                                                key={p.id}
-                                                type="button"
-                                                onClick={() => setPattern(p.id)}
-                                                className={`rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-colors sm:px-5 ${
-                                                    isSelected
-                                                        ? 'border-[var(--theme-tertiary)] bg-[var(--theme-tertiary)] text-white'
-                                                        : 'border-gray-200 bg-gray-50/80 text-gray-700 hover:border-gray-300'
-                                                }`}
-                                            >
-                                                {p.label}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </section>
+                                <div className="space-y-6">
+                                    {/* Start Date */}
+                                    <div>
+                                        <label htmlFor="start-date" className="mb-2 block text-sm font-semibold text-gray-900">Start Date</label>
+                                        <div className="relative">
+                                            <input
+                                                id="start-date"
+                                                type="date"
+                                                value={startDate}
+                                                onChange={(e) => setStartDate(e.target.value)}
+                                                min={new Date().toISOString().slice(0, 10)}
+                                                className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 pl-11 text-sm font-medium text-gray-900 transition-colors focus:border-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)]/20"
+                                            />
+                                            <Calendar className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                                        </div>
+                                    </div>
 
-                            {/* Quantity per delivery */}
-                            <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="qty-heading">
-                                <h2 id="qty-heading" className="mb-4 text-base font-bold text-gray-900 sm:text-lg">Quantity per delivery</h2>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center rounded-xl border-2 border-gray-200 bg-white">
-                                        <button
-                                            type="button"
-                                            onClick={() => setQuantityPerDelivery((q) => Math.max(1, q - 1))}
-                                            className="flex h-10 w-10 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--theme-primary-1)] rounded-l-lg"
-                                            aria-label="Decrease quantity"
-                                        >
-                                            <Minus className="h-4 w-4" strokeWidth={2} />
-                                        </button>
-                                        <span className="flex h-10 min-w-[3rem] items-center justify-center text-base font-bold text-gray-900" aria-live="polite">
-                                            {quantityPerDelivery}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setQuantityPerDelivery((q) => Math.min(99, q + 1))}
-                                            className="flex h-10 w-10 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--theme-primary-1)] rounded-r-lg"
-                                            aria-label="Increase quantity"
-                                        >
-                                            <Plus className="h-4 w-4" strokeWidth={2} />
-                                        </button>
+                                    {/* Time Slot */}
+                                    <div>
+                                        <span className="mb-2 block text-sm font-semibold text-gray-900">Preferred Time Slot</span>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {DELIVERY_SLOTS.map((slot) => {
+                                                const isSelected = deliverySlot === slot.id;
+                                                return (
+                                                    <button
+                                                        key={slot.id}
+                                                        type="button"
+                                                        onClick={() => setDeliverySlot(slot.id)}
+                                                        className={`flex flex-col items-start gap-1 rounded-xl border-2 px-4 py-3 text-left transition-all ${
+                                                            isSelected
+                                                                ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/5 ring-1 ring-[var(--theme-primary-1)]'
+                                                                : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                                                        }`}
+                                                    >
+                                                        <div className="flex w-full items-center justify-between">
+                                                            <span className={`text-sm font-bold ${isSelected ? 'text-[var(--theme-primary-1)]' : 'text-gray-900'}`}>
+                                                                {slot.label}
+                                                            </span>
+                                                            {isSelected && <CheckCircle2 className="h-4 w-4 text-[var(--theme-primary-1)]" />}
+                                                        </div>
+                                                        <span className="text-xs text-gray-500">{slot.time}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Frequency Pattern */}
+                                    <div>
+                                        <span className="mb-2 block text-sm font-semibold text-gray-900">Delivery Frequency</span>
+                                        <div className="flex flex-wrap gap-2">
+                                            {PATTERNS.map((p) => {
+                                                const isSelected = pattern === p.id;
+                                                // If plan is strict (e.g. daily), we might want to disable others, but for now keeping flexible
+                                                return (
+                                                    <button
+                                                        key={p.id}
+                                                        type="button"
+                                                        onClick={() => setPattern(p.id)}
+                                                        className={`rounded-lg border-2 px-4 py-2.5 text-sm font-semibold transition-all ${
+                                                            isSelected
+                                                                ? 'border-[var(--theme-tertiary)] bg-[var(--theme-tertiary)] text-white shadow-sm'
+                                                                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                                                        }`}
+                                                    >
+                                                        {p.label}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Quantity */}
+                                    <div>
+                                        <span className="mb-2 block text-sm font-semibold text-gray-900">Quantity per Delivery</span>
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center rounded-xl border-2 border-gray-200 bg-white">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setQuantityPerDelivery((q) => Math.max(1, q - 1))}
+                                                    className="flex h-11 w-11 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--theme-primary-1)] rounded-l-lg"
+                                                >
+                                                    <Minus className="h-4 w-4" strokeWidth={2.5} />
+                                                </button>
+                                                <span className="flex h-11 min-w-[3.5rem] items-center justify-center text-lg font-bold text-gray-900 border-x-2 border-gray-100">
+                                                    {quantityPerDelivery}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setQuantityPerDelivery((q) => Math.min(99, q + 1))}
+                                                    className="flex h-11 w-11 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--theme-primary-1)] rounded-r-lg"
+                                                >
+                                                    <Plus className="h-4 w-4" strokeWidth={2.5} />
+                                                </button>
+                                            </div>
+                                            <div className="text-sm text-gray-600">
+                                                <p>Total units: <span className="font-semibold text-gray-900">{selectedItem?.units}</span></p>
+                                                <p>Deliveries: <span className="font-semibold text-gray-900">{deliveriesCount}</span></p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-4 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-blue-800">
+                                            <Calendar className="h-5 w-5 shrink-0 mt-0.5" />
+                                            <div className="text-sm">
+                                                <p className="font-semibold">Subscription Duration</p>
+                                                <p className="mt-1 opacity-90">
+                                                    Starts <strong>{new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</strong> • 
+                                                    Ends <strong>{formatEndDate(endDate)}</strong>
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-                                    Your subscription is expected to end on <strong>{formatEndDate(endDate)}</strong>.
-                                </p>
-                            </section>
-
-                            {/* Start date */}
-                            <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="start-heading">
-                                <h2 id="start-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
-                                    <Calendar className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
-                                    Select start date
-                                </h2>
-                                <input
-                                    id="start-date"
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    min={new Date().toISOString().slice(0, 10)}
-                                    className="w-full rounded-xl border-2 border-gray-200 bg-gray-50/50 px-4 py-3 text-sm font-medium text-gray-900 transition-colors focus:border-[var(--theme-primary-1)] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)]/20"
-                                />
                             </section>
 
                             {/* Address */}
                             <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="address-heading">
                                 <h2 id="address-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
                                     <MapPin className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
-                                    Select address
+                                    3. Delivery Address
                                 </h2>
                                 {addresses.length > 0 ? (
                                     <div className="space-y-2">
@@ -427,11 +544,16 @@ export default function Subscription({ planId }: SubscriptionPageProps) {
                                     </h2>
                                     <div className="flex gap-3 rounded-xl border border-gray-100 bg-[var(--theme-primary-1)]/5 p-4 sm:p-4">
                                         <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white sm:h-16 sm:w-16">
-                                            <img src={selectedPlan.image} alt="" className="h-full w-full object-contain p-1" />
+                                            <img 
+                                                src={selectedItem?.product_image ? `/storage/${selectedItem.product_image}` : '/images/dairy-products.png'} 
+                                                alt={selectedItem?.product_name} 
+                                                className="h-full w-full object-contain p-1" 
+                                            />
                                         </span>
                                         <div className="min-w-0 flex-1">
-                                            <p className="font-semibold text-gray-900 sm:text-base">{selectedPlan.name}</p>
-                                            <p className="mt-0.5 text-sm font-semibold text-[var(--theme-primary-1)]">₹{selectedPlan.perUnit}/unit</p>
+                                            <p className="font-semibold text-gray-900 sm:text-base">{currentPlan.name}</p>
+                                            <p className="text-xs text-gray-600">{selectedItem?.product_name}</p>
+                                            <p className="mt-0.5 text-sm font-semibold text-[var(--theme-primary-1)]">₹{Math.round(selectedItem?.per_unit_price || 0)}/unit</p>
                                             {!showAddInstruction ? (
                                                 <button
                                                     type="button"

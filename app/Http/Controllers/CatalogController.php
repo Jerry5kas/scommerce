@@ -32,11 +32,14 @@ class CatalogController extends Controller
 
         $zone = $this->getUserZone($request);
         if ($zone === null) {
-            $zones = $this->locationService->getServiceableZones();
-
-            return Inertia::render('location/select', [
-                'zones' => $zones,
-                'message' => 'Please select a delivery location to view products.',
+            // Return view with empty data instead of redirecting
+            return Inertia::render('catalog/home', [
+                'vertical' => $vertical,
+                'verticalOptions' => BusinessVertical::options(),
+                'zone' => null,
+                'banners' => collect([]),
+                'categories' => collect([]),
+                'featuredProducts' => collect([]),
             ]);
         }
 

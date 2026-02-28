@@ -10,7 +10,7 @@ class SetLocationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool) $this->user();
+        return true;
     }
 
     /**

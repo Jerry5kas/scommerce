@@ -1,10 +1,10 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { product as productRoute } from '@/routes/catalog';
 import { ChevronLeft, ChevronRight, ExternalLink, Heart, MapPin, MapPinned, Mail, Package, Phone, Play, ShoppingCart, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import HeroBanner from '@/components/user/HeroBanner';
 import ProductCardMedia, { type MediaItem } from '@/components/user/ProductCardMedia';
 import UserLayout from '@/layouts/UserLayout';
+import { product as productRoute } from '@/routes/catalog';
 
 interface ProductVariant {
     id: number;
@@ -56,26 +56,6 @@ const carouselSlides: CarouselSlide[] = [
 
 const SUBSCRIPTION_FEATURES = ['Daily Morning delivery', 'Free delivery', 'Pause/Resume anytime', 'Vacation hold', 'WhatsApp alerts'];
 
-const SUBSCRIPTION_PLANS = [
-    {
-        name: '15-Pack Plan',
-        '480ml': { units: 15, total: '₹630', perUnit: '₹42/Unit(s)' },
-        '1L': { units: 15, total: '₹1,260', perUnit: '₹84/Unit(s)' },
-    },
-    {
-        name: '30-Packs Plan',
-        discount: '49% OFF',
-        '480ml': { units: 30, total: '₹1,230', perUnit: '₹41/Unit(s)' },
-        '1L': { units: 30, total: '₹2,430', perUnit: '₹81/Unit(s)' },
-    },
-    {
-        name: '90-Packs Plan',
-        discount: '50% OFF',
-        '480ml': { units: 90, total: '₹3,600', perUnit: '₹40/Unit(s)' },
-        '1L': { units: 90, total: '₹7,200', perUnit: '₹80/Unit(s)' },
-    },
-];
-
 const TESTIMONIALS = [
     { quote: 'Milk tastes just like village milk. Delivery is always on time.', name: 'Rashid', location: 'Malappuram', recent: '2 days ago' },
     { quote: 'Fresh curd every morning. My family loves it!', name: 'Priya', location: 'Manjeri', recent: '1 week ago' },
@@ -120,13 +100,40 @@ interface Category {
     image: string | null;
 }
 
+interface SubscriptionPlanItem {
+    id: number;
+    product_id: number;
+    product_name: string;
+    units: number;
+    total_price: number;
+    per_unit_price: number;
+}
+
+interface SubscriptionPlanFeature {
+    id: number;
+    title: string;
+    highlight: boolean;
+}
+
+interface SubscriptionPlan {
+    id: number;
+    name: string;
+    description: string;
+    frequency_type: string;
+    discount_type: string;
+    discount_value: number;
+    items: SubscriptionPlanItem[];
+    features: SubscriptionPlanFeature[];
+}
+
 interface HomeProps {
     banners: Banner[];
     categories: Category[];
     products: ProductItem[];
+    subscriptionPlans: SubscriptionPlan[];
 }
 
-export default function Home({ banners, categories, products = [] }: HomeProps) {
+export default function Home({ banners, categories, products = [], subscriptionPlans = [] }: HomeProps) {
     // Old carousel state - removed (using HeroBanner component now)
     // const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -151,6 +158,26 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
     const categorySliderRef = useRef<HTMLDivElement>(null);
     const storiesSliderRef = useRef<HTMLDivElement>(null);
     const testimonialsSliderRef = useRef<HTMLDivElement>(null);
+
+    // Manage sub-variant selection (e.g., 480ml vs 1L)
+    // We'll filter by a search string on product_name
+    const [subVariantSearch, setSubVariantSearch] = useState('480ml');
+
+    const handleSubVariantChange = (variant: '480ml' | '1L') => {
+        setSubVariantSearch(variant);
+    };
+
+    // Helper to get the correct item for a plan based on the subVariantSearch
+    const getPlanItem = (plan: SubscriptionPlan) => {
+        // Try to find an item that contains the search string (case-insensitive)
+        return plan.items.find(i => i.product_name.toLowerCase().includes(subVariantSearch.toLowerCase())) 
+            || plan.items[0]; // Fallback to first item if not found
+    };
+
+    // Helper to get unique product names across all items to show tabs
+    // Assuming all plans have similar product structures, we pick unique "variants" from the first plan
+    // In a real app, you might want to fetch available variants separately or compute from all plans
+    const availableVariants = ['480ml', '1L']; // Hardcoded for now based on requirement, could be dynamic
 
     const toggleProductWishlist = (id: number) => {
         if (!auth?.user) {
@@ -1467,13 +1494,13 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
 
                     {/* Variant tabs */}
                     <div className="mb-8 flex justify-center gap-2">
-                        {(['480ml', '1L'] as const).map((v) => (
+                        {availableVariants.map((v) => (
                             <button
                                 key={v}
                                 type="button"
-                                onClick={() => setSubVariant(v)}
+                                onClick={() => handleSubVariantChange(v as '480ml' | '1L')}
                                 className={`rounded-lg border-2 px-5 py-2.5 text-sm font-semibold transition-all sm:px-6 sm:py-3 sm:text-base ${
-                                    subVariant === v
+                                    subVariantSearch === v
                                         ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)] text-white'
                                         : 'border-gray-300 bg-white text-gray-700 hover:border-[var(--theme-primary-1)] hover:text-[var(--theme-primary-1)]'
                                 }`}
@@ -1484,44 +1511,51 @@ export default function Home({ banners, categories, products = [] }: HomeProps) 
                     </div>
 
                     <div className="grid gap-5 sm:grid-cols-3 sm:gap-6">
-                        {SUBSCRIPTION_PLANS.map((plan) => {
-                            const variant = plan[subVariant];
+                        {subscriptionPlans.map((plan) => {
+                            const item = getPlanItem(plan);
                             return (
                                 <div
-                                    key={plan.name}
+                                    key={plan.id}
                                     className="flex flex-col rounded-xl border-2 border-[var(--theme-primary-1)] bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6"
                                 >
                                     <div className="mb-3 flex items-start justify-between gap-2">
                                         <h3 className="text-lg font-bold text-gray-900 sm:text-xl">
-                                            {plan.name} {subVariant}
+                                            {plan.name}
                                         </h3>
-                                        {plan.discount && (
+                                        {plan.discount_type !== 'none' && plan.discount_value > 0 && (
                                             <span className="shrink-0 rounded bg-[var(--theme-primary-1)] px-2 py-0.5 text-xs font-bold text-white">
-                                                {plan.discount}
+                                                {plan.discount_type === 'percentage' 
+                                                    ? `${Math.round(plan.discount_value)}% OFF` 
+                                                    : `₹${Math.round(plan.discount_value)} OFF`}
                                             </span>
                                         )}
                                     </div>
-                                    <p className="mb-2 text-sm text-gray-600">{variant.units} Unit(s)</p>
-                                    <p className="mb-1 text-xl font-bold text-[var(--theme-primary-1)] sm:text-2xl">{variant.total}</p>
-                                    <p className="mb-3 text-sm font-medium text-gray-700">{variant.perUnit}</p>
+                                    {item && (
+                                        <>
+                                            <p className="mb-2 text-sm text-gray-600">{item.product_name}</p>
+                                            <p className="mb-2 text-sm text-gray-600">{item.units} Unit(s)</p>
+                                            <p className="mb-1 text-xl font-bold text-[var(--theme-primary-1)] sm:text-2xl">₹{Math.round(item.total_price)}</p>
+                                            <p className="mb-3 text-sm font-medium text-gray-700">₹{Math.round(item.per_unit_price)}/Unit(s)</p>
+                                        </>
+                                    )}
                                     <ul className="mb-4 space-y-1.5 border-t border-gray-100 pt-3" role="list">
-                                        {SUBSCRIPTION_FEATURES.map((feature) => (
-                                            <li key={feature} className="flex items-center gap-2 text-sm text-gray-700">
-                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--theme-secondary)] text-[var(--theme-primary-1)]">
+                                        {plan.features.map((feature) => (
+                                            <li key={feature.id} className="flex items-center gap-2 text-sm text-gray-700">
+                                                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${feature.highlight ? 'bg-[var(--theme-secondary)] text-[var(--theme-primary-1)]' : 'bg-gray-100 text-gray-500'}`}>
                                                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                     </svg>
                                                 </span>
-                                                <span>{feature}</span>
+                                                <span>{feature.title}</span>
                                             </li>
                                         ))}
                                     </ul>
-                                    <a
-                                        href="/login"
+                                    <Link
+                                        href={`/subscription?plan=${plan.id}`}
                                         className="mt-auto rounded-lg bg-[var(--theme-primary-1)] px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] sm:py-3 sm:text-base"
                                     >
                                         Subscribe
-                                    </a>
+                                    </Link>
                                 </div>
                             );
                         })}
