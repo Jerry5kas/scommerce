@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Edit, Eye, Plus, Search, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
+import { handleImageFallbackError, toSafeImageUrl } from '@/lib/imageFallback';
 
 interface Banner {
     id: number;
@@ -64,13 +65,13 @@ export default function BannersIndex({ banners, filters, typeOptions }: Props) {
                 <div className="rounded-xl bg-white p-4 shadow-sm">
                     <form onSubmit={handleSearch} className="flex flex-wrap gap-4">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search banners..."
-                                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4"
+                                className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10"
                             />
                         </div>
                         <select
@@ -80,7 +81,9 @@ export default function BannersIndex({ banners, filters, typeOptions }: Props) {
                         >
                             <option value="">All Types</option>
                             {Object.entries(typeOptions).map(([value, label]) => (
-                                <option key={value} value={value}>{label}</option>
+                                <option key={value} value={value}>
+                                    {label}
+                                </option>
                             ))}
                         </select>
                         <button type="submit" className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white">
@@ -94,7 +97,12 @@ export default function BannersIndex({ banners, filters, typeOptions }: Props) {
                     {banners.data.map((banner) => (
                         <div key={banner.id} className="overflow-hidden rounded-xl bg-white shadow-sm">
                             <div className="aspect-video w-full overflow-hidden bg-gray-100">
-                                <img src={banner.image} alt={banner.name} className="h-full w-full object-cover" />
+                                <img
+                                    src={toSafeImageUrl(banner.image)}
+                                    alt={banner.name}
+                                    className="h-full w-full object-cover"
+                                    onError={handleImageFallbackError}
+                                />
                             </div>
                             <div className="p-4">
                                 <div className="flex items-start justify-between">
@@ -125,11 +133,8 @@ export default function BannersIndex({ banners, filters, typeOptions }: Props) {
                     ))}
                 </div>
 
-                {banners.data.length === 0 && (
-                    <div className="rounded-xl bg-white p-8 text-center text-gray-500 shadow-sm">No banners found</div>
-                )}
+                {banners.data.length === 0 && <div className="rounded-xl bg-white p-8 text-center text-gray-500 shadow-sm">No banners found</div>}
             </div>
         </AdminLayout>
     );
 }
-

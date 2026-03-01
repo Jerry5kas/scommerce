@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Plus, Pencil, Eye, Trash2, Power } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import { handleImageFallbackError, toSafeImageUrl } from '@/lib/imageFallback';
 
 interface CategoryData {
     id: number;
@@ -31,9 +32,7 @@ export default function AdminCategoriesIndex({ categories, verticalOptions, filt
         <AdminLayout title="Categories">
             <Head title="Categories - Admin" />
             <div className="space-y-4">
-                {flash?.message && (
-                    <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800">{flash.message}</div>
-                )}
+                {flash?.message && <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800">{flash.message}</div>}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-wrap items-center gap-2">
                         <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
@@ -61,13 +60,13 @@ export default function AdminCategoriesIndex({ categories, verticalOptions, filt
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Image</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Name</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Slug</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Vertical</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Products</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500">Actions</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vertical</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Products</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
@@ -80,21 +79,16 @@ export default function AdminCategoriesIndex({ categories, verticalOptions, filt
                             ) : (
                                 categories.map((cat) => (
                                     <tr key={cat.id}>
-                                        <td className="whitespace-nowrap px-4 py-3">
-                                            {cat.image ? (
-                                                <img
-                                                    src={cat.image}
-                                                    alt={cat.name}
-                                                    className="h-12 w-12 rounded-lg object-cover border border-gray-200"
-                                                    loading="lazy"
-                                                />
-                                            ) : (
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-gray-200 bg-gray-100 text-xs text-gray-400">
-                                                    No image
-                                                </div>
-                                            )}
+                                        <td className="px-4 py-3 whitespace-nowrap">
+                                            <img
+                                                src={toSafeImageUrl(cat.image)}
+                                                alt={cat.name}
+                                                className="h-12 w-12 rounded-lg border border-gray-200 object-cover"
+                                                loading="lazy"
+                                                onError={handleImageFallbackError}
+                                            />
                                         </td>
-                                        <td className="whitespace-nowrap px-4 py-3">
+                                        <td className="px-4 py-3 whitespace-nowrap">
                                             <Link
                                                 href={'/admin/categories/' + cat.id}
                                                 className="font-medium text-[var(--admin-dark-primary)] hover:underline"
@@ -102,26 +96,50 @@ export default function AdminCategoriesIndex({ categories, verticalOptions, filt
                                                 {cat.name}
                                             </Link>
                                         </td>
-                                        <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{cat.slug}</td>
-                                        <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{verticalOptions[cat.vertical] ?? cat.vertical}</td>
-                                        <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">{cat.products_count}</td>
-                                        <td className="whitespace-nowrap px-4 py-3">
+                                        <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-600">{cat.slug}</td>
+                                        <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-600">
+                                            {verticalOptions[cat.vertical] ?? cat.vertical}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-600">{cat.products_count}</td>
+                                        <td className="px-4 py-3 whitespace-nowrap">
                                             <span className={cat.is_active ? 'text-green-600' : 'text-gray-400'}>
                                                 {cat.is_active ? 'Active' : 'Inactive'}
                                             </span>
                                         </td>
-                                        <td className="whitespace-nowrap px-4 py-3 text-right">
+                                        <td className="px-4 py-3 text-right whitespace-nowrap">
                                             <div className="flex justify-end gap-1">
-                                                <Link href={'/admin/categories/' + cat.id} className="rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" title="View">
+                                                <Link
+                                                    href={'/admin/categories/' + cat.id}
+                                                    className="rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                                    title="View"
+                                                >
                                                     <Eye className="h-4 w-4" />
                                                 </Link>
-                                                <Link href={'/admin/categories/' + cat.id + '/edit'} className="rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" title="Edit">
+                                                <Link
+                                                    href={'/admin/categories/' + cat.id + '/edit'}
+                                                    className="rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                                    title="Edit"
+                                                >
                                                     <Pencil className="h-4 w-4" />
                                                 </Link>
-                                                <Link href={'/admin/categories/' + cat.id + '/toggle-status'} method="post" as="button" className="rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700" title={cat.is_active ? 'Disable' : 'Enable'}>
+                                                <Link
+                                                    href={'/admin/categories/' + cat.id + '/toggle-status'}
+                                                    method="post"
+                                                    as="button"
+                                                    className="rounded p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                                    title={cat.is_active ? 'Disable' : 'Enable'}
+                                                >
                                                     <Power className="h-4 w-4" />
                                                 </Link>
-                                                <Link href={'/admin/categories/' + cat.id} method="delete" as="button" className="rounded p-2 text-red-500 hover:bg-red-50" title="Delete" preserveScroll onBefore={() => (confirm('Delete this category?') ? undefined : false)}>
+                                                <Link
+                                                    href={'/admin/categories/' + cat.id}
+                                                    method="delete"
+                                                    as="button"
+                                                    className="rounded p-2 text-red-500 hover:bg-red-50"
+                                                    title="Delete"
+                                                    preserveScroll
+                                                    onBefore={() => (confirm('Delete this category?') ? undefined : false)}
+                                                >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Link>
                                             </div>

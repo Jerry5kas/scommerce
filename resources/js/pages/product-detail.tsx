@@ -3,6 +3,7 @@ import { Heart, Star, ChevronDown, ChevronRight, Clock, Tag, ShoppingBag, CheckC
 import { useState } from 'react';
 import ProductCardMedia, { type MediaItem } from '@/components/user/ProductCardMedia';
 import UserLayout from '@/layouts/UserLayout';
+import { FALLBACK_IMAGE_URL, handleImageFallbackError } from '@/lib/imageFallback';
 import { product as productRoute } from '@/routes/catalog';
 
 interface Product {
@@ -120,7 +121,7 @@ const WHY_SHOP = [
 ];
 
 export default function ProductDetail({ product, price, relatedProducts }: ProductPageProps) {
-    const fallbackImage = '/images/icons/milk-bottle.png';
+    const fallbackImage = FALLBACK_IMAGE_URL;
 
     const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
     const [mediaIndex, setMediaIndex] = useState(0);
@@ -209,10 +210,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                                         alt={product.name}
                                         className="h-full w-full object-cover"
                                         loading="eager"
-                                        onError={(event) => {
-                                            event.currentTarget.onerror = null;
-                                            event.currentTarget.src = fallbackImage;
-                                        }}
+                                        onError={handleImageFallbackError}
                                     />
                                 ) : mediaList.length > 0 && mediaList[mediaIndex] ? (
                                     <video src={mediaList[mediaIndex].url} className="h-full w-full object-cover" muted loop playsInline autoPlay />
@@ -249,10 +247,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                                                     src={item.url}
                                                     alt=""
                                                     className="h-full w-full object-cover"
-                                                    onError={(event) => {
-                                                        event.currentTarget.onerror = null;
-                                                        event.currentTarget.src = fallbackImage;
-                                                    }}
+                                                    onError={handleImageFallbackError}
                                                 />
                                             ) : (
                                                 <video src={item.url} className="h-full w-full object-cover" muted playsInline />

@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Plus, Pencil, Eye, Trash2, Power, MapPin } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import { handleImageFallbackError, toSafeImageUrl } from '@/lib/imageFallback';
 
 interface CategoryRef {
     id: number;
@@ -43,19 +44,6 @@ interface AdminProductsIndexProps {
 
 export default function AdminProductsIndex({ products, zones, verticalOptions, filters }: AdminProductsIndexProps) {
     const { flash } = (usePage().props as { flash?: { message?: string } }) ?? {};
-    const fallbackImage = '/images/icons/milk-bottle.png';
-
-    const getSafeImageUrl = (url: string | null | undefined): string => {
-        if (!url) {
-            return fallbackImage;
-        }
-
-        if (url.startsWith('http') || url.startsWith('/')) {
-            return url;
-        }
-
-        return `/storage/${url}`;
-    };
 
     const applyFilters = (vertical: string, zoneId: number) => {
         const params = new URLSearchParams();
@@ -131,13 +119,10 @@ export default function AdminProductsIndex({ products, zones, verticalOptions, f
                                     <tr key={p.id}>
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             <img
-                                                src={getSafeImageUrl(p.image)}
+                                                src={toSafeImageUrl(p.image)}
                                                 alt={p.name}
                                                 className="h-12 w-12 rounded-lg border border-gray-200 object-cover"
-                                                onError={(event) => {
-                                                    event.currentTarget.onerror = null;
-                                                    event.currentTarget.src = fallbackImage;
-                                                }}
+                                                onError={handleImageFallbackError}
                                             />
                                         </td>
                                         <td className="px-4 py-3 whitespace-nowrap">

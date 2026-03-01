@@ -1,4 +1,4 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import {
     Package,
     Calendar,
@@ -12,7 +12,6 @@ import {
     Phone,
     User,
     FileText,
-    AlertCircle,
     RefreshCw,
     Loader2,
     Mail,
@@ -21,6 +20,7 @@ import {
 import { useState } from 'react';
 import type React from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
+import { handleImageFallbackError, toSafeImageUrl } from '@/lib/imageFallback';
 
 interface OrderItem {
     id: number;
@@ -123,14 +123,7 @@ const statusConfig: Record<string, { color: string; bgColor: string; icon: React
     cancelled: { color: 'text-red-800', bgColor: 'bg-red-100', icon: <XCircle className="h-4 w-4" /> },
 };
 
-export default function OrderShow({
-    order,
-    timeline,
-    availableStatuses,
-    statusOptions,
-    paymentStatusOptions,
-    drivers,
-}: OrderShowProps) {
+export default function OrderShow({ order, timeline, availableStatuses, statusOptions, paymentStatusOptions, drivers }: OrderShowProps) {
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showDriverModal, setShowDriverModal] = useState(false);
@@ -247,7 +240,9 @@ export default function OrderShow({
                         {/* Status Card */}
                         <div className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
                             <div className="flex flex-wrap items-center gap-3">
-                                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${config.bgColor} ${config.color}`}>
+                                <span
+                                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${config.bgColor} ${config.color}`}
+                                >
                                     {config.icon}
                                     {statusOptions[order.status]}
                                 </span>
@@ -257,9 +252,11 @@ export default function OrderShow({
                                         Subscription
                                     </span>
                                 )}
-                                <span className={`rounded-full px-3 py-1 text-sm font-medium ${
-                                    order.vertical === 'daily_fresh' ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
-                                }`}>
+                                <span
+                                    className={`rounded-full px-3 py-1 text-sm font-medium ${
+                                        order.vertical === 'daily_fresh' ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
+                                    }`}
+                                >
                                     {order.vertical === 'daily_fresh' ? 'Daily Fresh' : 'Society Fresh'}
                                 </span>
                             </div>
@@ -267,8 +264,8 @@ export default function OrderShow({
                             {/* Timeline */}
                             {order.status !== 'cancelled' && (
                                 <div className="mt-6 overflow-x-auto">
-                                    <div className="flex items-center justify-between min-w-[500px]">
-                                        {timeline.map((item, index) => (
+                                    <div className="flex min-w-[500px] items-center justify-between">
+                                        {timeline.map((item) => (
                                             <div key={item.status} className="flex flex-col items-center">
                                                 <div
                                                     className={`flex h-10 w-10 items-center justify-center rounded-full ${
@@ -281,12 +278,12 @@ export default function OrderShow({
                                                 >
                                                     {statusConfig[item.status]?.icon || <Clock className="h-4 w-4" />}
                                                 </div>
-                                                <p className={`mt-2 text-xs font-medium ${item.is_current ? 'text-[var(--theme-primary-1)]' : 'text-gray-600'}`}>
+                                                <p
+                                                    className={`mt-2 text-xs font-medium ${item.is_current ? 'text-[var(--theme-primary-1)]' : 'text-gray-600'}`}
+                                                >
                                                     {item.label}
                                                 </p>
-                                                {item.timestamp && (
-                                                    <p className="text-[10px] text-gray-400">{formatDate(item.timestamp)}</p>
-                                                )}
+                                                {item.timestamp && <p className="text-[10px] text-gray-400">{formatDate(item.timestamp)}</p>}
                                             </div>
                                         ))}
                                     </div>
@@ -296,12 +293,8 @@ export default function OrderShow({
                             {/* Cancellation Info */}
                             {order.status === 'cancelled' && (
                                 <div className="mt-4 rounded-lg bg-red-50 p-4">
-                                    <p className="text-sm font-medium text-red-800">
-                                        Cancelled on {formatDateTime(order.cancelled_at)}
-                                    </p>
-                                    {order.cancellation_reason && (
-                                        <p className="mt-1 text-sm text-red-600">Reason: {order.cancellation_reason}</p>
-                                    )}
+                                    <p className="text-sm font-medium text-red-800">Cancelled on {formatDateTime(order.cancelled_at)}</p>
+                                    {order.cancellation_reason && <p className="mt-1 text-sm text-red-600">Reason: {order.cancellation_reason}</p>}
                                 </div>
                             )}
                         </div>
@@ -317,9 +310,10 @@ export default function OrderShow({
                                     <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
                                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-100">
                                             <img
-                                                src={item.product_image || '/images/placeholder-product.png'}
+                                                src={toSafeImageUrl(item.product_image)}
                                                 alt={item.product_name}
                                                 className="h-full w-full object-contain p-1"
+                                                onError={handleImageFallbackError}
                                             />
                                         </div>
                                         <div className="min-w-0 flex-1">
@@ -336,9 +330,7 @@ export default function OrderShow({
                                                 ₹{parseFloat(item.price).toFixed(2)} × {item.quantity}
                                             </p>
                                         </div>
-                                        <p className="text-sm font-semibold text-gray-900">
-                                            ₹{parseFloat(item.subtotal).toFixed(2)}
-                                        </p>
+                                        <p className="text-sm font-semibold text-gray-900">₹{parseFloat(item.subtotal).toFixed(2)}</p>
                                     </li>
                                 ))}
                             </ul>
@@ -389,7 +381,12 @@ export default function OrderShow({
                                 <p className="font-semibold text-gray-900">{order.address.label}</p>
                                 <p className="text-gray-600">
                                     {order.address.address_line_1}
-                                    {order.address.address_line_2 && <><br />{order.address.address_line_2}</>}
+                                    {order.address.address_line_2 && (
+                                        <>
+                                            <br />
+                                            {order.address.address_line_2}
+                                        </>
+                                    )}
                                 </p>
                                 <p className="text-gray-600">
                                     {order.address.city}, {order.address.state} – {order.address.pincode}
@@ -419,16 +416,14 @@ export default function OrderShow({
                                         <Truck className="h-4 w-4 text-[var(--theme-primary-1)]" />
                                         {order.driver.user.name}
                                     </p>
-                                    {order.driver.user.phone && (
-                                        <p className="mt-1 text-sm text-gray-600">{order.driver.user.phone}</p>
-                                    )}
+                                    {order.driver.user.phone && <p className="mt-1 text-sm text-gray-600">{order.driver.user.phone}</p>}
                                 </div>
                             )}
 
                             {/* Instructions */}
                             {order.delivery_instructions && (
                                 <div className="mt-4">
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Instructions</p>
+                                    <p className="text-xs font-semibold tracking-wider text-gray-500 uppercase">Instructions</p>
                                     <p className="mt-1 text-sm text-gray-600">{order.delivery_instructions}</p>
                                 </div>
                             )}
@@ -520,7 +515,9 @@ export default function OrderShow({
                                 >
                                     <option value="">Select status...</option>
                                     {availableStatuses.map((status) => (
-                                        <option key={status} value={status}>{statusOptions[status]}</option>
+                                        <option key={status} value={status}>
+                                            {statusOptions[status]}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -544,7 +541,7 @@ export default function OrderShow({
                                 <button
                                     type="submit"
                                     disabled={!statusForm.data.status || statusForm.processing}
-                                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--theme-primary-1-dark)] disabled:opacity-50"
+                                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--theme-primary-1-dark)] disabled:opacity-50"
                                 >
                                     {statusForm.processing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update'}
                                 </button>
@@ -569,7 +566,9 @@ export default function OrderShow({
                                 >
                                     <option value="">Select driver...</option>
                                     {drivers.map((driver) => (
-                                        <option key={driver.id} value={driver.id}>{driver.user.name}</option>
+                                        <option key={driver.id} value={driver.id}>
+                                            {driver.user.name}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -584,7 +583,7 @@ export default function OrderShow({
                                 <button
                                     type="submit"
                                     disabled={!driverForm.data.driver_id || driverForm.processing}
-                                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--theme-primary-1-dark)] disabled:opacity-50"
+                                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--theme-primary-1-dark)] disabled:opacity-50"
                                 >
                                     {driverForm.processing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assign'}
                                 </button>
@@ -599,9 +598,7 @@ export default function OrderShow({
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
                         <h3 className="text-lg font-bold text-gray-900">Cancel Order</h3>
-                        <p className="mt-2 text-sm text-gray-600">
-                            Are you sure you want to cancel this order? This action cannot be undone.
-                        </p>
+                        <p className="mt-2 text-sm text-gray-600">Are you sure you want to cancel this order? This action cannot be undone.</p>
                         <form onSubmit={handleCancel} className="mt-4">
                             <label className="block text-sm font-medium text-gray-700">Reason</label>
                             <textarea
@@ -622,7 +619,7 @@ export default function OrderShow({
                                 <button
                                     type="submit"
                                     disabled={cancelForm.processing}
-                                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                                 >
                                     {cancelForm.processing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Cancel Order'}
                                 </button>
@@ -634,4 +631,3 @@ export default function OrderShow({
         </AdminLayout>
     );
 }
-

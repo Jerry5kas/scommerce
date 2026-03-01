@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Pencil, Package } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import { handleImageFallbackError, toSafeImageUrl } from '@/lib/imageFallback';
 
 interface ProductSummary {
     id: number;
@@ -64,16 +65,15 @@ export default function AdminCategoriesShow({ category, verticalOptions }: Admin
                 {/* ── Details card ───────────────────────────────────── */}
                 <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                     {/* Category image */}
-                    {category.image && (
-                        <div className="mb-5">
-                            <div className="text-sm font-medium text-gray-500">Image</div>
-                            <img
-                                src={category.image}
-                                alt={category.name}
-                                className="mt-1 h-32 w-32 rounded-lg border border-gray-200 object-cover"
-                            />
-                        </div>
-                    )}
+                    <div className="mb-5">
+                        <div className="text-sm font-medium text-gray-500">Image</div>
+                        <img
+                            src={toSafeImageUrl(category.image)}
+                            alt={category.name}
+                            className="mt-1 h-32 w-32 rounded-lg border border-gray-200 object-cover"
+                            onError={handleImageFallbackError}
+                        />
+                    </div>
 
                     <dl className="grid gap-3 sm:grid-cols-2">
                         <div>
@@ -113,7 +113,7 @@ export default function AdminCategoriesShow({ category, verticalOptions }: Admin
                         {category.description && (
                             <div className="sm:col-span-2">
                                 <dt className="text-sm font-medium text-gray-500">Description</dt>
-                                <dd className="mt-0.5 text-sm text-gray-900 whitespace-pre-wrap">{category.description}</dd>
+                                <dd className="mt-0.5 text-sm whitespace-pre-wrap text-gray-900">{category.description}</dd>
                             </div>
                         )}
                     </dl>
@@ -126,39 +126,32 @@ export default function AdminCategoriesShow({ category, verticalOptions }: Admin
                             <h3 className="flex items-center gap-2 text-sm font-medium text-gray-900">
                                 <Package className="h-4 w-4 text-gray-400" />
                                 Products in this category
-                                <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-                                    {category.products.length}
-                                </span>
+                                <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{category.products.length}</span>
                             </h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Image</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Name</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Price</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Variants</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Status</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Variants</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white">
                                     {category.products.map((p) => (
                                         <tr key={p.id}>
-                                            <td className="whitespace-nowrap px-4 py-3">
-                                                {p.image ? (
-                                                    <img
-                                                        src={p.image}
-                                                        alt={p.name}
-                                                        className="h-10 w-10 rounded-lg border border-gray-200 object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-gray-200 text-xs text-gray-400">
-                                                        —
-                                                    </div>
-                                                )}
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <img
+                                                    src={toSafeImageUrl(p.image)}
+                                                    alt={p.name}
+                                                    className="h-10 w-10 rounded-lg border border-gray-200 object-cover"
+                                                    onError={handleImageFallbackError}
+                                                />
                                             </td>
-                                            <td className="whitespace-nowrap px-4 py-3">
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 <Link
                                                     href={`/admin/products/${p.id}`}
                                                     className="font-medium text-[var(--admin-dark-primary)] hover:underline"
@@ -166,10 +159,10 @@ export default function AdminCategoriesShow({ category, verticalOptions }: Admin
                                                     {p.name}
                                                 </Link>
                                             </td>
-                                            <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-800">
+                                            <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-800">
                                                 ₹{Number(p.price).toLocaleString('en-IN')}
                                             </td>
-                                            <td className="whitespace-nowrap px-4 py-3">
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 {p.variants_count > 0 ? (
                                                     <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
                                                         {p.variants_count}
@@ -178,7 +171,7 @@ export default function AdminCategoriesShow({ category, verticalOptions }: Admin
                                                     <span className="text-xs text-gray-400">—</span>
                                                 )}
                                             </td>
-                                            <td className="whitespace-nowrap px-4 py-3">
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 <span
                                                     className={
                                                         p.is_active

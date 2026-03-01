@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { ChevronLeft, MapPin, Calendar, Clock, Plus, Minus, Tag, Repeat, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import UserLayout from '@/layouts/UserLayout';
+import { FALLBACK_IMAGE_URL, handleImageFallbackError } from '@/lib/imageFallback';
 
 const DELIVERY_SLOTS = [
     { id: 'morning', label: 'Morning', time: '6 AM – 9 AM' },
@@ -92,7 +93,7 @@ interface SubscriptionPageProps {
 }
 
 export default function Subscription({ subscriptionPlans = [], selectedPlanId, userAddresses = [] }: SubscriptionPageProps) {
-    const fallbackImage = '/images/icons/milk-bottle.png';
+    const fallbackImage = FALLBACK_IMAGE_URL;
 
     const getSafeImageUrl = (url: string | null | undefined): string => {
         if (!url) {
@@ -289,10 +290,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                         src={getSafeImageUrl(item.product_image)}
                                                         alt={item.product_name}
                                                         className="h-full w-full object-contain"
-                                                        onError={(event) => {
-                                                            event.currentTarget.onerror = null;
-                                                            event.currentTarget.src = fallbackImage;
-                                                        }}
+                                                        onError={handleImageFallbackError}
                                                     />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
@@ -593,10 +591,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 src={getSafeImageUrl(selectedItem?.product_image)}
                                                 alt={selectedItem?.product_name}
                                                 className="h-full w-full object-contain p-1"
-                                                onError={(event) => {
-                                                    event.currentTarget.onerror = null;
-                                                    event.currentTarget.src = fallbackImage;
-                                                }}
+                                                onError={handleImageFallbackError}
                                             />
                                         </span>
                                         <div className="min-w-0 flex-1">

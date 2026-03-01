@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Pencil, Package } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import { handleImageFallbackError, toSafeImageUrl } from '@/lib/imageFallback';
 
 interface CategoryRef {
     id: number;
@@ -36,13 +37,19 @@ export default function AdminCollectionsShow({ collection }: AdminCollectionsSho
         <AdminLayout title={collection.name}>
             <Head title={collection.name + ' - Admin'} />
             <div className="space-y-4">
-                <Link href="/admin/collections" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--admin-dark-primary)]">
+                <Link
+                    href="/admin/collections"
+                    className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--admin-dark-primary)]"
+                >
                     <ArrowLeft className="h-4 w-4" />
                     Back to collections
                 </Link>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <h2 className="text-lg font-semibold text-gray-900">{collection.name}</h2>
-                    <Link href={'/admin/collections/' + collection.id + '/edit'} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <Link
+                        href={'/admin/collections/' + collection.id + '/edit'}
+                        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
                         <Pencil className="h-4 w-4" />
                         Edit
                     </Link>
@@ -76,7 +83,12 @@ export default function AdminCollectionsShow({ collection }: AdminCollectionsSho
                         <div className="mt-4">
                             <dt className="text-sm font-medium text-gray-500">Banner</dt>
                             <dd className="mt-1">
-                                <img src={collection.banner_image} alt="" className="max-h-32 rounded-lg object-cover" />
+                                <img
+                                    src={toSafeImageUrl(collection.banner_image)}
+                                    alt=""
+                                    className="max-h-32 rounded-lg object-cover"
+                                    onError={handleImageFallbackError}
+                                />
                             </dd>
                         </div>
                     )}
@@ -89,7 +101,10 @@ export default function AdminCollectionsShow({ collection }: AdminCollectionsSho
                         <ul className="divide-y divide-gray-200">
                             {collection.products.map((p) => (
                                 <li key={p.id} className="flex items-center justify-between px-4 py-3">
-                                    <Link href={'/admin/products/' + p.id} className="flex items-center gap-2 font-medium text-[var(--admin-dark-primary)] hover:underline">
+                                    <Link
+                                        href={'/admin/products/' + p.id}
+                                        className="flex items-center gap-2 font-medium text-[var(--admin-dark-primary)] hover:underline"
+                                    >
                                         <Package className="h-4 w-4 text-gray-400" />
                                         {p.name}
                                     </Link>

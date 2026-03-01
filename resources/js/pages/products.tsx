@@ -3,6 +3,7 @@ import { Heart, ChevronDown, Package } from 'lucide-react';
 import { useState } from 'react';
 import ProductCardMedia, { getMediaList } from '@/components/user/ProductCardMedia';
 import UserLayout from '@/layouts/UserLayout';
+import { FALLBACK_IMAGE_URL, handleImageFallbackError } from '@/lib/imageFallback';
 import { product as productRoute } from '@/routes/catalog';
 import type { SharedData } from '@/types';
 
@@ -38,7 +39,7 @@ interface PageProps extends SharedData {
 export default function Products() {
     const { categories, products } = usePage<PageProps>().props;
 
-    const fallbackImage = '/images/icons/milk-bottle.png';
+    const fallbackImage = FALLBACK_IMAGE_URL;
 
     const isSupportedImageUrl = (url: string): boolean => {
         const cleanUrl = url.split('?')[0]?.split('#')[0]?.toLowerCase() ?? '';
@@ -149,10 +150,7 @@ export default function Products() {
                                                     alt=""
                                                     className="h-full w-full object-cover"
                                                     loading="lazy"
-                                                    onError={(event) => {
-                                                        event.currentTarget.onerror = null;
-                                                        event.currentTarget.src = fallbackImage;
-                                                    }}
+                                                    onError={handleImageFallbackError}
                                                 />
                                             </span>
                                             <span className="min-w-0 flex-1 truncate">{cat.name}</span>
@@ -189,10 +187,7 @@ export default function Products() {
                                                 src={categoriesWithCount.find((c) => c.slug === selectedCategory)?.image ?? fallbackImage}
                                                 alt=""
                                                 className="h-full w-full object-cover"
-                                                onError={(event) => {
-                                                    event.currentTarget.onerror = null;
-                                                    event.currentTarget.src = fallbackImage;
-                                                }}
+                                                onError={handleImageFallbackError}
                                             />
                                         </span>
                                         <span className="truncate">{currentCategoryLabel}</span>
@@ -226,10 +221,7 @@ export default function Products() {
                                                         alt=""
                                                         className="h-full w-full object-cover"
                                                         loading="lazy"
-                                                        onError={(event) => {
-                                                            event.currentTarget.onerror = null;
-                                                            event.currentTarget.src = fallbackImage;
-                                                        }}
+                                                        onError={handleImageFallbackError}
                                                     />
                                                 </span>
                                                 <span className="min-w-0 flex-1 truncate">{cat.name}</span>

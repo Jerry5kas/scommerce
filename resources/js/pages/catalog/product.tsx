@@ -1,6 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
+import { FALLBACK_IMAGE_URL, handleImageFallbackError } from '@/lib/imageFallback';
 import { product as productRoute } from '@/routes/catalog';
 
 interface Product {
@@ -60,7 +61,7 @@ export default function ProductPage({
     upsellProducts = [],
     isFreeSampleEligible,
 }: ProductPageProps) {
-    const fallbackImage = '/images/icons/milk-bottle.png';
+    const fallbackImage = FALLBACK_IMAGE_URL;
 
     const getSafeUrl = (url: string | null | undefined): string => {
         if (!url) return fallbackImage;
@@ -108,10 +109,7 @@ export default function ProductPage({
                                     src={selectedImage || fallbackImage}
                                     alt={product.name}
                                     className="h-96 w-full rounded-lg object-cover"
-                                    onError={(event) => {
-                                        event.currentTarget.onerror = null;
-                                        event.currentTarget.src = fallbackImage;
-                                    }}
+                                    onError={handleImageFallbackError}
                                 />
                             </div>
                             {images.length > 1 && (
@@ -128,10 +126,7 @@ export default function ProductPage({
                                                 src={img}
                                                 alt={`${product.name} ${idx + 1}`}
                                                 className="h-full w-full rounded object-cover"
-                                                onError={(event) => {
-                                                    event.currentTarget.onerror = null;
-                                                    event.currentTarget.src = fallbackImage;
-                                                }}
+                                                onError={handleImageFallbackError}
                                             />
                                         </button>
                                     ))}
@@ -248,10 +243,7 @@ export default function ProductPage({
                                             src={getSafeUrl(item.image)}
                                             alt={item.name}
                                             className="h-48 w-full object-cover"
-                                            onError={(event) => {
-                                                event.currentTarget.onerror = null;
-                                                event.currentTarget.src = fallbackImage;
-                                            }}
+                                            onError={handleImageFallbackError}
                                         />
                                         <div className="p-4">
                                             <h3 className="mb-2 text-sm font-medium">{item.name}</h3>
@@ -278,10 +270,7 @@ export default function ProductPage({
                                             src={getSafeUrl(item.image)}
                                             alt={item.name}
                                             className="h-48 w-full object-cover"
-                                            onError={(event) => {
-                                                event.currentTarget.onerror = null;
-                                                event.currentTarget.src = fallbackImage;
-                                            }}
+                                            onError={handleImageFallbackError}
                                         />
                                         <div className="p-4">
                                             <h3 className="mb-2 text-sm font-medium">{item.name}</h3>
@@ -308,10 +297,7 @@ export default function ProductPage({
                                             src={getSafeUrl(item.image)}
                                             alt={item.name}
                                             className="h-48 w-full object-cover"
-                                            onError={(event) => {
-                                                event.currentTarget.onerror = null;
-                                                event.currentTarget.src = fallbackImage;
-                                            }}
+                                            onError={handleImageFallbackError}
                                         />
                                         <div className="p-4">
                                             <h3 className="mb-2 text-sm font-medium">{item.name}</h3>

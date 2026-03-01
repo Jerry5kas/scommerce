@@ -1,7 +1,8 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Edit2, MapPin, Package, Pause, Play, Trash2, User } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Edit2, MapPin, Package, Pause, Play, Trash2, User } from 'lucide-react';
 import { useState } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
+import { handleImageFallbackError, toSafeImageUrl } from '@/lib/imageFallback';
 
 interface SubscriptionPlan {
     id: number;
@@ -128,9 +129,7 @@ export default function AdminSubscriptionShow({
     };
 
     const total = subscription.items.reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0);
-    const discount = subscription.plan.discount_percent
-        ? (total * parseFloat(subscription.plan.discount_percent)) / 100
-        : 0;
+    const discount = subscription.plan.discount_percent ? (total * parseFloat(subscription.plan.discount_percent)) / 100 : 0;
 
     return (
         <AdminLayout title={`Subscription #${subscription.id}`}>
@@ -139,20 +138,13 @@ export default function AdminSubscriptionShow({
                 {/* Header */}
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <Link
-                            href="/admin/subscriptions"
-                            className="mb-2 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
-                        >
+                        <Link href="/admin/subscriptions" className="mb-2 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900">
                             <ArrowLeft className="h-4 w-4" />
                             Back to Subscriptions
                         </Link>
-                        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
-                            Subscription #{subscription.id}
-                        </h1>
+                        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Subscription #{subscription.id}</h1>
                         <div className="mt-2 flex flex-wrap items-center gap-3">
-                            <span
-                                className={`inline-flex rounded-full border px-3 py-1 text-sm font-medium ${statusColors[subscription.status]}`}
-                            >
+                            <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-medium ${statusColors[subscription.status]}`}>
                                 {statusOptions[subscription.status]}
                             </span>
                             <span className="text-sm text-gray-600">{subscription.plan.name}</span>
@@ -208,20 +200,17 @@ export default function AdminSubscriptionShow({
                             <div className="space-y-3">
                                 {subscription.items.map((item) => (
                                     <div key={item.id} className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
-                                        {item.product.image && (
-                                            <img
-                                                src={item.product.image}
-                                                alt={item.product.name}
-                                                className="h-12 w-12 rounded-lg object-cover"
-                                            />
-                                        )}
+                                        <img
+                                            src={toSafeImageUrl(item.product.image)}
+                                            alt={item.product.name}
+                                            className="h-12 w-12 rounded-lg object-cover"
+                                            onError={handleImageFallbackError}
+                                        />
                                         <div className="min-w-0 flex-1">
                                             <p className="font-medium text-gray-900">{item.product.name}</p>
                                             <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                                         </div>
-                                        <p className="font-semibold text-gray-900">
-                                            ₹{(parseFloat(item.price) * item.quantity).toFixed(2)}
-                                        </p>
+                                        <p className="font-semibold text-gray-900">₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -254,9 +243,7 @@ export default function AdminSubscriptionShow({
                                     <button
                                         onClick={() => setActiveSchedule('current')}
                                         className={`rounded-md px-3 py-1 text-sm font-medium ${
-                                            activeSchedule === 'current'
-                                                ? 'bg-white shadow'
-                                                : 'text-gray-600 hover:text-gray-900'
+                                            activeSchedule === 'current' ? 'bg-white shadow' : 'text-gray-600 hover:text-gray-900'
                                         }`}
                                     >
                                         {currentMonthSchedule.month_name}
@@ -264,9 +251,7 @@ export default function AdminSubscriptionShow({
                                     <button
                                         onClick={() => setActiveSchedule('next')}
                                         className={`rounded-md px-3 py-1 text-sm font-medium ${
-                                            activeSchedule === 'next'
-                                                ? 'bg-white shadow'
-                                                : 'text-gray-600 hover:text-gray-900'
+                                            activeSchedule === 'next' ? 'bg-white shadow' : 'text-gray-600 hover:text-gray-900'
                                         }`}
                                     >
                                         {nextMonthSchedule.month_name}
@@ -287,9 +272,7 @@ export default function AdminSubscriptionShow({
                                 {schedule.days.map((day) => (
                                     <div
                                         key={day.date}
-                                        className={`rounded-lg py-2 text-sm ${
-                                            day.is_today ? 'ring-2 ring-blue-500' : ''
-                                        } ${
+                                        className={`rounded-lg py-2 text-sm ${day.is_today ? 'ring-2 ring-blue-500' : ''} ${
                                             day.is_delivery
                                                 ? 'bg-green-100 font-semibold text-green-800'
                                                 : day.is_vacation
@@ -329,9 +312,7 @@ export default function AdminSubscriptionShow({
                             </h3>
                             <p className="font-medium text-gray-900">{subscription.user.name}</p>
                             <p className="text-sm text-gray-600">{subscription.user.phone}</p>
-                            {subscription.user.email && (
-                                <p className="text-sm text-gray-600">{subscription.user.email}</p>
-                            )}
+                            {subscription.user.email && <p className="text-sm text-gray-600">{subscription.user.email}</p>}
                             <Link
                                 href={`/admin/users/${subscription.user.id}`}
                                 className="mt-2 inline-block text-sm text-[var(--admin-dark-primary)] hover:underline"
@@ -347,17 +328,12 @@ export default function AdminSubscriptionShow({
                                 Delivery Address
                             </h3>
                             <p className="text-sm text-gray-700">{subscription.address.address_line_1}</p>
-                            {subscription.address.address_line_2 && (
-                                <p className="text-sm text-gray-600">{subscription.address.address_line_2}</p>
-                            )}
+                            {subscription.address.address_line_2 && <p className="text-sm text-gray-600">{subscription.address.address_line_2}</p>}
                             <p className="text-sm text-gray-600">
-                                {subscription.address.city}, {subscription.address.state} -{' '}
-                                {subscription.address.pincode}
+                                {subscription.address.city}, {subscription.address.state} - {subscription.address.pincode}
                             </p>
                             {subscription.address.zone && (
-                                <p className="mt-2 text-sm font-medium text-green-600">
-                                    Zone: {subscription.address.zone.name}
-                                </p>
+                                <p className="mt-2 text-sm font-medium text-green-600">Zone: {subscription.address.zone.name}</p>
                             )}
                         </div>
 
@@ -370,9 +346,7 @@ export default function AdminSubscriptionShow({
                                         <div
                                             key={delivery.date}
                                             className={`rounded-lg px-3 py-2 text-sm ${
-                                                delivery.is_today
-                                                    ? 'bg-green-50 font-medium text-green-800'
-                                                    : 'bg-gray-50 text-gray-700'
+                                                delivery.is_today ? 'bg-green-50 font-medium text-green-800' : 'bg-gray-50 text-gray-700'
                                             }`}
                                         >
                                             {delivery.formatted}
@@ -427,4 +401,3 @@ export default function AdminSubscriptionShow({
         </AdminLayout>
     );
 }
-

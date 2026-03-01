@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import UserLayout from '@/layouts/UserLayout';
+import { FALLBACK_IMAGE_URL, handleImageFallbackError } from '@/lib/imageFallback';
 import { product as productRoute } from '@/routes/catalog';
 
 interface Collection {
@@ -37,7 +38,7 @@ interface CollectionPageProps {
 }
 
 export default function CollectionPage({ collection, vertical, products }: CollectionPageProps) {
-    const fallbackImage = '/images/icons/milk-bottle.png';
+    const fallbackImage = FALLBACK_IMAGE_URL;
 
     const getSafeImageUrl = (url: string | null | undefined): string => {
         if (!url) {
@@ -61,10 +62,7 @@ export default function CollectionPage({ collection, vertical, products }: Colle
                         src={getSafeImageUrl(collection.banner_image)}
                         alt={collection.name}
                         className="h-full w-full object-cover"
-                        onError={(event) => {
-                            event.currentTarget.onerror = null;
-                            event.currentTarget.src = fallbackImage;
-                        }}
+                        onError={handleImageFallbackError}
                     />
                     <div className="bg-opacity-40 absolute inset-0 flex items-center justify-center bg-black">
                         <div className="text-center text-white">
@@ -88,10 +86,7 @@ export default function CollectionPage({ collection, vertical, products }: Colle
                                         src={getSafeImageUrl(product.image)}
                                         alt={product.name}
                                         className="h-48 w-full object-cover"
-                                        onError={(event) => {
-                                            event.currentTarget.onerror = null;
-                                            event.currentTarget.src = fallbackImage;
-                                        }}
+                                        onError={handleImageFallbackError}
                                     />
                                     <div className="p-4">
                                         <h3 className="mb-2 line-clamp-2 text-sm font-medium">{product.name}</h3>

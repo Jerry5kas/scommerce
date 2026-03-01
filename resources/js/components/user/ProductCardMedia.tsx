@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { handleImageFallbackError } from '@/lib/imageFallback';
 
 export type MediaItem = { type: 'image'; url: string } | { type: 'video'; url: string };
 
@@ -28,7 +29,6 @@ export default function ProductCardMedia({
     className = '',
     imageClassName = '',
 }: ProductCardMediaProps) {
-    const fallbackImage = '/images/icons/milk-bottle.png';
     const index = currentIndexMap[productKey] ?? 0;
     const hasMultiple = media.length > 1;
 
@@ -60,10 +60,7 @@ export default function ProductCardMedia({
                                 alt={i === 0 ? alt : `${alt} – view ${i + 1}`}
                                 className={`h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 ${imageClassName}`}
                                 loading={i === 0 ? 'lazy' : undefined}
-                                onError={(event) => {
-                                    event.currentTarget.onerror = null;
-                                    event.currentTarget.src = fallbackImage;
-                                }}
+                                onError={handleImageFallbackError}
                             />
                         ) : (
                             <video

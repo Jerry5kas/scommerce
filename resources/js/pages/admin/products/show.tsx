@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Pencil, MapPin, Package } from 'lucide-react';
 import AdminLayout from '@/layouts/AdminLayout';
+import { handleImageFallbackError, toSafeImageUrl } from '@/lib/imageFallback';
 
 interface CategoryRef {
     id: number;
@@ -80,19 +81,6 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
     const editUrl = productUrl + '/edit';
     const zonesUrl = productUrl + '/zones';
     const verticalLabel = verticalOptions?.[product.vertical] ?? VERTICAL_LABELS[product.vertical] ?? product.vertical;
-    const fallbackImage = '/images/icons/milk-bottle.png';
-
-    const getSafeImageUrl = (url: string | null | undefined): string => {
-        if (!url) {
-            return fallbackImage;
-        }
-
-        if (url.startsWith('http') || url.startsWith('/')) {
-            return url;
-        }
-
-        return `/storage/${url}`;
-    };
 
     return (
         <AdminLayout title={product.name}>
@@ -105,11 +93,17 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                 <div className="flex flex-wrap items-center justify-between gap-2">
                     <h2 className="text-lg font-semibold text-gray-900">{product.name}</h2>
                     <div className="flex gap-2">
-                        <Link href={zonesUrl} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <Link
+                            href={zonesUrl}
+                            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
                             <MapPin className="h-4 w-4" />
                             Manage zones
                         </Link>
-                        <Link href={editUrl} className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <Link
+                            href={editUrl}
+                            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        >
                             <Pencil className="h-4 w-4" />
                             Edit
                         </Link>
@@ -124,13 +118,10 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                                 <div>
                                     <div className="text-sm font-medium text-gray-500">Main image</div>
                                     <img
-                                        src={getSafeImageUrl(product.image)}
+                                        src={toSafeImageUrl(product.image)}
                                         alt={product.name}
                                         className="mt-1 h-32 w-32 rounded-lg border border-gray-200 object-cover"
-                                        onError={(event) => {
-                                            event.currentTarget.onerror = null;
-                                            event.currentTarget.src = fallbackImage;
-                                        }}
+                                        onError={handleImageFallbackError}
                                     />
                                 </div>
                             )}
@@ -141,13 +132,10 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                                         {product.images.map((url, index) => (
                                             <img
                                                 key={index}
-                                                src={getSafeImageUrl(url)}
+                                                src={toSafeImageUrl(url)}
                                                 alt={product.name + ' image ' + (index + 1)}
                                                 className="h-20 w-20 rounded-lg border border-gray-200 object-cover"
-                                                onError={(event) => {
-                                                    event.currentTarget.onerror = null;
-                                                    event.currentTarget.src = fallbackImage;
-                                                }}
+                                                onError={handleImageFallbackError}
                                             />
                                         ))}
                                     </div>
@@ -168,20 +156,30 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                             <dt className="text-sm font-medium text-gray-500">Category</dt>
                             <dd className="mt-0.5 text-sm text-gray-900">
                                 {product.category ? (
-                                    <Link href={`/admin/categories/${product.category.id}`} className="text-[var(--admin-dark-primary)] hover:underline">
+                                    <Link
+                                        href={`/admin/categories/${product.category.id}`}
+                                        className="text-[var(--admin-dark-primary)] hover:underline"
+                                    >
                                         {product.category.name}
                                     </Link>
-                                ) : '—'}
+                                ) : (
+                                    '—'
+                                )}
                             </dd>
                         </div>
                         <div>
                             <dt className="text-sm font-medium text-gray-500">Collection</dt>
                             <dd className="mt-0.5 text-sm text-gray-900">
                                 {product.collection ? (
-                                    <Link href={`/admin/collections/${product.collection.id}`} className="text-[var(--admin-dark-primary)] hover:underline">
+                                    <Link
+                                        href={`/admin/collections/${product.collection.id}`}
+                                        className="text-[var(--admin-dark-primary)] hover:underline"
+                                    >
                                         {product.collection.name}
                                     </Link>
-                                ) : '—'}
+                                ) : (
+                                    '—'
+                                )}
                             </dd>
                         </div>
                         <div>
@@ -228,7 +226,9 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                         {product.weight != null && (
                             <div>
                                 <dt className="text-sm font-medium text-gray-500">Weight</dt>
-                                <dd className="mt-0.5 text-sm text-gray-900">{product.weight} {product.unit ?? 'kg'}</dd>
+                                <dd className="mt-0.5 text-sm text-gray-900">
+                                    {product.weight} {product.unit ?? 'kg'}
+                                </dd>
                             </div>
                         )}
                         {(product.min_quantity != null || product.max_quantity != null) && (
@@ -256,7 +256,7 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                         {product.description && (
                             <div className="sm:col-span-2 lg:col-span-3">
                                 <dt className="text-sm font-medium text-gray-500">Description</dt>
-                                <dd className="mt-0.5 text-sm text-gray-900 whitespace-pre-wrap">{product.description}</dd>
+                                <dd className="mt-0.5 text-sm whitespace-pre-wrap text-gray-900">{product.description}</dd>
                             </div>
                         )}
                     </dl>
@@ -269,38 +269,28 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                             <h3 className="flex items-center gap-2 text-sm font-medium text-gray-900">
                                 <Package className="h-4 w-4 text-gray-400" />
                                 Variants
-                                <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-                                    {product.variants.length}
-                                </span>
+                                <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{product.variants.length}</span>
                             </h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Size / Label</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">SKU</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Price</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Stock</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-500">Status</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Size / Label</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white">
                                     {product.variants.map((v) => (
                                         <tr key={v.id}>
-                                            <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold text-gray-900">
-                                                {v.name}
-                                            </td>
-                                            <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-gray-500">
-                                                {v.sku}
-                                            </td>
-                                            <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-800">
-                                                {formatPrice(v.price)}
-                                            </td>
-                                            <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
-                                                {v.stock_quantity}
-                                            </td>
-                                            <td className="whitespace-nowrap px-4 py-3">
+                                            <td className="px-4 py-3 text-sm font-semibold whitespace-nowrap text-gray-900">{v.name}</td>
+                                            <td className="px-4 py-3 font-mono text-xs whitespace-nowrap text-gray-500">{v.sku}</td>
+                                            <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-800">{formatPrice(v.price)}</td>
+                                            <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-600">{v.stock_quantity}</td>
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 <span
                                                     className={
                                                         v.is_active
@@ -326,15 +316,15 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                             <h3 className="flex items-center gap-2 text-sm font-medium text-gray-900">
                                 <MapPin className="h-4 w-4 text-gray-400" />
                                 Zone availability
-                                <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-                                    {product.zones.length}
-                                </span>
+                                <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">{product.zones.length}</span>
                             </h3>
                         </div>
                         <ul className="divide-y divide-gray-200">
                             {product.zones.map((z) => (
                                 <li key={z.id} className="flex items-center justify-between px-4 py-3">
-                                    <span className="font-medium text-gray-900">{z.name} ({z.code})</span>
+                                    <span className="font-medium text-gray-900">
+                                        {z.name} ({z.code})
+                                    </span>
                                     <span className={z.pivot?.is_available ? 'text-green-600' : 'text-gray-400'}>
                                         {z.pivot?.is_available ? 'Available' : 'Unavailable'}
                                         {z.pivot?.price_override != null && ' · ' + formatPrice(z.pivot.price_override)}

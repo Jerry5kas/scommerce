@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
+import { FALLBACK_IMAGE_URL, handleImageFallbackError } from '@/lib/imageFallback';
 import { product as productRoute } from '@/routes/catalog';
 
 interface Product {
@@ -29,7 +30,7 @@ interface SearchPageProps {
 export default function SearchPage({ query, vertical, products }: SearchPageProps) {
     const [searchQuery, setSearchQuery] = useState(query);
 
-    const fallbackImage = '/images/icons/milk-bottle.png';
+    const fallbackImage = FALLBACK_IMAGE_URL;
 
     const getSafeImageUrl = (url: string | null | undefined): string => {
         if (!url) {
@@ -90,10 +91,7 @@ export default function SearchPage({ query, vertical, products }: SearchPageProp
                                         src={getSafeImageUrl(product.image)}
                                         alt={product.name}
                                         className="h-48 w-full object-cover"
-                                        onError={(event) => {
-                                            event.currentTarget.onerror = null;
-                                            event.currentTarget.src = fallbackImage;
-                                        }}
+                                        onError={handleImageFallbackError}
                                     />
                                     <div className="p-4">
                                         <h3 className="mb-2 line-clamp-2 text-sm font-medium">{product.name}</h3>
