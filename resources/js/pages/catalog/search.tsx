@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { product as productRoute } from '@/routes/catalog';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
+import { product as productRoute } from '@/routes/catalog';
 
 interface Product {
     id: number;
@@ -26,8 +26,22 @@ interface SearchPageProps {
     products: Product[];
 }
 
-export default function SearchPage({ query, vertical, zone, products }: SearchPageProps) {
+export default function SearchPage({ query, vertical, products }: SearchPageProps) {
     const [searchQuery, setSearchQuery] = useState(query);
+
+    const fallbackImage = '/images/icons/milk-bottle.png';
+
+    const getSafeImageUrl = (url: string | null | undefined): string => {
+        if (!url) {
+            return fallbackImage;
+        }
+
+        if (url.startsWith('http') || url.startsWith('/')) {
+            return url;
+        }
+
+        return `/storage/${url}`;
+    };
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -72,7 +86,15 @@ export default function SearchPage({ query, vertical, zone, products }: SearchPa
                                     href={productRoute(product.slug, { query: { vertical } })}
                                     className="overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                 >
-                                    {product.image && <img src={product.image} alt={product.name} className="h-48 w-full object-cover" />}
+                                    <img
+                                        src={getSafeImageUrl(product.image)}
+                                        alt={product.name}
+                                        className="h-48 w-full object-cover"
+                                        onError={(event) => {
+                                            event.currentTarget.onerror = null;
+                                            event.currentTarget.src = fallbackImage;
+                                        }}
+                                    />
                                     <div className="p-4">
                                         <h3 className="mb-2 line-clamp-2 text-sm font-medium">{product.name}</h3>
                                         {product.short_description && (

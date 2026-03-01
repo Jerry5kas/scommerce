@@ -35,7 +35,7 @@ interface RelatedProduct {
     image?: string | null;
     price: string | number;
     is_subscription_eligible?: boolean;
-    variants?: any[];
+    variants?: unknown[];
 }
 
 interface Zone {
@@ -120,6 +120,8 @@ const WHY_SHOP = [
 ];
 
 export default function ProductDetail({ product, price, relatedProducts }: ProductPageProps) {
+    const fallbackImage = '/images/icons/milk-bottle.png';
+
     const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
     const [mediaIndex, setMediaIndex] = useState(0);
     const [detailsOpen, setDetailsOpen] = useState(false);
@@ -132,8 +134,8 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
 
     const [similarCardMediaIndex, setSimilarCardMediaIndex] = useState<Record<string, number>>({});
 
-    const getSafeUrl = (url: string | null | undefined) => {
-        if (!url) return '/placeholder.png';
+    const getSafeUrl = (url: string | null | undefined): string => {
+        if (!url) return fallbackImage;
         if (url.startsWith('http') || url.startsWith('/')) return url;
         return `/storage/${url}`;
     };
@@ -144,7 +146,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
     } else if (product.image) {
         mediaList.push({ type: 'image', url: getSafeUrl(product.image) });
     } else {
-        mediaList.push({ type: 'image', url: '/placeholder.png' });
+        mediaList.push({ type: 'image', url: fallbackImage });
     }
 
     const variant = product.variants?.[selectedVariantIndex];
@@ -202,7 +204,16 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                         <div className="mb-6 lg:col-span-5 lg:mb-0">
                             <div className="relative aspect-[3/4] min-h-[380px] w-full overflow-hidden rounded-xl bg-[var(--theme-secondary)]/10 sm:min-h-[480px] lg:min-h-[560px]">
                                 {mediaList.length > 0 && mediaList[mediaIndex] && mediaList[mediaIndex].type === 'image' ? (
-                                    <img src={mediaList[mediaIndex].url} alt={product.name} className="h-full w-full object-cover" loading="eager" />
+                                    <img
+                                        src={mediaList[mediaIndex].url}
+                                        alt={product.name}
+                                        className="h-full w-full object-cover"
+                                        loading="eager"
+                                        onError={(event) => {
+                                            event.currentTarget.onerror = null;
+                                            event.currentTarget.src = fallbackImage;
+                                        }}
+                                    />
                                 ) : mediaList.length > 0 && mediaList[mediaIndex] ? (
                                     <video src={mediaList[mediaIndex].url} className="h-full w-full object-cover" muted loop playsInline autoPlay />
                                 ) : null}
@@ -234,7 +245,15 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                                             }`}
                                         >
                                             {item.type === 'image' ? (
-                                                <img src={item.url} alt="" className="h-full w-full object-cover" />
+                                                <img
+                                                    src={item.url}
+                                                    alt=""
+                                                    className="h-full w-full object-cover"
+                                                    onError={(event) => {
+                                                        event.currentTarget.onerror = null;
+                                                        event.currentTarget.src = fallbackImage;
+                                                    }}
+                                                />
                                             ) : (
                                                 <video src={item.url} className="h-full w-full object-cover" muted playsInline />
                                             )}

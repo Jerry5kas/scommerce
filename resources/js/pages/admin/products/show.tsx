@@ -80,6 +80,19 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
     const editUrl = productUrl + '/edit';
     const zonesUrl = productUrl + '/zones';
     const verticalLabel = verticalOptions?.[product.vertical] ?? VERTICAL_LABELS[product.vertical] ?? product.vertical;
+    const fallbackImage = '/images/icons/milk-bottle.png';
+
+    const getSafeImageUrl = (url: string | null | undefined): string => {
+        if (!url) {
+            return fallbackImage;
+        }
+
+        if (url.startsWith('http') || url.startsWith('/')) {
+            return url;
+        }
+
+        return `/storage/${url}`;
+    };
 
     return (
         <AdminLayout title={product.name}>
@@ -110,7 +123,15 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                             {product.image && (
                                 <div>
                                     <div className="text-sm font-medium text-gray-500">Main image</div>
-                                    <img src={product.image} alt={product.name} className="mt-1 h-32 w-32 rounded-lg border border-gray-200 object-cover" />
+                                    <img
+                                        src={getSafeImageUrl(product.image)}
+                                        alt={product.name}
+                                        className="mt-1 h-32 w-32 rounded-lg border border-gray-200 object-cover"
+                                        onError={(event) => {
+                                            event.currentTarget.onerror = null;
+                                            event.currentTarget.src = fallbackImage;
+                                        }}
+                                    />
                                 </div>
                             )}
                             {product.images && product.images.length > 0 && (
@@ -118,7 +139,16 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                                     <div className="text-sm font-medium text-gray-500">Gallery</div>
                                     <div className="mt-1 flex flex-wrap gap-3">
                                         {product.images.map((url, index) => (
-                                            <img key={index} src={url} alt={product.name + ' image ' + (index + 1)} className="h-20 w-20 rounded-lg border border-gray-200 object-cover" />
+                                            <img
+                                                key={index}
+                                                src={getSafeImageUrl(url)}
+                                                alt={product.name + ' image ' + (index + 1)}
+                                                className="h-20 w-20 rounded-lg border border-gray-200 object-cover"
+                                                onError={(event) => {
+                                                    event.currentTarget.onerror = null;
+                                                    event.currentTarget.src = fallbackImage;
+                                                }}
+                                            />
                                         ))}
                                     </div>
                                 </div>

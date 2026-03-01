@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
-import { product as productRoute } from '@/routes/catalog';
 import UserLayout from '@/layouts/UserLayout';
+import { product as productRoute } from '@/routes/catalog';
 
 interface Collection {
     id: number;
@@ -36,14 +36,36 @@ interface CollectionPageProps {
     };
 }
 
-export default function CollectionPage({ collection, vertical, zone, products, filters }: CollectionPageProps) {
+export default function CollectionPage({ collection, vertical, products }: CollectionPageProps) {
+    const fallbackImage = '/images/icons/milk-bottle.png';
+
+    const getSafeImageUrl = (url: string | null | undefined): string => {
+        if (!url) {
+            return fallbackImage;
+        }
+
+        if (url.startsWith('http') || url.startsWith('/')) {
+            return url;
+        }
+
+        return `/storage/${url}`;
+    };
+
     return (
         <UserLayout>
             <Head title={collection.name} />
             <div className="min-h-screen bg-gray-50">
                 {/* Collection Banner */}
                 <div className="relative h-64 w-full overflow-hidden md:h-96">
-                    <img src={collection.banner_image} alt={collection.name} className="h-full w-full object-cover" />
+                    <img
+                        src={getSafeImageUrl(collection.banner_image)}
+                        alt={collection.name}
+                        className="h-full w-full object-cover"
+                        onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = fallbackImage;
+                        }}
+                    />
                     <div className="bg-opacity-40 absolute inset-0 flex items-center justify-center bg-black">
                         <div className="text-center text-white">
                             <h1 className="mb-4 text-4xl font-bold md:text-5xl">{collection.name}</h1>
@@ -62,7 +84,15 @@ export default function CollectionPage({ collection, vertical, zone, products, f
                                     href={productRoute(product.slug, { query: { vertical } })}
                                     className="overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                 >
-                                    {product.image && <img src={product.image} alt={product.name} className="h-48 w-full object-cover" />}
+                                    <img
+                                        src={getSafeImageUrl(product.image)}
+                                        alt={product.name}
+                                        className="h-48 w-full object-cover"
+                                        onError={(event) => {
+                                            event.currentTarget.onerror = null;
+                                            event.currentTarget.src = fallbackImage;
+                                        }}
+                                    />
                                     <div className="p-4">
                                         <h3 className="mb-2 line-clamp-2 text-sm font-medium">{product.name}</h3>
                                         <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { product as productRoute } from '@/routes/catalog';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
+import { product as productRoute } from '@/routes/catalog';
 
 interface Product {
     id: number;
@@ -54,20 +54,22 @@ interface ProductPageProps {
 export default function ProductPage({
     product,
     vertical,
-    zone,
     price,
     relatedProducts,
     crossSellProducts = [],
     upsellProducts = [],
     isFreeSampleEligible,
 }: ProductPageProps) {
-    const getSafeUrl = (url: string | null | undefined) => {
-        if (!url) return '';
+    const fallbackImage = '/images/icons/milk-bottle.png';
+
+    const getSafeUrl = (url: string | null | undefined): string => {
+        if (!url) return fallbackImage;
         if (url.startsWith('http') || url.startsWith('/')) return url;
         return `/storage/${url}`;
     };
 
-    const images = product.images && product.images.length > 0 ? product.images.map(getSafeUrl) : product.image ? [getSafeUrl(product.image)] : [];
+    const images =
+        product.images && product.images.length > 0 ? product.images.map(getSafeUrl) : product.image ? [getSafeUrl(product.image)] : [fallbackImage];
 
     const [selectedImage, setSelectedImage] = useState(images.length > 0 ? images[0] : '');
     const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
@@ -102,7 +104,15 @@ export default function ProductPage({
                         {/* Product Images */}
                         <div>
                             <div className="mb-4">
-                                <img src={selectedImage || '/placeholder.png'} alt={product.name} className="h-96 w-full rounded-lg object-cover" />
+                                <img
+                                    src={selectedImage || fallbackImage}
+                                    alt={product.name}
+                                    className="h-96 w-full rounded-lg object-cover"
+                                    onError={(event) => {
+                                        event.currentTarget.onerror = null;
+                                        event.currentTarget.src = fallbackImage;
+                                    }}
+                                />
                             </div>
                             {images.length > 1 && (
                                 <div className="flex gap-2 overflow-x-auto">
@@ -114,7 +124,15 @@ export default function ProductPage({
                                                 selectedImage === img ? 'border-blue-500' : 'border-gray-300'
                                             }`}
                                         >
-                                            <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full rounded object-cover" />
+                                            <img
+                                                src={img}
+                                                alt={`${product.name} ${idx + 1}`}
+                                                className="h-full w-full rounded object-cover"
+                                                onError={(event) => {
+                                                    event.currentTarget.onerror = null;
+                                                    event.currentTarget.src = fallbackImage;
+                                                }}
+                                            />
                                         </button>
                                     ))}
                                 </div>
@@ -226,7 +244,15 @@ export default function ProductPage({
                                         href={productRoute(item.slug, { query: { vertical } })}
                                         className="overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                     >
-                                        {item.image && <img src={getSafeUrl(item.image)} alt={item.name} className="h-48 w-full object-cover" />}
+                                        <img
+                                            src={getSafeUrl(item.image)}
+                                            alt={item.name}
+                                            className="h-48 w-full object-cover"
+                                            onError={(event) => {
+                                                event.currentTarget.onerror = null;
+                                                event.currentTarget.src = fallbackImage;
+                                            }}
+                                        />
                                         <div className="p-4">
                                             <h3 className="mb-2 text-sm font-medium">{item.name}</h3>
                                             <span className="text-lg font-bold">₹{item.price}</span>
@@ -248,7 +274,15 @@ export default function ProductPage({
                                         href={productRoute(item.slug, { query: { vertical } })}
                                         className="overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                     >
-                                        {item.image && <img src={getSafeUrl(item.image)} alt={item.name} className="h-48 w-full object-cover" />}
+                                        <img
+                                            src={getSafeUrl(item.image)}
+                                            alt={item.name}
+                                            className="h-48 w-full object-cover"
+                                            onError={(event) => {
+                                                event.currentTarget.onerror = null;
+                                                event.currentTarget.src = fallbackImage;
+                                            }}
+                                        />
                                         <div className="p-4">
                                             <h3 className="mb-2 text-sm font-medium">{item.name}</h3>
                                             <span className="text-lg font-bold">₹{item.price}</span>
@@ -270,7 +304,15 @@ export default function ProductPage({
                                         href={productRoute(item.slug, { query: { vertical } })}
                                         className="overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                     >
-                                        {item.image && <img src={getSafeUrl(item.image)} alt={item.name} className="h-48 w-full object-cover" />}
+                                        <img
+                                            src={getSafeUrl(item.image)}
+                                            alt={item.name}
+                                            className="h-48 w-full object-cover"
+                                            onError={(event) => {
+                                                event.currentTarget.onerror = null;
+                                                event.currentTarget.src = fallbackImage;
+                                            }}
+                                        />
                                         <div className="p-4">
                                             <h3 className="mb-2 text-sm font-medium">{item.name}</h3>
                                             <span className="text-lg font-bold">₹{item.price}</span>

@@ -1,17 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import {
-    ChevronLeft,
-    MapPin,
-    Calendar,
-    Clock,
-    Plus,
-    Minus,
-    Tag,
-    Repeat,
-    FileText,
-    CheckCircle2,
-    AlertCircle,
-} from 'lucide-react';
+import { ChevronLeft, MapPin, Calendar, Clock, Plus, Minus, Tag, Repeat, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import UserLayout from '@/layouts/UserLayout';
 
@@ -63,7 +51,16 @@ interface SavedAddress {
 }
 
 const MOCK_ADDRESSES: SavedAddress[] = [
-    { id: 'addr-1', label: 'Home', line1: '12, Green Valley Road', line2: 'Near City Mall', city: 'Kozhikode', state: 'Kerala', pincode: '673001', isDefault: true },
+    {
+        id: 'addr-1',
+        label: 'Home',
+        line1: '12, Green Valley Road',
+        line2: 'Near City Mall',
+        city: 'Kozhikode',
+        state: 'Kerala',
+        pincode: '673001',
+        isDefault: true,
+    },
     { id: 'addr-2', label: 'Office', line1: 'Tech Park, Building A', city: 'Kochi', state: 'Kerala', pincode: '682030' },
 ];
 
@@ -95,32 +92,44 @@ interface SubscriptionPageProps {
 }
 
 export default function Subscription({ subscriptionPlans = [], selectedPlanId, userAddresses = [] }: SubscriptionPageProps) {
+    const fallbackImage = '/images/icons/milk-bottle.png';
+
+    const getSafeImageUrl = (url: string | null | undefined): string => {
+        if (!url) {
+            return fallbackImage;
+        }
+
+        if (url.startsWith('http') || url.startsWith('/')) {
+            return url;
+        }
+
+        return `/storage/${url}`;
+    };
+
     // Determine default plan
     const defaultPlan = useMemo(() => {
         if (selectedPlanId) {
-            const found = subscriptionPlans.find(p => p.id === Number(selectedPlanId));
+            const found = subscriptionPlans.find((p) => p.id === Number(selectedPlanId));
             if (found) return found;
         }
         return subscriptionPlans[0];
     }, [subscriptionPlans, selectedPlanId]);
 
     const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan>(defaultPlan);
-    
+
     // Manage sub-variant selection (e.g., 480ml vs 1L)
     // We'll track selection by product name substring for now, or just index
     // Let's assume user picks a specific item from the plan items list
     const [selectedItemIndex, setSelectedItemIndex] = useState(0);
 
-    const [addresses, setAddresses] = useState<SavedAddress[]>(userAddresses.length > 0 ? userAddresses : MOCK_ADDRESSES);
+    const [addresses] = useState<SavedAddress[]>(userAddresses.length > 0 ? userAddresses : MOCK_ADDRESSES);
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-        userAddresses.length > 0 
-            ? (userAddresses.find(a => a.isDefault)?.id || userAddresses[0].id)
-            : (MOCK_ADDRESSES[0]?.id ?? null)
+        userAddresses.length > 0 ? userAddresses.find((a) => a.isDefault)?.id || userAddresses[0].id : (MOCK_ADDRESSES[0]?.id ?? null),
     );
     const [deliverySlot, setDeliverySlot] = useState<string>(DELIVERY_SLOTS[0].id);
     // Pattern is now determined by the plan's frequency_type, but let's keep it flexible if plan allows custom
     const [pattern, setPattern] = useState<string>(currentPlan?.frequency_type || 'daily');
-    
+
     const [quantityPerDelivery, setQuantityPerDelivery] = useState(1);
     const [startDate, setStartDate] = useState<string>(() => {
         const d = new Date();
@@ -181,15 +190,6 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
         setCouponError(null);
     };
 
-    // Helper to get unique product names across all items to show tabs
-    const productVariants = useMemo(() => {
-        if (!currentPlan) return [];
-        return currentPlan.items.map((item, index) => ({
-            index,
-            name: item.product_name
-        }));
-    }, [currentPlan]);
-
     return (
         <UserLayout>
             <Head title="Subscribe - Freshtick" />
@@ -198,12 +198,14 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                     <nav className="mb-6 flex items-center gap-3 sm:mb-8" aria-label="Breadcrumb">
                         <Link
                             href="/#subscriptions"
-                            className="flex items-center gap-1.5 rounded-lg text-sm font-medium text-gray-600 transition-colors hover:text-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                            className="flex items-center gap-1.5 rounded-lg text-sm font-medium text-gray-600 transition-colors hover:text-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                         >
                             <ChevronLeft className="h-5 w-5 shrink-0" strokeWidth={2} />
                             <span className="hidden sm:inline">Back</span>
                         </Link>
-                        <span className="text-sm text-gray-400" aria-hidden>|</span>
+                        <span className="text-sm text-gray-400" aria-hidden>
+                            |
+                        </span>
                         <h1 className="text-lg font-bold text-gray-900 sm:text-xl">Subscribe</h1>
                     </nav>
 
@@ -216,10 +218,10 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                     <Repeat className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
                                     1. Choose Plan & Product
                                 </h2>
-                                
+
                                 {/* Plan Selection Tabs */}
-                                <div className="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                                    {subscriptionPlans.map(plan => (
+                                <div className="scrollbar-hide mb-6 flex gap-2 overflow-x-auto pb-2">
+                                    {subscriptionPlans.map((plan) => (
                                         <button
                                             key={plan.id}
                                             onClick={() => {
@@ -227,7 +229,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 setSelectedItemIndex(0); // Reset item selection
                                                 setPattern(plan.frequency_type);
                                             }}
-                                            className={`relative flex-shrink-0 whitespace-nowrap rounded-xl px-5 py-3 text-sm font-semibold transition-all border-2 ${
+                                            className={`relative flex-shrink-0 rounded-xl border-2 px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all ${
                                                 currentPlan.id === plan.id
                                                     ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)] text-white shadow-md'
                                                     : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
@@ -235,12 +237,16 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                         >
                                             {plan.name}
                                             {plan.discount_type !== 'none' && plan.discount_value > 0 && (
-                                                <span className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                                                    currentPlan.id === plan.id 
-                                                        ? 'bg-white/20 text-white' 
-                                                        : 'bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
-                                                }`}>
-                                                    {plan.discount_type === 'percentage' ? `${Math.round(plan.discount_value)}% OFF` : `₹${Math.round(plan.discount_value)} OFF`}
+                                                <span
+                                                    className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                                                        currentPlan.id === plan.id
+                                                            ? 'bg-white/20 text-white'
+                                                            : 'bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
+                                                    }`}
+                                                >
+                                                    {plan.discount_type === 'percentage'
+                                                        ? `${Math.round(plan.discount_value)}% OFF`
+                                                        : `₹${Math.round(plan.discount_value)} OFF`}
                                                 </span>
                                             )}
                                         </button>
@@ -248,12 +254,14 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                 </div>
 
                                 {/* Plan Features */}
-                                <div className="mb-6 rounded-xl bg-[var(--theme-primary-1)]/5 p-4 border border-[var(--theme-primary-1)]/10">
-                                    <h3 className="mb-3 text-sm font-bold text-[var(--theme-primary-1)] uppercase tracking-wide">Plan Benefits</h3>
+                                <div className="mb-6 rounded-xl border border-[var(--theme-primary-1)]/10 bg-[var(--theme-primary-1)]/5 p-4">
+                                    <h3 className="mb-3 text-sm font-bold tracking-wide text-[var(--theme-primary-1)] uppercase">Plan Benefits</h3>
                                     <ul className="grid gap-2 sm:grid-cols-2">
                                         {currentPlan.features.map((feature) => (
                                             <li key={feature.id} className="flex items-start gap-2 text-sm text-gray-700">
-                                                <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 ${feature.highlight ? 'text-[var(--theme-primary-1)]' : 'text-gray-400'}`} />
+                                                <CheckCircle2
+                                                    className={`mt-0.5 h-4 w-4 shrink-0 ${feature.highlight ? 'text-[var(--theme-primary-1)]' : 'text-gray-400'}`}
+                                                />
                                                 <span className={feature.highlight ? 'font-medium text-gray-900' : ''}>{feature.title}</span>
                                             </li>
                                         ))}
@@ -276,27 +284,29 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                         : 'border-gray-200 bg-gray-50/50 hover:border-gray-300 hover:bg-white'
                                                 }`}
                                             >
-                                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-white p-1 border border-gray-100">
-                                                    <img 
-                                                        src={item.product_image ? `/storage/${item.product_image}` : '/images/dairy-products.png'} 
-                                                        alt={item.product_name} 
+                                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border border-gray-100 bg-white p-1">
+                                                    <img
+                                                        src={getSafeImageUrl(item.product_image)}
+                                                        alt={item.product_name}
                                                         className="h-full w-full object-contain"
+                                                        onError={(event) => {
+                                                            event.currentTarget.onerror = null;
+                                                            event.currentTarget.src = fallbackImage;
+                                                        }}
                                                     />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex flex-wrap items-center gap-2">
-                                                        <span className={`font-bold transition-colors ${isSelected ? 'text-[var(--theme-primary-1)]' : 'text-gray-900'}`}>
+                                                        <span
+                                                            className={`font-bold transition-colors ${isSelected ? 'text-[var(--theme-primary-1)]' : 'text-gray-900'}`}
+                                                        >
                                                             {item.product_name}
                                                         </span>
                                                     </div>
-                                                    <p className="mt-1 text-xs text-gray-500">
-                                                        {item.units} unit(s) per delivery
-                                                    </p>
+                                                    <p className="mt-1 text-xs text-gray-500">{item.units} unit(s) per delivery</p>
                                                     <div className="mt-2 flex items-baseline gap-2">
                                                         <span className="text-lg font-bold text-gray-900">₹{Math.round(item.total_price)}</span>
-                                                        <span className="text-xs text-gray-500">
-                                                            (₹{Math.round(item.per_unit_price)}/unit)
-                                                        </span>
+                                                        <span className="text-xs text-gray-500">(₹{Math.round(item.per_unit_price)}/unit)</span>
                                                     </div>
                                                 </div>
                                                 {isSelected && (
@@ -311,7 +321,10 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                             </section>
 
                             {/* Delivery Schedule (Grouped) */}
-                            <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="schedule-heading">
+                            <section
+                                className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6"
+                                aria-labelledby="schedule-heading"
+                            >
                                 <h2 id="schedule-heading" className="mb-6 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
                                     <Clock className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
                                     2. Delivery Schedule
@@ -320,7 +333,9 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                 <div className="space-y-6">
                                     {/* Start Date */}
                                     <div>
-                                        <label htmlFor="start-date" className="mb-2 block text-sm font-semibold text-gray-900">Start Date</label>
+                                        <label htmlFor="start-date" className="mb-2 block text-sm font-semibold text-gray-900">
+                                            Start Date
+                                        </label>
                                         <div className="relative">
                                             <input
                                                 id="start-date"
@@ -328,9 +343,9 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
                                                 min={new Date().toISOString().slice(0, 10)}
-                                                className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 pl-11 text-sm font-medium text-gray-900 transition-colors focus:border-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)]/20"
+                                                className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 pl-11 text-sm font-medium text-gray-900 transition-colors focus:border-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)]/20 focus:outline-none"
                                             />
-                                            <Calendar className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                                            <Calendar className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400" />
                                         </div>
                                     </div>
 
@@ -352,7 +367,9 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                         }`}
                                                     >
                                                         <div className="flex w-full items-center justify-between">
-                                                            <span className={`text-sm font-bold ${isSelected ? 'text-[var(--theme-primary-1)]' : 'text-gray-900'}`}>
+                                                            <span
+                                                                className={`text-sm font-bold ${isSelected ? 'text-[var(--theme-primary-1)]' : 'text-gray-900'}`}
+                                                            >
                                                                 {slot.label}
                                                             </span>
                                                             {isSelected && <CheckCircle2 className="h-4 w-4 text-[var(--theme-primary-1)]" />}
@@ -397,33 +414,40 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 <button
                                                     type="button"
                                                     onClick={() => setQuantityPerDelivery((q) => Math.max(1, q - 1))}
-                                                    className="flex h-11 w-11 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--theme-primary-1)] rounded-l-lg"
+                                                    className="flex h-11 w-11 items-center justify-center rounded-l-lg text-gray-600 transition-colors hover:bg-gray-100 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:outline-none focus:ring-inset"
                                                 >
                                                     <Minus className="h-4 w-4" strokeWidth={2.5} />
                                                 </button>
-                                                <span className="flex h-11 min-w-[3.5rem] items-center justify-center text-lg font-bold text-gray-900 border-x-2 border-gray-100">
+                                                <span className="flex h-11 min-w-[3.5rem] items-center justify-center border-x-2 border-gray-100 text-lg font-bold text-gray-900">
                                                     {quantityPerDelivery}
                                                 </span>
                                                 <button
                                                     type="button"
                                                     onClick={() => setQuantityPerDelivery((q) => Math.min(99, q + 1))}
-                                                    className="flex h-11 w-11 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--theme-primary-1)] rounded-r-lg"
+                                                    className="flex h-11 w-11 items-center justify-center rounded-r-lg text-gray-600 transition-colors hover:bg-gray-100 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:outline-none focus:ring-inset"
                                                 >
                                                     <Plus className="h-4 w-4" strokeWidth={2.5} />
                                                 </button>
                                             </div>
                                             <div className="text-sm text-gray-600">
-                                                <p>Total units: <span className="font-semibold text-gray-900">{selectedItem?.units}</span></p>
-                                                <p>Deliveries: <span className="font-semibold text-gray-900">{deliveriesCount}</span></p>
+                                                <p>
+                                                    Total units: <span className="font-semibold text-gray-900">{selectedItem?.units}</span>
+                                                </p>
+                                                <p>
+                                                    Deliveries: <span className="font-semibold text-gray-900">{deliveriesCount}</span>
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="mt-4 flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-blue-800">
-                                            <Calendar className="h-5 w-5 shrink-0 mt-0.5" />
+                                            <Calendar className="mt-0.5 h-5 w-5 shrink-0" />
                                             <div className="text-sm">
                                                 <p className="font-semibold">Subscription Duration</p>
                                                 <p className="mt-1 opacity-90">
-                                                    Starts <strong>{new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</strong> • 
-                                                    Ends <strong>{formatEndDate(endDate)}</strong>
+                                                    Starts{' '}
+                                                    <strong>
+                                                        {new Date(startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                                    </strong>{' '}
+                                                    • Ends <strong>{formatEndDate(endDate)}</strong>
                                                 </p>
                                             </div>
                                         </div>
@@ -432,7 +456,10 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                             </section>
 
                             {/* Address */}
-                            <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="address-heading">
+                            <section
+                                className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6"
+                                aria-labelledby="address-heading"
+                            >
                                 <h2 id="address-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
                                     <MapPin className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
                                     3. Delivery Address
@@ -445,7 +472,9 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 <label
                                                     key={addr.id}
                                                     className={`flex cursor-pointer gap-3 rounded-xl border-2 p-4 transition-colors ${
-                                                        isSelected ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/5' : 'border-gray-200 hover:border-gray-300'
+                                                        isSelected
+                                                            ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/5'
+                                                            : 'border-gray-200 hover:border-gray-300'
                                                     }`}
                                                 >
                                                     <input
@@ -460,7 +489,9 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                         <div className="flex flex-wrap items-center gap-2">
                                                             <span className="font-semibold text-gray-900">{addr.label}</span>
                                                             {addr.isDefault && (
-                                                                <span className="rounded bg-[var(--theme-primary-1)]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--theme-primary-1)]">Default</span>
+                                                                <span className="rounded bg-[var(--theme-primary-1)]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--theme-primary-1)]">
+                                                                    Default
+                                                                </span>
                                                             )}
                                                         </div>
                                                         <p className="mt-1 text-sm text-gray-600">
@@ -480,7 +511,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                     <button
                                         type="button"
                                         onClick={() => setShowAddAddress(true)}
-                                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--theme-primary-1)]/50 bg-[var(--theme-primary-1)]/5 py-3 text-sm font-semibold text-[var(--theme-primary-1)] transition-colors hover:bg-[var(--theme-primary-1)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--theme-primary-1)]/50 bg-[var(--theme-primary-1)]/5 py-3 text-sm font-semibold text-[var(--theme-primary-1)] transition-colors hover:bg-[var(--theme-primary-1)]/10 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                                     >
                                         <Plus className="h-4 w-4" strokeWidth={2} />
                                         Add new address
@@ -488,7 +519,11 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                 ) : (
                                     <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4">
                                         <p className="mb-3 text-xs font-semibold text-gray-500">New address (connect to backend)</p>
-                                        <button type="button" onClick={() => setShowAddAddress(false)} className="text-sm font-medium text-[var(--theme-primary-1)] hover:underline">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAddAddress(false)}
+                                            className="text-sm font-medium text-[var(--theme-primary-1)] hover:underline"
+                                        >
                                             Cancel
                                         </button>
                                     </div>
@@ -496,7 +531,10 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                             </section>
 
                             {/* Delivery instructions */}
-                            <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="instructions-heading">
+                            <section
+                                className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6"
+                                aria-labelledby="instructions-heading"
+                            >
                                 <h2 id="instructions-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
                                     <FileText className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
                                     Delivery instructions
@@ -512,18 +550,22 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                     className="mt-1 h-4 w-4 rounded border-gray-300 text-[var(--theme-primary-1)] focus:ring-[var(--theme-primary-1)]"
                                                 />
                                                 <span className="text-sm font-medium text-gray-800">
-                                                    {opt.emoji && <span className="mr-1.5" aria-hidden>{opt.emoji}</span>}
+                                                    {opt.emoji && (
+                                                        <span className="mr-1.5" aria-hidden>
+                                                            {opt.emoji}
+                                                        </span>
+                                                    )}
                                                     {opt.label}
                                                 </span>
                                             </label>
                                             {opt.id === 'other' && instructionIds.has('other') && (
-                                                <div className="ml-7 mt-2">
+                                                <div className="mt-2 ml-7">
                                                     <input
                                                         type="text"
                                                         placeholder="Describe your instruction"
                                                         value={otherInstruction}
                                                         onChange={(e) => setOtherInstruction(e.target.value)}
-                                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[var(--theme-primary-1)] focus:outline-none focus:ring-1 focus:ring-[var(--theme-primary-1)]"
+                                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] focus:outline-none"
                                                     />
                                                 </div>
                                             )}
@@ -537,23 +579,32 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                         <div className="lg:col-span-4">
                             <div className="sticky top-24 space-y-4">
                                 {/* Subscription summary */}
-                                <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="summary-heading">
+                                <section
+                                    className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6"
+                                    aria-labelledby="summary-heading"
+                                >
                                     <h2 id="summary-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
                                         <Repeat className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
                                         Subscription
                                     </h2>
                                     <div className="flex gap-3 rounded-xl border border-gray-100 bg-[var(--theme-primary-1)]/5 p-4 sm:p-4">
                                         <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white sm:h-16 sm:w-16">
-                                            <img 
-                                                src={selectedItem?.product_image ? `/storage/${selectedItem.product_image}` : '/images/dairy-products.png'} 
-                                                alt={selectedItem?.product_name} 
-                                                className="h-full w-full object-contain p-1" 
+                                            <img
+                                                src={getSafeImageUrl(selectedItem?.product_image)}
+                                                alt={selectedItem?.product_name}
+                                                className="h-full w-full object-contain p-1"
+                                                onError={(event) => {
+                                                    event.currentTarget.onerror = null;
+                                                    event.currentTarget.src = fallbackImage;
+                                                }}
                                             />
                                         </span>
                                         <div className="min-w-0 flex-1">
                                             <p className="font-semibold text-gray-900 sm:text-base">{currentPlan.name}</p>
                                             <p className="text-xs text-gray-600">{selectedItem?.product_name}</p>
-                                            <p className="mt-0.5 text-sm font-semibold text-[var(--theme-primary-1)]">₹{Math.round(selectedItem?.per_unit_price || 0)}/unit</p>
+                                            <p className="mt-0.5 text-sm font-semibold text-[var(--theme-primary-1)]">
+                                                ₹{Math.round(selectedItem?.per_unit_price || 0)}/unit
+                                            </p>
                                             {!showAddInstruction ? (
                                                 <button
                                                     type="button"
@@ -570,9 +621,13 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                         placeholder="Delivery note (optional)"
                                                         value={customInstruction}
                                                         onChange={(e) => setCustomInstruction(e.target.value)}
-                                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:border-[var(--theme-primary-1)] focus:outline-none focus:ring-1 focus:ring-[var(--theme-primary-1)]"
+                                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] focus:outline-none"
                                                     />
-                                                    <button type="button" onClick={() => setShowAddInstruction(false)} className="mt-1 text-[10px] text-gray-500 hover:underline">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowAddInstruction(false)}
+                                                        className="mt-1 text-[10px] text-gray-500 hover:underline"
+                                                    >
                                                         Done
                                                     </button>
                                                 </div>
@@ -582,7 +637,10 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                 </section>
 
                                 {/* Offers */}
-                                <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="offers-heading">
+                                <section
+                                    className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6"
+                                    aria-labelledby="offers-heading"
+                                >
                                     <h2 id="offers-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
                                         <Tag className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
                                         Offers & benefits
@@ -593,7 +651,11 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
                                                 {appliedCoupon.code} applied (–₹{appliedCoupon.discount})
                                             </span>
-                                            <button type="button" onClick={removeCoupon} className="text-xs font-medium text-green-700 underline hover:no-underline">
+                                            <button
+                                                type="button"
+                                                onClick={removeCoupon}
+                                                className="text-xs font-medium text-green-700 underline hover:no-underline"
+                                            >
                                                 Remove
                                             </button>
                                         </div>
@@ -608,12 +670,12 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                     setCouponError(null);
                                                 }}
                                                 onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
-                                                className="min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-gray-50/50 px-4 py-3 text-sm font-medium uppercase placeholder:normal-case placeholder:text-gray-400 focus:border-[var(--theme-primary-1)] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)]/20"
+                                                className="min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-gray-50/50 px-4 py-3 text-sm font-medium uppercase placeholder:text-gray-400 placeholder:normal-case focus:border-[var(--theme-primary-1)] focus:bg-white focus:ring-2 focus:ring-[var(--theme-primary-1)]/20 focus:outline-none"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={applyCoupon}
-                                                className="shrink-0 rounded-xl bg-[var(--theme-primary-1)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                                className="shrink-0 rounded-xl bg-[var(--theme-primary-1)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                                             >
                                                 Apply
                                             </button>
@@ -629,7 +691,10 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                 </section>
 
                                 {/* Bill details */}
-                                <section className="rounded-2xl border border-gray-200/80 bg-[var(--theme-primary-1)]/5 p-4 shadow-sm sm:p-6" aria-labelledby="bill-heading">
+                                <section
+                                    className="rounded-2xl border border-gray-200/80 bg-[var(--theme-primary-1)]/5 p-4 shadow-sm sm:p-6"
+                                    aria-labelledby="bill-heading"
+                                >
                                     <h2 id="bill-heading" className="mb-4 text-base font-bold text-gray-900 sm:text-lg">
                                         Bill details (includes taxes)
                                     </h2>
@@ -640,7 +705,9 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                         </div>
                                         <div className="flex justify-between text-gray-700">
                                             <dt>Delivery fee</dt>
-                                            <dd className="font-semibold text-[var(--theme-primary-1)]">{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}</dd>
+                                            <dd className="font-semibold text-[var(--theme-primary-1)]">
+                                                {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
+                                            </dd>
                                         </div>
                                         {discount > 0 && (
                                             <div className="flex justify-between text-green-600">
@@ -655,7 +722,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                     </dl>
                                     <Link
                                         href="#"
-                                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--theme-primary-1)] py-4 text-base font-bold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--theme-primary-1)] py-4 text-base font-bold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                                     >
                                         Proceed to pay ₹{toPay}
                                     </Link>
@@ -665,15 +732,15 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                     </div>
 
                     {/* Sticky CTA on mobile */}
-                    <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] lg:hidden">
-                        <div className="container mx-auto max-w-7xl flex items-center justify-between gap-4">
+                    <div className="fixed right-0 bottom-0 left-0 z-30 border-t border-gray-200 bg-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] lg:hidden">
+                        <div className="container mx-auto flex max-w-7xl items-center justify-between gap-4">
                             <div>
                                 <p className="text-xs text-gray-500">To pay</p>
                                 <p className="text-xl font-bold text-gray-900">₹{toPay}</p>
                             </div>
                             <Link
                                 href="#"
-                                className="flex flex-1 max-w-[200px] items-center justify-center rounded-xl bg-[var(--theme-primary-1)] py-3.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                className="flex max-w-[200px] flex-1 items-center justify-center rounded-xl bg-[var(--theme-primary-1)] py-3.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                             >
                                 Pay ₹{toPay}
                             </Link>

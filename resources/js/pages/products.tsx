@@ -32,11 +32,41 @@ interface PageProps extends SharedData {
     categories: BackendCategory[];
     products: BackendProduct[];
     vertical: string;
-    zone: any;
+    zone: unknown;
 }
 
 export default function Products() {
     const { categories, products } = usePage<PageProps>().props;
+
+    const fallbackImage = '/images/icons/milk-bottle.png';
+
+    const isSupportedImageUrl = (url: string): boolean => {
+        const cleanUrl = url.split('?')[0]?.split('#')[0]?.toLowerCase() ?? '';
+        const lastDotIndex = cleanUrl.lastIndexOf('.');
+
+        if (lastDotIndex === -1) {
+            return true;
+        }
+
+        const extension = cleanUrl.slice(lastDotIndex);
+        const supportedExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.bmp', '.svg', '.jfif']);
+
+        return supportedExtensions.has(extension);
+    };
+
+    const getSafeUrl = (url: string | null | undefined): string => {
+        if (!url) {
+            return fallbackImage;
+        }
+
+        const normalized = url.startsWith('http') || url.startsWith('/') ? url : `/storage/${url}`;
+
+        if (!isSupportedImageUrl(normalized)) {
+            return fallbackImage;
+        }
+
+        return normalized;
+    };
 
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [wishlistedIds, setWishlistedIds] = useState<Set<number>>(new Set());
@@ -58,38 +88,31 @@ export default function Products() {
 
     // Make "All Products" category dynamically
     const allProductsCount = Array.isArray(products) ? products.length : 0;
-    
+
     // Sort categories (you could sort by product count or name, or keep default)
     const validCategories = Array.isArray(categories) ? categories : [];
-    
+
     const categoriesWithCount = [
         {
             id: 0,
             slug: 'all',
             name: 'All Products',
-            image: '/images/dairy-products.png',
+            image: fallbackImage,
             products_count: allProductsCount,
         },
-        ...validCategories.map(c => {
-            let safeImage = '/images/dairy-products.png';
-            if (c.image) {
-                if (c.image.startsWith('http') || c.image.startsWith('/')) safeImage = c.image;
-                else safeImage = `/storage/${c.image}`;
-            }
+        ...validCategories.map((c) => {
+            const safeImage = getSafeUrl(c.image);
             return {
                 ...c,
-                image: safeImage
+                image: safeImage,
             };
-        })
+        }),
     ];
 
     const currentCategoryLabel = categoriesWithCount.find((c) => c.slug === selectedCategory)?.name ?? 'All Products';
 
     const safeProducts = Array.isArray(products) ? products : [];
-    const filteredProducts =
-        selectedCategory === 'all'
-            ? safeProducts
-            : safeProducts.filter((p) => p.category?.slug === selectedCategory);
+    const filteredProducts = selectedCategory === 'all' ? safeProducts : safeProducts.filter((p) => p.category?.slug === selectedCategory);
 
     return (
         <UserLayout>
@@ -99,24 +122,15 @@ export default function Products() {
                 <div className="container mx-auto max-w-7xl px-4 py-5 sm:px-5 sm:py-6 lg:px-6 lg:py-8">
                     {/* Page title */}
                     <div className="mb-4 sm:mb-6">
-                        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl lg:text-3xl">
-                            Products
-                        </h1>
-                        <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">
-                            Fresh dairy delivered to your doorstep
-                        </p>
+                        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl lg:text-3xl">Products</h1>
+                        <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">Fresh dairy delivered to your doorstep</p>
                     </div>
 
                     <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
                         {/* Sidebar – desktop */}
-                        <aside
-                            className="hidden shrink-0 lg:block lg:w-64"
-                            aria-label="Product categories"
-                        >
+                        <aside className="hidden shrink-0 lg:block lg:w-64" aria-label="Product categories">
                             <div className="sticky top-24 rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm">
-                                <h2 className="mb-4 px-1 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                    Categories
-                                </h2>
+                                <h2 className="mb-4 px-1 text-xs font-semibold tracking-wider text-gray-500 uppercase">Categories</h2>
                                 <nav className="flex flex-col gap-1">
                                     {categoriesWithCount.map((cat) => (
                                         <button
@@ -131,10 +145,14 @@ export default function Products() {
                                         >
                                             <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200/80 bg-gray-50">
                                                 <img
-                                                    src={cat.image || '/images/dairy-products.png'}
+                                                    src={cat.image || fallbackImage}
                                                     alt=""
                                                     className="h-full w-full object-cover"
                                                     loading="lazy"
+                                                    onError={(event) => {
+                                                        event.currentTarget.onerror = null;
+                                                        event.currentTarget.src = fallbackImage;
+                                                    }}
                                                 />
                                             </span>
                                             <span className="min-w-0 flex-1 truncate">{cat.name}</span>
@@ -168,9 +186,13 @@ export default function Products() {
                                     <span className="flex min-w-0 flex-1 items-center gap-3">
                                         <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
                                             <img
-                                                src={categoriesWithCount.find((c) => c.slug === selectedCategory)?.image ?? '/images/dairy-products.png'}
+                                                src={categoriesWithCount.find((c) => c.slug === selectedCategory)?.image ?? fallbackImage}
                                                 alt=""
                                                 className="h-full w-full object-cover"
+                                                onError={(event) => {
+                                                    event.currentTarget.onerror = null;
+                                                    event.currentTarget.src = fallbackImage;
+                                                }}
                                             />
                                         </span>
                                         <span className="truncate">{currentCategoryLabel}</span>
@@ -181,10 +203,7 @@ export default function Products() {
                                     />
                                 </button>
                                 {mobileCategoryOpen && (
-                                    <div
-                                        className="mt-2 rounded-xl border border-gray-200 bg-white py-2 shadow-lg"
-                                        role="listbox"
-                                    >
+                                    <div className="mt-2 rounded-xl border border-gray-200 bg-white py-2 shadow-lg" role="listbox">
                                         {categoriesWithCount.map((cat) => (
                                             <button
                                                 key={cat.slug}
@@ -202,7 +221,16 @@ export default function Products() {
                                                 }`}
                                             >
                                                 <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                                                    <img src={cat.image || '/images/dairy-products.png'} alt="" className="h-full w-full object-cover" loading="lazy" />
+                                                    <img
+                                                        src={cat.image || fallbackImage}
+                                                        alt=""
+                                                        className="h-full w-full object-cover"
+                                                        loading="lazy"
+                                                        onError={(event) => {
+                                                            event.currentTarget.onerror = null;
+                                                            event.currentTarget.src = fallbackImage;
+                                                        }}
+                                                    />
                                                 </span>
                                                 <span className="min-w-0 flex-1 truncate">{cat.name}</span>
                                                 <span className="shrink-0 text-xs text-gray-500">({cat.products_count})</span>
@@ -213,30 +241,28 @@ export default function Products() {
                             </div>
 
                             {/* Product grid – compact cards */}
-                            <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
                                 {filteredProducts.map((product) => {
                                     const isWishlisted = wishlistedIds.has(product.id);
-                                    
-                                    const getSafeUrl = (url: string | null | undefined) => {
-                                        if (!url) return '';
-                                        if (url.startsWith('http') || url.startsWith('/')) return url;
-                                        return `/storage/${url}`;
-                                    };
 
-                                    const safeImage = getSafeUrl(product.image) || '/images/dairy-products.png';
-                                    const safeImages = (product.images || []).map(url => ({ type: 'image' as const, url: getSafeUrl(url) }));
-                                    
+                                    const safeImage = getSafeUrl(product.image);
+                                    const safeImages = (product.images || [])
+                                        .map((url) => getSafeUrl(url))
+                                        .filter((url) => url !== fallbackImage)
+                                        .map((url) => ({ type: 'image' as const, url }));
+
                                     const media = getMediaList({
                                         id: product.id.toString(),
                                         image: safeImage,
-                                        media: safeImages.length > 0 ? safeImages : undefined
+                                        media: safeImages.length > 0 ? safeImages : undefined,
                                     });
 
-                                    const isBestSeller = (typeof product.price === 'number' ? product.price > 100 : parseFloat(product.price as string) > 100);
+                                    const isBestSeller =
+                                        typeof product.price === 'number' ? product.price > 100 : parseFloat(product.price as string) > 100;
                                     const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
-                                    const mainPrice = hasVariants 
-                                        ? Math.min(...product.variants!.map(v => parseFloat(v.price || '0'))) 
-                                        : parseFloat(product.price as string || '0');
+                                    const mainPrice = hasVariants
+                                        ? Math.min(...product.variants!.map((v) => parseFloat(v.price || '0')))
+                                        : parseFloat((product.price as string) || '0');
 
                                     return (
                                         <article
@@ -255,7 +281,7 @@ export default function Products() {
                                                     imageClassName="group-hover:scale-105"
                                                 />
                                                 {isBestSeller && (
-                                                    <span className="absolute left-1 top-1 rounded-full bg-[#cf992c] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white sm:left-1.5 sm:top-1.5 sm:px-2 sm:text-[10px]">
+                                                    <span className="absolute top-1 left-1 rounded-full bg-[#cf992c] px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-white uppercase sm:top-1.5 sm:left-1.5 sm:px-2 sm:text-[10px]">
                                                         Best Seller
                                                     </span>
                                                 )}
@@ -267,7 +293,7 @@ export default function Products() {
                                                         toggleWishlist(product.id);
                                                     }}
                                                     aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                                                    className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 shadow-sm transition-colors hover:bg-white sm:right-1.5 sm:top-1.5 sm:h-7 sm:w-7"
+                                                    className="absolute top-1 right-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 shadow-sm transition-colors hover:bg-white sm:top-1.5 sm:right-1.5 sm:h-7 sm:w-7"
                                                 >
                                                     <Heart
                                                         className={`h-3 w-3 sm:h-4 sm:w-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-500'}`}
@@ -276,8 +302,15 @@ export default function Products() {
                                                 </button>
                                             </div>
                                             <div className="flex flex-1 flex-col p-2 sm:p-2.5">
-                                                <Link href={productRoute(product.slug)} className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors hover:text-[var(--theme-primary-1)] sm:text-sm">
-                                                    {product.name} {(!product.is_subscription_eligible && !hasVariants && product.weight) && `- (${parseFloat(product.weight)} ${product.unit})`}
+                                                <Link
+                                                    href={productRoute(product.slug)}
+                                                    className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors hover:text-[var(--theme-primary-1)] sm:text-sm"
+                                                >
+                                                    {product.name}{' '}
+                                                    {!product.is_subscription_eligible &&
+                                                        !hasVariants &&
+                                                        product.weight &&
+                                                        `- (${parseFloat(product.weight)} ${product.unit})`}
                                                 </Link>
                                                 {product.is_subscription_eligible || hasVariants ? (
                                                     <p className="mb-1 text-[10px] font-medium text-gray-600 sm:text-xs">
@@ -289,8 +322,12 @@ export default function Products() {
                                                     </p>
                                                 )}
                                                 <Link
-                                                    href={product.is_subscription_eligible ? `/subscription?plan=${encodeURIComponent(product.slug)}` : productRoute(product.slug)}
-                                                    className="mt-auto w-full rounded-md bg-[var(--theme-primary-1)] py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 sm:py-2 sm:text-xs"
+                                                    href={
+                                                        product.is_subscription_eligible
+                                                            ? `/subscription?plan=${encodeURIComponent(product.slug)}`
+                                                            : productRoute(product.slug)
+                                                    }
+                                                    className="mt-auto w-full rounded-md bg-[var(--theme-primary-1)] py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none sm:py-2 sm:text-xs"
                                                 >
                                                     {product.is_subscription_eligible ? 'Subscribe' : 'View Details'}
                                                 </Link>
