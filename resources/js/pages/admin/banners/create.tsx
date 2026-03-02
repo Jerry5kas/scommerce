@@ -28,7 +28,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 const inputCls =
-    'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[var(--admin-dark-primary)] focus:ring-1 focus:ring-[var(--admin-dark-primary)]';
+    'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-(--admin-dark-primary) focus:ring-1 focus:ring-(--admin-dark-primary)';
 const labelCls = 'block text-sm font-medium text-gray-700';
 
 export default function AdminBannersCreate({ typeOptions, linkTypeOptions, zones }: AdminBannersCreateProps) {
@@ -153,7 +153,7 @@ export default function AdminBannersCreate({ typeOptions, linkTypeOptions, zones
         <AdminLayout title="Create banner">
             <Head title="Create Banner - Admin" />
             <form onSubmit={handleSubmit} className="space-y-6">
-                <Link href="/admin/banners" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--admin-dark-primary)]">
+                <Link href="/admin/banners" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-(--admin-dark-primary)">
                     <ArrowLeft className="h-4 w-4" /> Back to banners
                 </Link>
 
@@ -224,7 +224,7 @@ export default function AdminBannersCreate({ typeOptions, linkTypeOptions, zones
                                     </button>
                                 </div>
                             )}
-                            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-[var(--admin-dark-primary)] hover:bg-gray-100">
+                            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-(--admin-dark-primary) hover:bg-gray-100">
                                 <Upload className="h-4 w-4" />
                                 <span>{imageFile ? imageFile.name : 'Choose image file'}</span>
                                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFileChange} />
@@ -278,7 +278,7 @@ export default function AdminBannersCreate({ typeOptions, linkTypeOptions, zones
                                     </button>
                                 </div>
                             )}
-                            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-[var(--admin-dark-primary)] hover:bg-gray-100">
+                            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-(--admin-dark-primary) hover:bg-gray-100">
                                 <Upload className="h-4 w-4" />
                                 <span>{mobileImageFile ? mobileImageFile.name : 'Choose mobile image'}</span>
                                 <input
@@ -394,7 +394,7 @@ export default function AdminBannersCreate({ typeOptions, linkTypeOptions, zones
                             {zones.map((zone) => (
                                 <label
                                     key={zone.id}
-                                    className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 transition-colors ${form.data.zones.includes(zone.id) ? 'border-[var(--admin-dark-primary)] bg-[var(--admin-dark-primary)] text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-[var(--admin-dark-primary)]'}`}
+                                    className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 transition-colors ${form.data.zones.includes(zone.id) ? 'border-(--admin-dark-primary) bg-(--admin-dark-primary) text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-(--admin-dark-primary)'}`}
                                 >
                                     <input
                                         type="checkbox"
@@ -414,7 +414,7 @@ export default function AdminBannersCreate({ typeOptions, linkTypeOptions, zones
                     <button
                         type="submit"
                         disabled={form.processing || isUploading}
-                        className="flex items-center gap-2 rounded-lg bg-[var(--admin-dark-primary)] px-6 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="flex items-center gap-2 rounded-lg bg-(--admin-dark-primary) px-6 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                         {(form.processing || isUploading) && (
                             <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -45,7 +45,7 @@ export default function ProductCardMedia({
     };
 
     return (
-        <div className={`relative h-full w-full overflow-hidden bg-[var(--theme-secondary)]/10 ${className}`}>
+        <div className={`relative h-full w-full overflow-hidden bg-(--theme-secondary)/10 ${className}`}>
             <div className="relative h-full w-full">
                 {media.map((item, i) => (
                     <div

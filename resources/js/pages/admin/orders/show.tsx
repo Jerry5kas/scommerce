@@ -196,7 +196,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                     <div className="flex items-center gap-3">
                         <Link
                             href="/admin/orders"
-                            className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-[var(--theme-primary-1)]"
+                            className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-(--theme-primary-1)"
                         >
                             <ChevronLeft className="h-5 w-5" />
                         </Link>
@@ -210,7 +210,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                             <>
                                 <button
                                     onClick={() => setShowStatusModal(true)}
-                                    className="inline-flex items-center gap-2 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--theme-primary-1-dark)]"
+                                    className="inline-flex items-center gap-2 rounded-lg bg-(--theme-primary-1) px-4 py-2 text-sm font-semibold text-white hover:bg-(--theme-primary-1-dark)"
                                 >
                                     <Edit3 className="h-4 w-4" />
                                     Update Status
@@ -264,7 +264,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                             {/* Timeline */}
                             {order.status !== 'cancelled' && (
                                 <div className="mt-6 overflow-x-auto">
-                                    <div className="flex min-w-[500px] items-center justify-between">
+                                    <div className="flex min-w-125 items-center justify-between">
                                         {timeline.map((item) => (
                                             <div key={item.status} className="flex flex-col items-center">
                                                 <div
@@ -272,14 +272,14 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                                                         item.is_completed
                                                             ? 'bg-green-500 text-white'
                                                             : item.is_current
-                                                              ? 'bg-[var(--theme-primary-1)] text-white'
+                                                              ? 'bg-(--theme-primary-1) text-white'
                                                               : 'bg-gray-200 text-gray-500'
                                                     }`}
                                                 >
                                                     {statusConfig[item.status]?.icon || <Clock className="h-4 w-4" />}
                                                 </div>
                                                 <p
-                                                    className={`mt-2 text-xs font-medium ${item.is_current ? 'text-[var(--theme-primary-1)]' : 'text-gray-600'}`}
+                                                    className={`mt-2 text-xs font-medium ${item.is_current ? 'text-(--theme-primary-1)' : 'text-gray-600'}`}
                                                 >
                                                     {item.label}
                                                 </p>
@@ -302,7 +302,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                         {/* Order Items */}
                         <div className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
                             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                <Package className="h-5 w-5 text-[var(--theme-primary-1)]" />
+                                <Package className="h-5 w-5 text-(--theme-primary-1)" />
                                 Order Items ({order.items.length})
                             </h2>
                             <ul className="divide-y divide-gray-100">
@@ -339,7 +339,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                         {/* Customer Info */}
                         <div className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
                             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                <User className="h-5 w-5 text-[var(--theme-primary-1)]" />
+                                <User className="h-5 w-5 text-(--theme-primary-1)" />
                                 Customer
                             </h2>
                             <div className="flex items-start gap-4">
@@ -360,7 +360,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                                     )}
                                     <Link
                                         href={`/admin/users/${order.user.id}`}
-                                        className="mt-2 inline-flex text-sm font-medium text-[var(--theme-primary-1)] hover:underline"
+                                        className="mt-2 inline-flex text-sm font-medium text-(--theme-primary-1) hover:underline"
                                     >
                                         View Customer →
                                     </Link>
@@ -374,7 +374,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                         {/* Delivery Address */}
                         <div className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
                             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                <MapPin className="h-5 w-5 text-[var(--theme-primary-1)]" />
+                                <MapPin className="h-5 w-5 text-(--theme-primary-1)" />
                                 Delivery
                             </h2>
                             <div className="space-y-3 text-sm">
@@ -411,9 +411,9 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
 
                             {/* Driver */}
                             {order.driver && (
-                                <div className="mt-4 rounded-lg border border-[var(--theme-primary-1)]/30 bg-[var(--theme-primary-1)]/5 p-3">
+                                <div className="mt-4 rounded-lg border border-(--theme-primary-1)/30 bg-(--theme-primary-1)/5 p-3">
                                     <p className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                                        <Truck className="h-4 w-4 text-[var(--theme-primary-1)]" />
+                                        <Truck className="h-4 w-4 text-(--theme-primary-1)" />
                                         {order.driver.user.name}
                                     </p>
                                     {order.driver.user.phone && <p className="mt-1 text-sm text-gray-600">{order.driver.user.phone}</p>}
@@ -432,7 +432,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                         {/* Payment */}
                         <div className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
                             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-                                <CreditCard className="h-5 w-5 text-[var(--theme-primary-1)]" />
+                                <CreditCard className="h-5 w-5 text-(--theme-primary-1)" />
                                 Payment
                             </h2>
                             <div className="space-y-3 text-sm">
@@ -480,7 +480,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                         {order.notes && (
                             <div className="rounded-xl bg-white p-4 shadow-sm sm:p-6">
                                 <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-900">
-                                    <FileText className="h-4 w-4 text-[var(--theme-primary-1)]" />
+                                    <FileText className="h-4 w-4 text-(--theme-primary-1)" />
                                     Admin Notes
                                 </h2>
                                 <p className="text-sm text-gray-600">{order.notes}</p>
@@ -511,7 +511,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                                 <select
                                     value={statusForm.data.status}
                                     onChange={(e) => statusForm.setData('status', e.target.value)}
-                                    className="mt-1 w-full rounded-lg border-gray-300 focus:border-[var(--theme-primary-1)] focus:ring-[var(--theme-primary-1)]"
+                                    className="mt-1 w-full rounded-lg border-gray-300 focus:border-(--theme-primary-1) focus:ring-(--theme-primary-1)"
                                 >
                                     <option value="">Select status...</option>
                                     {availableStatuses.map((status) => (
@@ -527,7 +527,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                                     value={statusForm.data.notes}
                                     onChange={(e) => statusForm.setData('notes', e.target.value)}
                                     rows={3}
-                                    className="mt-1 w-full rounded-lg border-gray-300 text-sm focus:border-[var(--theme-primary-1)] focus:ring-[var(--theme-primary-1)]"
+                                    className="mt-1 w-full rounded-lg border-gray-300 text-sm focus:border-(--theme-primary-1) focus:ring-(--theme-primary-1)"
                                 />
                             </div>
                             <div className="flex gap-3">
@@ -541,7 +541,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                                 <button
                                     type="submit"
                                     disabled={!statusForm.data.status || statusForm.processing}
-                                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--theme-primary-1-dark)] disabled:opacity-50"
+                                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-(--theme-primary-1) px-4 py-2 text-sm font-semibold text-white hover:bg-(--theme-primary-1-dark) disabled:opacity-50"
                                 >
                                     {statusForm.processing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update'}
                                 </button>
@@ -562,7 +562,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                                 <select
                                     value={driverForm.data.driver_id}
                                     onChange={(e) => driverForm.setData('driver_id', e.target.value)}
-                                    className="mt-1 w-full rounded-lg border-gray-300 focus:border-[var(--theme-primary-1)] focus:ring-[var(--theme-primary-1)]"
+                                    className="mt-1 w-full rounded-lg border-gray-300 focus:border-(--theme-primary-1) focus:ring-(--theme-primary-1)"
                                 >
                                     <option value="">Select driver...</option>
                                     {drivers.map((driver) => (
@@ -583,7 +583,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                                 <button
                                     type="submit"
                                     disabled={!driverForm.data.driver_id || driverForm.processing}
-                                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--theme-primary-1-dark)] disabled:opacity-50"
+                                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-(--theme-primary-1) px-4 py-2 text-sm font-semibold text-white hover:bg-(--theme-primary-1-dark) disabled:opacity-50"
                                 >
                                     {driverForm.processing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Assign'}
                                 </button>
@@ -606,7 +606,7 @@ export default function OrderShow({ order, timeline, availableStatuses, statusOp
                                 onChange={(e) => cancelForm.setData('reason', e.target.value)}
                                 placeholder="Enter cancellation reason..."
                                 rows={3}
-                                className="mt-1 w-full rounded-lg border-gray-300 text-sm focus:border-[var(--theme-primary-1)] focus:ring-[var(--theme-primary-1)]"
+                                className="mt-1 w-full rounded-lg border-gray-300 text-sm focus:border-(--theme-primary-1) focus:ring-(--theme-primary-1)"
                             />
                             <div className="mt-4 flex gap-3">
                                 <button

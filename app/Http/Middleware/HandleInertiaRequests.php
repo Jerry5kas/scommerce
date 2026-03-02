@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Cart;
 use App\Models\ThemeSetting;
+use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,6 +41,7 @@ class HandleInertiaRequests extends Middleware
         // compute user's default zone for sharing (nullable)
         $zone = null;
         $location = null;
+        $cartItemsCount = 0;
 
         if ($request->user()) {
             $defaultAddress = $request->user()
@@ -46,6 +49,29 @@ class HandleInertiaRequests extends Middleware
                 ->active()
                 ->where('is_default', true)
                 ->first();
+
+            if ($defaultAddress === null || $defaultAddress->zone_id === null) {
+                $fallbackAddress = $request->user()
+                    ->addresses()
+                    ->active()
+                    ->whereNotNull('zone_id')
+                    ->latest('id')
+                    ->first();
+
+                if ($fallbackAddress instanceof UserAddress && ($defaultAddress === null || $defaultAddress->id !== $fallbackAddress->id)) {
+                    $request->user()->addresses()->active()->update(['is_default' => false]);
+                    $fallbackAddress->update(['is_default' => true]);
+                    $defaultAddress = $fallbackAddress;
+                }
+            }
+
+            $userCart = Cart::query()
+                ->notExpired()
+                ->forUser($request->user()->id)
+                ->latest('id')
+                ->first();
+
+            $cartItemsCount = $userCart?->itemCount() ?? 0;
 
             if ($defaultAddress) {
                 if ($defaultAddress->zone) {
@@ -68,6 +94,15 @@ class HandleInertiaRequests extends Middleware
             if (session('guest_address')) {
                 $location = session('guest_address');
             }
+
+            $guestSessionId = $request->session()->getId();
+            $guestCart = Cart::query()
+                ->notExpired()
+                ->forSession($guestSessionId)
+                ->latest('id')
+                ->first();
+
+            $cartItemsCount = $guestCart?->itemCount() ?? 0;
         }
 
         return [
@@ -80,6 +115,9 @@ class HandleInertiaRequests extends Middleware
                 'wishlisted_products' => $request->user() ? $request->user()->wishlists()->pluck('product_id')->toArray() : [],
             ],
             'theme' => ThemeSetting::getTheme(),
+            'cart' => [
+                'items_count' => $cartItemsCount,
+            ],
             'flash' => [
                 'message' => session('message'),
             ],

@@ -9,7 +9,9 @@ use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\SubscriptionPlan;
 use App\Services\CartService;
+use App\Services\CouponService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,7 +19,8 @@ use Inertia\Response;
 class CartController extends Controller
 {
     public function __construct(
-        private CartService $cartService
+        private CartService $cartService,
+        private CouponService $couponService
     ) {}
 
     /**
@@ -35,8 +38,18 @@ class CartController extends Controller
 
         // Get user addresses if authenticated
         $addresses = [];
+        $availableCoupons = [];
         if ($user) {
             $addresses = $user->addresses()->active()->with('zone')->get();
+            $availableCoupons = $this->couponService
+                ->getAvailableCoupons($user)
+                ->map(fn ($coupon) => [
+                    'code' => $coupon->code,
+                    'name' => $coupon->name,
+                    'discount_label' => $coupon->getDiscountLabel(),
+                    'min_order_amount' => $coupon->min_order_amount,
+                ])
+                ->values();
         }
 
         return Inertia::render('cart/index', [
@@ -44,6 +57,7 @@ class CartController extends Controller
             'items' => $cart->items,
             'summary' => $summary,
             'addresses' => $addresses,
+            'available_coupons' => $availableCoupons,
         ]);
     }
 
@@ -68,7 +82,7 @@ class CartController extends Controller
     /**
      * Add product to cart
      */
-    public function addItem(AddToCartRequest $request): JsonResponse
+    public function addItem(AddToCartRequest $request): JsonResponse|RedirectResponse
     {
         $user = $request->user();
         $sessionId = $request->session()->getId();
@@ -101,18 +115,22 @@ class CartController extends Controller
         $item->load('product');
         $cart->refresh();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Product added to cart.',
-            'item' => $item,
-            'summary' => $this->cartService->getCartSummary($cart),
-        ]);
+        if ($this->shouldReturnJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Product added to cart.',
+                'item' => $item,
+                'summary' => $this->cartService->getCartSummary($cart),
+            ]);
+        }
+
+        return back()->with('message', 'Product added to cart.');
     }
 
     /**
      * Update cart item quantity
      */
-    public function updateItem(UpdateCartItemRequest $request, CartItem $cartItem): JsonResponse
+    public function updateItem(UpdateCartItemRequest $request, CartItem $cartItem): JsonResponse|RedirectResponse
     {
         $user = $request->user();
         $sessionId = $request->session()->getId();
@@ -128,6 +146,10 @@ class CartController extends Controller
         if ($validated['quantity'] <= 0) {
             $this->cartService->removeItem($cartItem);
 
+            if (! $this->shouldReturnJson($request)) {
+                return back()->with('message', 'Item removed from cart.');
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Item removed from cart.',
@@ -140,6 +162,10 @@ class CartController extends Controller
         $cartItem->refresh();
         $cartItem->load('product');
 
+        if (! $this->shouldReturnJson($request)) {
+            return back()->with('message', 'Cart updated.');
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Cart updated.',
@@ -151,7 +177,7 @@ class CartController extends Controller
     /**
      * Remove item from cart
      */
-    public function removeItem(Request $request, CartItem $cartItem): JsonResponse
+    public function removeItem(Request $request, CartItem $cartItem): JsonResponse|RedirectResponse
     {
         $user = $request->user();
         $sessionId = $request->session()->getId();
@@ -164,6 +190,10 @@ class CartController extends Controller
 
         $this->cartService->removeItem($cartItem);
 
+        if (! $this->shouldReturnJson($request)) {
+            return back()->with('message', 'Item removed from cart.');
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Item removed from cart.',
@@ -174,13 +204,17 @@ class CartController extends Controller
     /**
      * Clear entire cart
      */
-    public function clear(Request $request): JsonResponse
+    public function clear(Request $request): JsonResponse|RedirectResponse
     {
         $user = $request->user();
         $sessionId = $request->session()->getId();
 
         $cart = $this->cartService->getOrCreateCart($user, $sessionId);
         $cart->clear();
+
+        if (! $this->shouldReturnJson($request)) {
+            return back()->with('message', 'Cart cleared.');
+        }
 
         return response()->json([
             'success' => true,
@@ -211,5 +245,10 @@ class CartController extends Controller
                 'subtotal' => $item->subtotal,
             ])->take(5),
         ]);
+    }
+
+    protected function shouldReturnJson(Request $request): bool
+    {
+        return $request->expectsJson() || $request->wantsJson();
     }
 }

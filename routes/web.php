@@ -153,6 +153,7 @@ Route::get('/location', [ZoneController::class, 'index'])->name('location.select
 Route::post('/location/check-serviceability', [ZoneController::class, 'checkServiceability'])->name('location.check-serviceability');
 Route::get('/location/zone/{pincode}', [ZoneController::class, 'getZoneByPincode'])->name('location.zone-by-pincode')->where('pincode', '[0-9]+');
 Route::post('/location/set', [ZoneController::class, 'setLocation'])->name('location.set');
+Route::get('/location/addresses', [UserAddressController::class, 'forLocation'])->name('location.addresses');
 
 /*
 |--------------------------------------------------------------------------
@@ -161,6 +162,9 @@ Route::post('/location/set', [ZoneController::class, 'setLocation'])->name('loca
 */
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/auth/email-continue', [AuthController::class, 'continueWithEmail'])
+        ->middleware('throttle:5,1')
+        ->name('auth.email-continue');
     Route::post('/auth/send-otp', [AuthController::class, 'sendOtp'])
         ->middleware('throttle:5,1')
         ->name('auth.send-otp');

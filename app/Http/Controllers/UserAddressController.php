@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreUserAddressRequest;
 use App\Http\Requests\UpdateUserAddressRequest;
 use App\Models\UserAddress;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,6 +13,45 @@ use Inertia\Response;
 
 class UserAddressController extends Controller
 {
+    public function forLocation(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user === null) {
+            return response()->json([
+                'can_manage' => false,
+                'addresses' => [],
+            ]);
+        }
+
+        $addresses = $user
+            ->addresses()
+            ->active()
+            ->orderByDesc('is_default')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (UserAddress $address) => [
+                'id' => $address->id,
+                'type' => $address->type,
+                'label' => $address->label,
+                'address_line_1' => $address->address_line_1,
+                'address_line_2' => $address->address_line_2,
+                'landmark' => $address->landmark,
+                'city' => $address->city,
+                'state' => $address->state,
+                'pincode' => $address->pincode,
+                'latitude' => $address->latitude,
+                'longitude' => $address->longitude,
+                'is_default' => (bool) $address->is_default,
+            ])
+            ->values();
+
+        return response()->json([
+            'can_manage' => true,
+            'addresses' => $addresses,
+        ]);
+    }
+
     public function index(Request $request): Response
     {
         $addresses = $request->user()
@@ -36,7 +76,7 @@ class UserAddressController extends Controller
         $address = $user->addresses()->create(array_merge($data, ['is_active' => true]));
         $address->autoAssignZone();
 
-        return redirect()->route('profile.addresses')->with('message', 'Address added.');
+        return $this->redirectAfterMutation($request, 'Address added.');
     }
 
     public function update(UpdateUserAddressRequest $request, UserAddress $address): RedirectResponse
@@ -48,7 +88,7 @@ class UserAddressController extends Controller
         $address->update($data);
         $address->autoAssignZone();
 
-        return redirect()->route('profile.addresses')->with('message', 'Address updated.');
+        return $this->redirectAfterMutation($request, 'Address updated.');
     }
 
     public function destroy(Request $request, UserAddress $address): RedirectResponse
@@ -58,7 +98,7 @@ class UserAddressController extends Controller
         }
         $address->update(['is_active' => false]);
 
-        return redirect()->route('profile.addresses')->with('message', 'Address removed.');
+        return $this->redirectAfterMutation($request, 'Address removed.');
     }
 
     public function setDefault(Request $request, UserAddress $address): RedirectResponse
@@ -70,6 +110,15 @@ class UserAddressController extends Controller
         $address->update(['is_default' => true]);
         $address->autoAssignZone();
 
-        return redirect()->route('profile.addresses')->with('message', 'Default address updated.');
+        return $this->redirectAfterMutation($request, 'Default address updated.');
+    }
+
+    private function redirectAfterMutation(Request $request, string $message): RedirectResponse
+    {
+        if ($request->boolean('from_location')) {
+            return back()->with('message', $message);
+        }
+
+        return redirect()->route('profile.addresses')->with('message', $message);
     }
 }

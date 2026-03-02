@@ -50,7 +50,7 @@ export default function AdminCategoriesIndex({ categories, verticalOptions, filt
                     </div>
                     <Link
                         href="/admin/categories/create"
-                        className="inline-flex items-center gap-2 rounded-lg bg-[var(--admin-dark-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                        className="inline-flex items-center gap-2 rounded-lg bg-(--admin-dark-primary) px-4 py-2 text-sm font-medium text-white hover:opacity-90"
                     >
                         <Plus className="h-4 w-4" />
                         Add category
@@ -91,7 +91,7 @@ export default function AdminCategoriesIndex({ categories, verticalOptions, filt
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             <Link
                                                 href={'/admin/categories/' + cat.id}
-                                                className="font-medium text-[var(--admin-dark-primary)] hover:underline"
+                                                className="font-medium text-(--admin-dark-primary) hover:underline"
                                             >
                                                 {cat.name}
                                             </Link>

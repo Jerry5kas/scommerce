@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Heart, ChevronDown, Package } from 'lucide-react';
 import { useState } from 'react';
 import ProductCardMedia, { getMediaList } from '@/components/user/ProductCardMedia';
@@ -27,17 +27,18 @@ interface BackendProduct {
     category?: { slug: string };
     is_subscription_eligible: boolean;
     cost_price?: string | number; // maybe used to show a fake best seller tag
+    variants?: Array<{ price: string | number | null }>;
 }
 
 interface PageProps extends SharedData {
     categories: BackendCategory[];
     products: BackendProduct[];
     vertical: string;
-    zone: unknown;
 }
 
 export default function Products() {
     const { categories, products } = usePage<PageProps>().props;
+    const auth = (usePage().props as { auth?: { user?: unknown; wishlisted_products?: number[] } }).auth;
 
     const fallbackImage = FALLBACK_IMAGE_URL;
 
@@ -70,21 +71,42 @@ export default function Products() {
     };
 
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
-    const [wishlistedIds, setWishlistedIds] = useState<Set<number>>(new Set());
     const [cardMediaIndex, setCardMediaIndex] = useState<Record<string, number>>({});
     const [mobileCategoryOpen, setMobileCategoryOpen] = useState(false);
+    const [addingProductId, setAddingProductId] = useState<number | null>(null);
+    const wishlistedProductIds = new Set(auth?.wishlisted_products || []);
 
     const setCardMediaIndexForKey = (key: string, index: number) => {
         setCardMediaIndex((prev) => ({ ...prev, [key]: index }));
     };
 
     const toggleWishlist = (id: number) => {
-        setWishlistedIds((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
+        if (!auth?.user) {
+            router.get('/login');
+            return;
+        }
+
+        router.post(`/wishlist/toggle/${id}`, {}, { preserveScroll: true, preserveState: true });
+    };
+
+    const addToCart = (event: React.MouseEvent, productId: number) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (addingProductId === productId) {
+            return;
+        }
+
+        setAddingProductId(productId);
+        router.post(
+            '/cart/add',
+            { product_id: productId, quantity: 1 },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setAddingProductId((current) => (current === productId ? null : current)),
+            },
+        );
     };
 
     // Make "All Products" category dynamically
@@ -140,8 +162,8 @@ export default function Products() {
                                             onClick={() => setSelectedCategory(cat.slug)}
                                             className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium transition-colors ${
                                                 selectedCategory === cat.slug
-                                                    ? 'bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
-                                                    : 'text-gray-700 hover:bg-gray-50 hover:text-[var(--theme-primary-1)]'
+                                                    ? 'bg-(--theme-primary-1)/10 text-(--theme-primary-1)'
+                                                    : 'text-gray-700 hover:bg-gray-50 hover:text-(--theme-primary-1)'
                                             }`}
                                         >
                                             <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200/80 bg-gray-50">
@@ -157,7 +179,7 @@ export default function Products() {
                                             <span
                                                 className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                                     selectedCategory === cat.slug
-                                                        ? 'bg-[var(--theme-primary-1)]/20 text-[var(--theme-primary-1)]'
+                                                        ? 'bg-(--theme-primary-1)/20 text-(--theme-primary-1)'
                                                         : 'bg-gray-100 text-gray-500'
                                                 }`}
                                             >
@@ -211,7 +233,7 @@ export default function Products() {
                                                 }}
                                                 className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm ${
                                                     selectedCategory === cat.slug
-                                                        ? 'bg-[var(--theme-primary-1)]/10 font-medium text-[var(--theme-primary-1)]'
+                                                        ? 'bg-(--theme-primary-1)/10 font-medium text-(--theme-primary-1)'
                                                         : 'text-gray-700'
                                                 }`}
                                             >
@@ -235,7 +257,7 @@ export default function Products() {
                             {/* Product grid – compact cards */}
                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
                                 {filteredProducts.map((product) => {
-                                    const isWishlisted = wishlistedIds.has(product.id);
+                                    const isWishlisted = wishlistedProductIds.has(product.id);
 
                                     const safeImage = getSafeUrl(product.image);
                                     const safeImages = (product.images || [])
@@ -244,7 +266,6 @@ export default function Products() {
                                         .map((url) => ({ type: 'image' as const, url }));
 
                                     const media = getMediaList({
-                                        id: product.id.toString(),
                                         image: safeImage,
                                         media: safeImages.length > 0 ? safeImages : undefined,
                                     });
@@ -253,16 +274,16 @@ export default function Products() {
                                         typeof product.price === 'number' ? product.price > 100 : parseFloat(product.price as string) > 100;
                                     const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
                                     const mainPrice = hasVariants
-                                        ? Math.min(...product.variants!.map((v) => parseFloat(v.price || '0')))
+                                        ? Math.min(...product.variants!.map((variant) => parseFloat(String(variant.price ?? '0'))))
                                         : parseFloat((product.price as string) || '0');
 
                                     return (
                                         <article
                                             key={product.id}
-                                            className="group flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-[var(--theme-primary-1)]/40 hover:shadow-md"
+                                            className="group flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-(--theme-primary-1)/40 hover:shadow-md"
                                             role="listitem"
                                         >
-                                            <div className="relative aspect-square w-full overflow-hidden bg-[var(--theme-secondary)]/10 sm:aspect-[4/3]">
+                                            <div className="relative aspect-square w-full overflow-hidden bg-(--theme-secondary)/10 sm:aspect-4/3">
                                                 <ProductCardMedia
                                                     media={media}
                                                     alt={product.name}
@@ -296,7 +317,7 @@ export default function Products() {
                                             <div className="flex flex-1 flex-col p-2 sm:p-2.5">
                                                 <Link
                                                     href={productRoute(product.slug)}
-                                                    className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors hover:text-[var(--theme-primary-1)] sm:text-sm"
+                                                    className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors hover:text-(--theme-primary-1) sm:text-sm"
                                                 >
                                                     {product.name}{' '}
                                                     {!product.is_subscription_eligible &&
@@ -309,20 +330,27 @@ export default function Products() {
                                                         Starts from ₹{mainPrice}/ Unit
                                                     </p>
                                                 ) : (
-                                                    <p className="mb-1 text-xs font-semibold text-[var(--theme-primary-1)] sm:text-sm">
+                                                    <p className="mb-1 text-xs font-semibold text-(--theme-primary-1) sm:text-sm">
                                                         ₹{mainPrice}/ Unit
                                                     </p>
                                                 )}
-                                                <Link
-                                                    href={
-                                                        product.is_subscription_eligible
-                                                            ? `/subscription?plan=${encodeURIComponent(product.slug)}`
-                                                            : productRoute(product.slug)
-                                                    }
-                                                    className="mt-auto w-full rounded-md bg-[var(--theme-primary-1)] py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none sm:py-2 sm:text-xs"
-                                                >
-                                                    {product.is_subscription_eligible ? 'Subscribe' : 'View Details'}
-                                                </Link>
+                                                {product.is_subscription_eligible ? (
+                                                    <Link
+                                                        href={`/subscription?plan=${encodeURIComponent(product.slug)}`}
+                                                        className="mt-auto w-full rounded-md bg-(--theme-primary-1) py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none sm:py-2 sm:text-xs"
+                                                    >
+                                                        Subscribe
+                                                    </Link>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(event) => addToCart(event, product.id)}
+                                                        disabled={addingProductId === product.id}
+                                                        className="mt-auto w-full rounded-md bg-(--theme-primary-1) py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70 sm:py-2 sm:text-xs"
+                                                    >
+                                                        {addingProductId === product.id ? 'Adding...' : 'Add to Cart'}
+                                                    </button>
+                                                )}
                                             </div>
                                         </article>
                                     );
@@ -336,7 +364,7 @@ export default function Products() {
                                     <button
                                         type="button"
                                         onClick={() => setSelectedCategory('all')}
-                                        className="mt-3 text-sm font-medium text-[var(--theme-primary-1)] hover:underline"
+                                        className="mt-3 text-sm font-medium text-(--theme-primary-1) hover:underline"
                                     >
                                         View all products
                                     </button>

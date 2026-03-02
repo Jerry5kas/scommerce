@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -13,21 +14,51 @@ return new class extends Migration
     {
         Schema::disableForeignKeyConstraints();
 
+        if (Schema::hasColumn('subscription_plans', 'slug') && DB::getDriverName() === 'sqlite') {
+            Schema::table('subscription_plans', function (Blueprint $table) {
+                try {
+                    $table->dropUnique('subscription_plans_slug_unique');
+                } catch (\Throwable) {
+                }
+
+                try {
+                    $table->dropIndex('subscription_plans_is_active_display_order_index');
+                } catch (\Throwable) {
+                }
+            });
+        }
+
         // 1. Modify subscription_plans
         Schema::table('subscription_plans', function (Blueprint $table) {
             // Drop columns not in the new requirement
             // Existing: name, slug, description, frequency_type, frequency_value, days_of_week, discount_percent, min_deliveries, is_active, display_order, created_at, updated_at, prices
-            
-            if (Schema::hasColumn('subscription_plans', 'slug')) $table->dropColumn('slug');
-            if (Schema::hasColumn('subscription_plans', 'frequency_value')) $table->dropColumn('frequency_value');
-            if (Schema::hasColumn('subscription_plans', 'days_of_week')) $table->dropColumn('days_of_week');
-            if (Schema::hasColumn('subscription_plans', 'discount_percent')) $table->dropColumn('discount_percent');
-            if (Schema::hasColumn('subscription_plans', 'min_deliveries')) $table->dropColumn('min_deliveries');
-            if (Schema::hasColumn('subscription_plans', 'display_order')) $table->dropColumn('display_order');
-            if (Schema::hasColumn('subscription_plans', 'prices')) $table->dropColumn('prices');
-            
+
+            if (Schema::hasColumn('subscription_plans', 'slug')) {
+                $table->dropColumn('slug');
+            }
+            if (Schema::hasColumn('subscription_plans', 'frequency_value')) {
+                $table->dropColumn('frequency_value');
+            }
+            if (Schema::hasColumn('subscription_plans', 'days_of_week')) {
+                $table->dropColumn('days_of_week');
+            }
+            if (Schema::hasColumn('subscription_plans', 'discount_percent')) {
+                $table->dropColumn('discount_percent');
+            }
+            if (Schema::hasColumn('subscription_plans', 'min_deliveries')) {
+                $table->dropColumn('min_deliveries');
+            }
+            if (Schema::hasColumn('subscription_plans', 'display_order')) {
+                $table->dropColumn('display_order');
+            }
+            if (Schema::hasColumn('subscription_plans', 'prices')) {
+                $table->dropColumn('prices');
+            }
+
             // Drop frequency_type to recreate it with new enum values
-            if (Schema::hasColumn('subscription_plans', 'frequency_type')) $table->dropColumn('frequency_type');
+            if (Schema::hasColumn('subscription_plans', 'frequency_type')) {
+                $table->dropColumn('frequency_type');
+            }
         });
 
         Schema::table('subscription_plans', function (Blueprint $table) {
@@ -72,20 +103,28 @@ return new class extends Migration
 
         // Revert subscription_plans changes (simplified revert)
         Schema::table('subscription_plans', function (Blueprint $table) {
-            if (Schema::hasColumn('subscription_plans', 'discount_type')) $table->dropColumn('discount_type');
-            if (Schema::hasColumn('subscription_plans', 'discount_value')) $table->dropColumn('discount_value');
-            if (Schema::hasColumn('subscription_plans', 'sort_order')) $table->dropColumn('sort_order');
-            if (Schema::hasColumn('subscription_plans', 'frequency_type')) $table->dropColumn('frequency_type');
+            if (Schema::hasColumn('subscription_plans', 'discount_type')) {
+                $table->dropColumn('discount_type');
+            }
+            if (Schema::hasColumn('subscription_plans', 'discount_value')) {
+                $table->dropColumn('discount_value');
+            }
+            if (Schema::hasColumn('subscription_plans', 'sort_order')) {
+                $table->dropColumn('sort_order');
+            }
+            if (Schema::hasColumn('subscription_plans', 'frequency_type')) {
+                $table->dropColumn('frequency_type');
+            }
         });
 
         Schema::table('subscription_plans', function (Blueprint $table) {
-             $table->string('slug')->nullable();
-             $table->enum('frequency_type', ['daily', 'alternate_days', 'weekly', 'custom'])->default('daily');
-             $table->unsignedInteger('frequency_value')->nullable();
-             $table->json('days_of_week')->nullable();
-             $table->decimal('discount_percent', 5, 2)->default(0);
-             $table->unsignedInteger('min_deliveries')->nullable();
-             $table->unsignedInteger('display_order')->default(0);
+            $table->string('slug')->nullable();
+            $table->enum('frequency_type', ['daily', 'alternate_days', 'weekly', 'custom'])->default('daily');
+            $table->unsignedInteger('frequency_value')->nullable();
+            $table->json('days_of_week')->nullable();
+            $table->decimal('discount_percent', 5, 2)->default(0);
+            $table->unsignedInteger('min_deliveries')->nullable();
+            $table->unsignedInteger('display_order')->default(0);
         });
 
         Schema::enableForeignKeyConstraints();

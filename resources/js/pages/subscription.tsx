@@ -199,7 +199,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                     <nav className="mb-6 flex items-center gap-3 sm:mb-8" aria-label="Breadcrumb">
                         <Link
                             href="/#subscriptions"
-                            className="flex items-center gap-1.5 rounded-lg text-sm font-medium text-gray-600 transition-colors hover:text-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
+                            className="flex items-center gap-1.5 rounded-lg text-sm font-medium text-gray-600 transition-colors hover:text-(--theme-primary-1) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none"
                         >
                             <ChevronLeft className="h-5 w-5 shrink-0" strokeWidth={2} />
                             <span className="hidden sm:inline">Back</span>
@@ -216,7 +216,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                             {/* Available plans */}
                             <section className="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:p-6" aria-labelledby="plans-heading">
                                 <h2 id="plans-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
-                                    <Repeat className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
+                                    <Repeat className="h-5 w-5 text-(--theme-primary-1)" strokeWidth={2} />
                                     1. Choose Plan & Product
                                 </h2>
 
@@ -230,9 +230,9 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 setSelectedItemIndex(0); // Reset item selection
                                                 setPattern(plan.frequency_type);
                                             }}
-                                            className={`relative flex-shrink-0 rounded-xl border-2 px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all ${
+                                            className={`relative shrink-0 rounded-xl border-2 px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all ${
                                                 currentPlan.id === plan.id
-                                                    ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)] text-white shadow-md'
+                                                    ? 'border-(--theme-primary-1) bg-(--theme-primary-1) text-white shadow-md'
                                                     : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                                             }`}
                                         >
@@ -242,7 +242,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                     className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-bold ${
                                                         currentPlan.id === plan.id
                                                             ? 'bg-white/20 text-white'
-                                                            : 'bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
+                                                            : 'bg-(--theme-primary-1)/10 text-(--theme-primary-1)'
                                                     }`}
                                                 >
                                                     {plan.discount_type === 'percentage'
@@ -255,13 +255,13 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                 </div>
 
                                 {/* Plan Features */}
-                                <div className="mb-6 rounded-xl border border-[var(--theme-primary-1)]/10 bg-[var(--theme-primary-1)]/5 p-4">
-                                    <h3 className="mb-3 text-sm font-bold tracking-wide text-[var(--theme-primary-1)] uppercase">Plan Benefits</h3>
+                                <div className="mb-6 rounded-xl border border-(--theme-primary-1)/10 bg-(--theme-primary-1)/5 p-4">
+                                    <h3 className="mb-3 text-sm font-bold tracking-wide text-(--theme-primary-1) uppercase">Plan Benefits</h3>
                                     <ul className="grid gap-2 sm:grid-cols-2">
                                         {currentPlan.features.map((feature) => (
                                             <li key={feature.id} className="flex items-start gap-2 text-sm text-gray-700">
                                                 <CheckCircle2
-                                                    className={`mt-0.5 h-4 w-4 shrink-0 ${feature.highlight ? 'text-[var(--theme-primary-1)]' : 'text-gray-400'}`}
+                                                    className={`mt-0.5 h-4 w-4 shrink-0 ${feature.highlight ? 'text-(--theme-primary-1)' : 'text-gray-400'}`}
                                                 />
                                                 <span className={feature.highlight ? 'font-medium text-gray-900' : ''}>{feature.title}</span>
                                             </li>
@@ -281,7 +281,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 onClick={() => setSelectedItemIndex(index)}
                                                 className={`group relative flex items-start gap-3 rounded-xl border-2 p-3 text-left transition-all sm:gap-4 sm:p-4 ${
                                                     isSelected
-                                                        ? 'border-[var(--theme-primary-1)] bg-white shadow-md ring-1 ring-[var(--theme-primary-1)]'
+                                                        ? 'border-(--theme-primary-1) bg-white shadow-md ring-1 ring-(--theme-primary-1)'
                                                         : 'border-gray-200 bg-gray-50/50 hover:border-gray-300 hover:bg-white'
                                                 }`}
                                             >
@@ -296,7 +296,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex flex-wrap items-center gap-2">
                                                         <span
-                                                            className={`font-bold transition-colors ${isSelected ? 'text-[var(--theme-primary-1)]' : 'text-gray-900'}`}
+                                                            className={`font-bold transition-colors ${isSelected ? 'text-(--theme-primary-1)' : 'text-gray-900'}`}
                                                         >
                                                             {item.product_name}
                                                         </span>
@@ -308,8 +308,8 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                     </div>
                                                 </div>
                                                 {isSelected && (
-                                                    <div className="absolute top-3 right-3 text-[var(--theme-primary-1)]">
-                                                        <CheckCircle2 className="h-5 w-5 fill-[var(--theme-primary-1)] text-white" />
+                                                    <div className="absolute top-3 right-3 text-(--theme-primary-1)">
+                                                        <CheckCircle2 className="h-5 w-5 fill-(--theme-primary-1) text-white" />
                                                     </div>
                                                 )}
                                             </button>
@@ -324,7 +324,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                 aria-labelledby="schedule-heading"
                             >
                                 <h2 id="schedule-heading" className="mb-6 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
-                                    <Clock className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
+                                    <Clock className="h-5 w-5 text-(--theme-primary-1)" strokeWidth={2} />
                                     2. Delivery Schedule
                                 </h2>
 
@@ -341,7 +341,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
                                                 min={new Date().toISOString().slice(0, 10)}
-                                                className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 pl-11 text-sm font-medium text-gray-900 transition-colors focus:border-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)]/20 focus:outline-none"
+                                                className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 pl-11 text-sm font-medium text-gray-900 transition-colors focus:border-(--theme-primary-1) focus:ring-2 focus:ring-(--theme-primary-1)/20 focus:outline-none"
                                             />
                                             <Calendar className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400" />
                                         </div>
@@ -360,17 +360,17 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                         onClick={() => setDeliverySlot(slot.id)}
                                                         className={`flex flex-col items-start gap-1 rounded-xl border-2 px-4 py-3 text-left transition-all ${
                                                             isSelected
-                                                                ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/5 ring-1 ring-[var(--theme-primary-1)]'
+                                                                ? 'border-(--theme-primary-1) bg-(--theme-primary-1)/5 ring-1 ring-(--theme-primary-1)'
                                                                 : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                                                         }`}
                                                     >
                                                         <div className="flex w-full items-center justify-between">
                                                             <span
-                                                                className={`text-sm font-bold ${isSelected ? 'text-[var(--theme-primary-1)]' : 'text-gray-900'}`}
+                                                                className={`text-sm font-bold ${isSelected ? 'text-(--theme-primary-1)' : 'text-gray-900'}`}
                                                             >
                                                                 {slot.label}
                                                             </span>
-                                                            {isSelected && <CheckCircle2 className="h-4 w-4 text-[var(--theme-primary-1)]" />}
+                                                            {isSelected && <CheckCircle2 className="h-4 w-4 text-(--theme-primary-1)" />}
                                                         </div>
                                                         <span className="text-xs text-gray-500">{slot.time}</span>
                                                     </button>
@@ -393,7 +393,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                         onClick={() => setPattern(p.id)}
                                                         className={`rounded-lg border-2 px-4 py-2.5 text-sm font-semibold transition-all ${
                                                             isSelected
-                                                                ? 'border-[var(--theme-tertiary)] bg-[var(--theme-tertiary)] text-white shadow-sm'
+                                                                ? 'border-(--theme-tertiary) bg-(--theme-tertiary) text-white shadow-sm'
                                                                 : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                                                         }`}
                                                     >
@@ -412,17 +412,17 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                 <button
                                                     type="button"
                                                     onClick={() => setQuantityPerDelivery((q) => Math.max(1, q - 1))}
-                                                    className="flex h-11 w-11 items-center justify-center rounded-l-lg text-gray-600 transition-colors hover:bg-gray-100 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:outline-none focus:ring-inset"
+                                                    className="flex h-11 w-11 items-center justify-center rounded-l-lg text-gray-600 transition-colors hover:bg-gray-100 focus:ring-2 focus:ring-(--theme-primary-1) focus:outline-none focus:ring-inset"
                                                 >
                                                     <Minus className="h-4 w-4" strokeWidth={2.5} />
                                                 </button>
-                                                <span className="flex h-11 min-w-[3.5rem] items-center justify-center border-x-2 border-gray-100 text-lg font-bold text-gray-900">
+                                                <span className="flex h-11 min-w-14 items-center justify-center border-x-2 border-gray-100 text-lg font-bold text-gray-900">
                                                     {quantityPerDelivery}
                                                 </span>
                                                 <button
                                                     type="button"
                                                     onClick={() => setQuantityPerDelivery((q) => Math.min(99, q + 1))}
-                                                    className="flex h-11 w-11 items-center justify-center rounded-r-lg text-gray-600 transition-colors hover:bg-gray-100 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:outline-none focus:ring-inset"
+                                                    className="flex h-11 w-11 items-center justify-center rounded-r-lg text-gray-600 transition-colors hover:bg-gray-100 focus:ring-2 focus:ring-(--theme-primary-1) focus:outline-none focus:ring-inset"
                                                 >
                                                     <Plus className="h-4 w-4" strokeWidth={2.5} />
                                                 </button>
@@ -459,7 +459,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                 aria-labelledby="address-heading"
                             >
                                 <h2 id="address-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
-                                    <MapPin className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
+                                    <MapPin className="h-5 w-5 text-(--theme-primary-1)" strokeWidth={2} />
                                     3. Delivery Address
                                 </h2>
                                 {addresses.length > 0 ? (
@@ -471,7 +471,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                     key={addr.id}
                                                     className={`flex cursor-pointer gap-3 rounded-xl border-2 p-4 transition-colors ${
                                                         isSelected
-                                                            ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/5'
+                                                            ? 'border-(--theme-primary-1) bg-(--theme-primary-1)/5'
                                                             : 'border-gray-200 hover:border-gray-300'
                                                     }`}
                                                 >
@@ -481,13 +481,13 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                         value={addr.id}
                                                         checked={isSelected ?? false}
                                                         onChange={() => setSelectedAddressId(addr.id)}
-                                                        className="mt-1 h-4 w-4 border-gray-300 text-[var(--theme-primary-1)] focus:ring-[var(--theme-primary-1)]"
+                                                        className="mt-1 h-4 w-4 border-gray-300 text-(--theme-primary-1) focus:ring-(--theme-primary-1)"
                                                     />
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex flex-wrap items-center gap-2">
                                                             <span className="font-semibold text-gray-900">{addr.label}</span>
                                                             {addr.isDefault && (
-                                                                <span className="rounded bg-[var(--theme-primary-1)]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--theme-primary-1)]">
+                                                                <span className="rounded bg-(--theme-primary-1)/20 px-1.5 py-0.5 text-[10px] font-semibold text-(--theme-primary-1)">
                                                                     Default
                                                                 </span>
                                                             )}
@@ -509,7 +509,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                     <button
                                         type="button"
                                         onClick={() => setShowAddAddress(true)}
-                                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--theme-primary-1)]/50 bg-[var(--theme-primary-1)]/5 py-3 text-sm font-semibold text-[var(--theme-primary-1)] transition-colors hover:bg-[var(--theme-primary-1)]/10 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
+                                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-(--theme-primary-1)/50 bg-(--theme-primary-1)/5 py-3 text-sm font-semibold text-(--theme-primary-1) transition-colors hover:bg-(--theme-primary-1)/10 focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none"
                                     >
                                         <Plus className="h-4 w-4" strokeWidth={2} />
                                         Add new address
@@ -520,7 +520,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                         <button
                                             type="button"
                                             onClick={() => setShowAddAddress(false)}
-                                            className="text-sm font-medium text-[var(--theme-primary-1)] hover:underline"
+                                            className="text-sm font-medium text-(--theme-primary-1) hover:underline"
                                         >
                                             Cancel
                                         </button>
@@ -534,18 +534,18 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                 aria-labelledby="instructions-heading"
                             >
                                 <h2 id="instructions-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
-                                    <FileText className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
+                                    <FileText className="h-5 w-5 text-(--theme-primary-1)" strokeWidth={2} />
                                     Delivery instructions
                                 </h2>
                                 <ul className="space-y-2">
                                     {DELIVERY_INSTRUCTIONS.map((opt) => (
                                         <li key={opt.id}>
-                                            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 transition-colors hover:bg-gray-50/50 has-[:checked]:border-[var(--theme-primary-1)] has-[:checked]:bg-[var(--theme-primary-1)]/5">
+                                            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 transition-colors hover:bg-gray-50/50 has-checked:border-(--theme-primary-1) has-checked:bg-(--theme-primary-1)/5">
                                                 <input
                                                     type="checkbox"
                                                     checked={instructionIds.has(opt.id)}
                                                     onChange={() => toggleInstruction(opt.id)}
-                                                    className="mt-1 h-4 w-4 rounded border-gray-300 text-[var(--theme-primary-1)] focus:ring-[var(--theme-primary-1)]"
+                                                    className="mt-1 h-4 w-4 rounded border-gray-300 text-(--theme-primary-1) focus:ring-(--theme-primary-1)"
                                                 />
                                                 <span className="text-sm font-medium text-gray-800">
                                                     {opt.emoji && (
@@ -563,7 +563,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                         placeholder="Describe your instruction"
                                                         value={otherInstruction}
                                                         onChange={(e) => setOtherInstruction(e.target.value)}
-                                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] focus:outline-none"
+                                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1) focus:outline-none"
                                                     />
                                                 </div>
                                             )}
@@ -582,10 +582,10 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                     aria-labelledby="summary-heading"
                                 >
                                     <h2 id="summary-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
-                                        <Repeat className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
+                                        <Repeat className="h-5 w-5 text-(--theme-primary-1)" strokeWidth={2} />
                                         Subscription
                                     </h2>
-                                    <div className="flex gap-3 rounded-xl border border-gray-100 bg-[var(--theme-primary-1)]/5 p-4 sm:p-4">
+                                    <div className="flex gap-3 rounded-xl border border-gray-100 bg-(--theme-primary-1)/5 p-4 sm:p-4">
                                         <span className="flex h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-white sm:h-16 sm:w-16">
                                             <img
                                                 src={getSafeImageUrl(selectedItem?.product_image)}
@@ -597,14 +597,14 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                         <div className="min-w-0 flex-1">
                                             <p className="font-semibold text-gray-900 sm:text-base">{currentPlan.name}</p>
                                             <p className="text-xs text-gray-600">{selectedItem?.product_name}</p>
-                                            <p className="mt-0.5 text-sm font-semibold text-[var(--theme-primary-1)]">
+                                            <p className="mt-0.5 text-sm font-semibold text-(--theme-primary-1)">
                                                 ₹{Math.round(selectedItem?.per_unit_price || 0)}/unit
                                             </p>
                                             {!showAddInstruction ? (
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowAddInstruction(true)}
-                                                    className="mt-2 flex items-center gap-1 text-xs font-medium text-[var(--theme-primary-1)] hover:underline"
+                                                    className="mt-2 flex items-center gap-1 text-xs font-medium text-(--theme-primary-1) hover:underline"
                                                 >
                                                     <FileText className="h-3 w-3" strokeWidth={2} />
                                                     Add instruction
@@ -616,7 +616,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                         placeholder="Delivery note (optional)"
                                                         value={customInstruction}
                                                         onChange={(e) => setCustomInstruction(e.target.value)}
-                                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] focus:outline-none"
+                                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1) focus:outline-none"
                                                     />
                                                     <button
                                                         type="button"
@@ -637,7 +637,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                     aria-labelledby="offers-heading"
                                 >
                                     <h2 id="offers-heading" className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900 sm:text-lg">
-                                        <Tag className="h-5 w-5 text-[var(--theme-primary-1)]" strokeWidth={2} />
+                                        <Tag className="h-5 w-5 text-(--theme-primary-1)" strokeWidth={2} />
                                         Offers & benefits
                                     </h2>
                                     {appliedCoupon ? (
@@ -665,12 +665,12 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                                     setCouponError(null);
                                                 }}
                                                 onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
-                                                className="min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-gray-50/50 px-4 py-3 text-sm font-medium uppercase placeholder:text-gray-400 placeholder:normal-case focus:border-[var(--theme-primary-1)] focus:bg-white focus:ring-2 focus:ring-[var(--theme-primary-1)]/20 focus:outline-none"
+                                                className="min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-gray-50/50 px-4 py-3 text-sm font-medium uppercase placeholder:text-gray-400 placeholder:normal-case focus:border-(--theme-primary-1) focus:bg-white focus:ring-2 focus:ring-(--theme-primary-1)/20 focus:outline-none"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={applyCoupon}
-                                                className="shrink-0 rounded-xl bg-[var(--theme-primary-1)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
+                                                className="shrink-0 rounded-xl bg-(--theme-primary-1) px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none"
                                             >
                                                 Apply
                                             </button>
@@ -687,7 +687,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
 
                                 {/* Bill details */}
                                 <section
-                                    className="rounded-2xl border border-gray-200/80 bg-[var(--theme-primary-1)]/5 p-4 shadow-sm sm:p-6"
+                                    className="rounded-2xl border border-gray-200/80 bg-(--theme-primary-1)/5 p-4 shadow-sm sm:p-6"
                                     aria-labelledby="bill-heading"
                                 >
                                     <h2 id="bill-heading" className="mb-4 text-base font-bold text-gray-900 sm:text-lg">
@@ -700,7 +700,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                         </div>
                                         <div className="flex justify-between text-gray-700">
                                             <dt>Delivery fee</dt>
-                                            <dd className="font-semibold text-[var(--theme-primary-1)]">
+                                            <dd className="font-semibold text-(--theme-primary-1)">
                                                 {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
                                             </dd>
                                         </div>
@@ -717,7 +717,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                     </dl>
                                     <Link
                                         href="#"
-                                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--theme-primary-1)] py-4 text-base font-bold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
+                                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-(--theme-primary-1) py-4 text-base font-bold text-white shadow-sm transition-colors hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none"
                                     >
                                         Proceed to pay ₹{toPay}
                                     </Link>
@@ -735,7 +735,7 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                             </div>
                             <Link
                                 href="#"
-                                className="flex max-w-[200px] flex-1 items-center justify-center rounded-xl bg-[var(--theme-primary-1)] py-3.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
+                                className="flex max-w-50 flex-1 items-center justify-center rounded-xl bg-(--theme-primary-1) py-3.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none"
                             >
                                 Pay ₹{toPay}
                             </Link>

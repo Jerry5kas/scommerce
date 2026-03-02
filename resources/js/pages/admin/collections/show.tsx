@@ -37,10 +37,7 @@ export default function AdminCollectionsShow({ collection }: AdminCollectionsSho
         <AdminLayout title={collection.name}>
             <Head title={collection.name + ' - Admin'} />
             <div className="space-y-4">
-                <Link
-                    href="/admin/collections"
-                    className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--admin-dark-primary)]"
-                >
+                <Link href="/admin/collections" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-(--admin-dark-primary)">
                     <ArrowLeft className="h-4 w-4" />
                     Back to collections
                 </Link>
@@ -103,7 +100,7 @@ export default function AdminCollectionsShow({ collection }: AdminCollectionsSho
                                 <li key={p.id} className="flex items-center justify-between px-4 py-3">
                                     <Link
                                         href={'/admin/products/' + p.id}
-                                        className="flex items-center gap-2 font-medium text-[var(--admin-dark-primary)] hover:underline"
+                                        className="flex items-center gap-2 font-medium text-(--admin-dark-primary) hover:underline"
                                     >
                                         <Package className="h-4 w-4 text-gray-400" />
                                         {p.name}

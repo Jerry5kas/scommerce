@@ -126,6 +126,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
     const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
     const [mediaIndex, setMediaIndex] = useState(0);
     const [detailsOpen, setDetailsOpen] = useState(false);
+    const [isAddingToCart, setIsAddingToCart] = useState(false);
 
     const auth = (usePage().props as { auth?: { user?: unknown; wishlisted_products?: number[] } }).auth;
     const wishlistedProductIds = new Set(auth?.wishlisted_products || []);
@@ -169,6 +170,23 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
         router.post(`/wishlist/toggle/${id}`, {}, { preserveScroll: true, preserveState: true });
     };
 
+    const handleAddToCart = () => {
+        if (isAddingToCart) {
+            return;
+        }
+
+        setIsAddingToCart(true);
+        router.post(
+            '/cart/add',
+            { product_id: product.id, quantity: 1 },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setIsAddingToCart(false),
+            },
+        );
+    };
+
     const toggleSimilarWishlist = (e: React.MouseEvent, productId: number) => {
         e.preventDefault();
         e.stopPropagation();
@@ -189,11 +207,11 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                 <div className="container mx-auto max-w-7xl px-4 py-4 sm:px-5 sm:py-6 lg:px-6 lg:py-8">
                     {/* Breadcrumbs */}
                     <nav className="mb-4 flex items-center gap-1.5 text-xs text-gray-500 sm:mb-6 sm:text-sm" aria-label="Breadcrumb">
-                        <Link href="/" className="transition-colors hover:text-[var(--theme-primary-1)]">
+                        <Link href="/" className="transition-colors hover:text-(--theme-primary-1)">
                             Home
                         </Link>
                         <ChevronRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-                        <Link href="/products" className="transition-colors hover:text-[var(--theme-primary-1)]">
+                        <Link href="/products" className="transition-colors hover:text-(--theme-primary-1)">
                             Products
                         </Link>
                         <ChevronRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
@@ -203,7 +221,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                     <section className="mb-10 rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm sm:mb-12 sm:p-6 lg:mb-10 lg:grid lg:grid-cols-9 lg:gap-6 lg:p-8">
                         {/* Media */}
                         <div className="mb-6 lg:col-span-5 lg:mb-0">
-                            <div className="relative aspect-[3/4] min-h-[380px] w-full overflow-hidden rounded-xl bg-[var(--theme-secondary)]/10 sm:min-h-[480px] lg:min-h-[560px]">
+                            <div className="relative aspect-3/4 min-h-95 w-full overflow-hidden rounded-xl bg-(--theme-secondary)/10 sm:min-h-120 lg:min-h-140">
                                 {mediaList.length > 0 && mediaList[mediaIndex] && mediaList[mediaIndex].type === 'image' ? (
                                     <img
                                         src={mediaList[mediaIndex].url}
@@ -239,7 +257,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                                             type="button"
                                             onClick={() => setMediaIndex(i)}
                                             className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-colors sm:h-16 sm:w-16 ${
-                                                i === mediaIndex ? 'border-[var(--theme-primary-1)]' : 'border-transparent bg-gray-100'
+                                                i === mediaIndex ? 'border-(--theme-primary-1)' : 'border-transparent bg-gray-100'
                                             }`}
                                         >
                                             {item.type === 'image' ? (
@@ -278,9 +296,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                                 <>
                                     <div className="mt-3 flex flex-wrap items-baseline gap-2">
                                         {displayMrp && <span className="text-sm text-gray-400 line-through">{formatCurrency(displayMrp)}</span>}
-                                        <span className="text-xl font-bold text-[var(--theme-primary-1)] sm:text-2xl">
-                                            {formatCurrency(displayPrice)}
-                                        </span>
+                                        <span className="text-xl font-bold text-(--theme-primary-1) sm:text-2xl">{formatCurrency(displayPrice)}</span>
                                         {displayMrp &&
                                             (() => {
                                                 const mrpNum = parseFloat(displayMrp.toString());
@@ -300,7 +316,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                                                 onClick={() => setSelectedVariantIndex(i)}
                                                 className={`rounded-xl border-2 px-3 py-2 text-sm font-semibold transition-colors ${
                                                     i === selectedVariantIndex
-                                                        ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
+                                                        ? 'border-(--theme-primary-1) bg-(--theme-primary-1)/10 text-(--theme-primary-1)'
                                                         : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                                                 }`}
                                             >
@@ -314,9 +330,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                                 <>
                                     <div className="mt-3 flex flex-wrap items-baseline gap-2">
                                         {displayMrp && <span className="text-sm text-gray-400 line-through">{formatCurrency(displayMrp)}</span>}
-                                        <span className="text-xl font-bold text-[var(--theme-primary-1)] sm:text-2xl">
-                                            {formatCurrency(displayPrice)}
-                                        </span>
+                                        <span className="text-xl font-bold text-(--theme-primary-1) sm:text-2xl">{formatCurrency(displayPrice)}</span>
                                         {displayMrp &&
                                             (() => {
                                                 const mrpNum = parseFloat(displayMrp.toString());
@@ -330,16 +344,27 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                             )}
 
                             <div className="mt-6 flex flex-wrap items-center gap-3">
-                                <Link
-                                    href="#"
-                                    className="w-full rounded-xl bg-[var(--theme-primary-1)] px-4 py-3.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none sm:w-auto sm:max-w-xs sm:flex-1"
+                                <button
+                                    type="button"
+                                    onClick={handleAddToCart}
+                                    disabled={isAddingToCart}
+                                    className="w-full rounded-xl bg-(--theme-primary-1) px-4 py-3.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none sm:w-auto sm:max-w-xs sm:flex-1"
                                 >
-                                    Add to cart
-                                </Link>
+                                    {isAddingToCart ? 'Adding...' : 'Add to cart'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => triggerToggleWishlist(product.id)}
+                                    aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                                    className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-pink-500 px-4 py-3 text-sm font-semibold text-pink-600 transition-colors hover:bg-pink-50 sm:w-auto"
+                                >
+                                    <Heart className={`h-4 w-4 ${wishlisted ? 'fill-pink-500 text-pink-500' : 'text-pink-500'}`} strokeWidth={2} />
+                                    <span>Wishlist</span>
+                                </button>
                                 {isPlan && (
                                     <Link
                                         href={`/subscription?product=${product.id}`}
-                                        className="w-full rounded-xl border-2 border-[var(--theme-primary-1)] bg-white px-4 py-3.5 text-center text-sm font-semibold text-[var(--theme-primary-1)] transition-colors hover:bg-[var(--theme-primary-1)]/10 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none sm:w-auto sm:max-w-xs sm:flex-1"
+                                        className="w-full rounded-xl border-2 border-(--theme-primary-1) bg-white px-4 py-3.5 text-center text-sm font-semibold text-(--theme-primary-1) transition-colors hover:bg-(--theme-primary-1)/10 focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none sm:w-auto sm:max-w-xs sm:flex-1"
                                     >
                                         Subscribe
                                     </Link>
@@ -377,7 +402,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                                         const Icon = item.icon;
                                         return (
                                             <li key={item.title} className="flex gap-3">
-                                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]">
+                                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-(--theme-primary-1)/10 text-(--theme-primary-1)">
                                                     <Icon className="h-4 w-4" strokeWidth={2} />
                                                 </span>
                                                 <div>
@@ -403,7 +428,7 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                             {MOCK_REVIEWS.map((review) => (
                                 <article key={review.id} className="rounded-lg border border-gray-200 bg-gray-50/50 p-3 sm:p-4">
                                     <div className="flex gap-2.5">
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--theme-primary-1)]/15 text-xs font-semibold text-[var(--theme-primary-1)]">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--theme-primary-1)/15 text-xs font-semibold text-(--theme-primary-1)">
                                             {review.name.charAt(0)}
                                         </div>
                                         <div className="min-w-0 flex-1">
@@ -451,10 +476,10 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                                     return (
                                         <article
                                             key={p.id}
-                                            className="group flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-[var(--theme-primary-1)]/40 hover:shadow-md"
+                                            className="group flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:border-(--theme-primary-1)/40 hover:shadow-md"
                                             role="listitem"
                                         >
-                                            <div className="relative aspect-square w-full overflow-hidden bg-[var(--theme-secondary)]/10 sm:aspect-[4/3]">
+                                            <div className="relative aspect-square w-full overflow-hidden bg-(--theme-secondary)/10 sm:aspect-4/3">
                                                 <ProductCardMedia
                                                     media={simMedia}
                                                     alt={p.name}
@@ -479,20 +504,20 @@ export default function ProductDetail({ product, price, relatedProducts }: Produ
                                             <div className="flex flex-1 flex-col p-2 sm:p-2.5">
                                                 <Link
                                                     href={productRoute(p.slug)}
-                                                    className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors hover:text-[var(--theme-primary-1)] sm:text-sm"
+                                                    className="mb-0.5 line-clamp-2 text-xs font-bold text-gray-800 transition-colors hover:text-(--theme-primary-1) sm:text-sm"
                                                 >
                                                     {p.name}
                                                 </Link>
                                                 {p.is_subscription_eligible ? (
                                                     <p className="mb-1 text-[10px] font-medium text-gray-600 sm:text-xs">Subscription Available</p>
                                                 ) : (
-                                                    <p className="mb-1 text-xs font-semibold text-[var(--theme-primary-1)] sm:text-sm">
+                                                    <p className="mb-1 text-xs font-semibold text-(--theme-primary-1) sm:text-sm">
                                                         {formatCurrency(p.price)}/ Unit
                                                     </p>
                                                 )}
                                                 <Link
                                                     href={p.is_subscription_eligible ? `/subscription?product=${p.id}` : '#'}
-                                                    className="mt-auto w-full rounded-md bg-[var(--theme-primary-1)] py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none sm:py-2 sm:text-xs"
+                                                    className="mt-auto w-full rounded-md bg-(--theme-primary-1) py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none sm:py-2 sm:text-xs"
                                                 >
                                                     {p.is_subscription_eligible ? 'Subscribe' : 'Add'}
                                                 </Link>

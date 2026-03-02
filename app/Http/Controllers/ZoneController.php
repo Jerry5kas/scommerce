@@ -8,6 +8,7 @@ use App\Models\UserAddress;
 use App\Services\LocationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,8 +18,12 @@ class ZoneController extends Controller
         private LocationService $locationService
     ) {}
 
-    public function index(): Response
+    public function index(): Response|RedirectResponse
     {
+        if (! Auth::check()) {
+            return redirect()->route('login');
+        }
+
         $zones = $this->locationService->getServiceableZones()->map(function ($zone) {
             return [
                 'id' => $zone->id,
@@ -61,6 +66,7 @@ class ZoneController extends Controller
         return response()->json([
             'serviceable' => $zone !== null,
             'zone' => $zone?->only(['id', 'name', 'code', 'city', 'state', 'delivery_charge', 'min_order_amount']),
+            'verticals' => $zone !== null ? $this->locationService->getVerticalsForZone($zone) : [],
         ]);
     }
 

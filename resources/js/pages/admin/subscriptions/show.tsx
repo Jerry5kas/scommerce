@@ -315,7 +315,7 @@ export default function AdminSubscriptionShow({
                             {subscription.user.email && <p className="text-sm text-gray-600">{subscription.user.email}</p>}
                             <Link
                                 href={`/admin/users/${subscription.user.id}`}
-                                className="mt-2 inline-block text-sm text-[var(--admin-dark-primary)] hover:underline"
+                                className="mt-2 inline-block text-sm text-(--admin-dark-primary) hover:underline"
                             >
                                 View customer →
                             </Link>

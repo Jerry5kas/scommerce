@@ -43,7 +43,7 @@ export default function WishlistIndex({ topProducts, topUsers, stats }: Props) {
                         <h1 className="text-2xl font-bold text-gray-900">Wishlist Insights</h1>
                         <p className="text-gray-500">Analyze popular products and user engagement</p>
                     </div>
-                    <div className="flex items-center gap-2 rounded-xl bg-[var(--theme-primary-1)]/10 px-4 py-2 text-[var(--theme-primary-1)]">
+                    <div className="flex items-center gap-2 rounded-xl bg-(--theme-primary-1)/10 px-4 py-2 text-(--theme-primary-1)">
                         <Heart className="h-5 w-5 fill-current" />
                         <span className="font-semibold">{stats.total_wishlisted_items} Total Items</span>
                     </div>
@@ -127,10 +127,7 @@ export default function WishlistIndex({ topProducts, topUsers, stats }: Props) {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <Link
-                                                    href={`/admin/products/${p.id}/edit`}
-                                                    className="text-gray-400 hover:text-[var(--theme-primary-1)]"
-                                                >
+                                                <Link href={`/admin/products/${p.id}/edit`} className="text-gray-400 hover:text-(--theme-primary-1)">
                                                     <ChevronRight className="h-5 w-5" />
                                                 </Link>
                                             </td>
@@ -171,7 +168,7 @@ export default function WishlistIndex({ topProducts, topUsers, stats }: Props) {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                <Link href={`/admin/users/${u.id}`} className="text-gray-400 hover:text-[var(--theme-primary-1)]">
+                                                <Link href={`/admin/users/${u.id}`} className="text-gray-400 hover:text-(--theme-primary-1)">
                                                     <ChevronRight className="h-5 w-5" />
                                                 </Link>
                                             </td>

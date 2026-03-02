@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Auth\EmailAuthRequest;
 use App\Http\Requests\Auth\SendOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Models\User;
@@ -77,6 +78,7 @@ class AuthController extends Controller
         $user = User::query()->firstOrCreate(
             ['phone' => $phone],
             [
+                'name' => 'User '.substr($phone, -4),
                 'role' => User::ROLE_CUSTOMER,
                 'preferred_language' => $language,
                 'communication_consent' => $consent,
@@ -91,7 +93,49 @@ class AuthController extends Controller
         Auth::guard('web')->login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home'))->with('success', 'Logged in successfully.');
+        return redirect()->route('location.select')->with('success', 'Logged in successfully.');
+    }
+
+    public function continueWithEmail(EmailAuthRequest $request): RedirectResponse
+    {
+        $email = Str::lower($request->validated('email'));
+        $password = $request->validated('password');
+        $language = $request->validated('language');
+        $consent = $request->boolean('consent');
+
+        $user = User::query()->where('email', $email)->first();
+
+        if ($user !== null) {
+            if (! Hash::check($password, (string) $user->password)) {
+                throw ValidationException::withMessages([
+                    'password' => ['Invalid email or password.'],
+                ])->redirectTo($request->url());
+            }
+
+            $user->update([
+                'preferred_language' => $language,
+                'communication_consent' => $consent,
+                'last_login_at' => now(),
+            ]);
+        } else {
+            $nameFromEmail = Str::of($email)->before('@')->replace(['.', '_', '-'], ' ')->title()->toString();
+
+            $user = User::query()->create([
+                'name' => $nameFromEmail !== '' ? $nameFromEmail : 'Customer',
+                'email' => $email,
+                'phone' => null,
+                'role' => User::ROLE_CUSTOMER,
+                'preferred_language' => $language,
+                'communication_consent' => $consent,
+                'password' => Hash::make($password),
+                'last_login_at' => now(),
+            ]);
+        }
+
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
+
+        return redirect()->route('location.select')->with('success', 'Logged in successfully.');
     }
 
     public function logout(): RedirectResponse

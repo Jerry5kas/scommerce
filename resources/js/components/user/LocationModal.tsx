@@ -18,8 +18,10 @@ interface LocationModalProps {
 
 export default function LocationModal({ isOpen, onClose, initialLocation }: LocationModalProps) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Select Delivery Location" maxWidth="2xl">
-            <LocationPicker onSuccess={onClose} onCancel={onClose} initialLocation={initialLocation} />
+        <Modal isOpen={isOpen} onClose={onClose} title="Select Location" fullScreen>
+            <div className="w-full">
+                <LocationPicker onSuccess={onClose} onCancel={onClose} initialLocation={initialLocation} className="pb-4" />
+            </div>
         </Modal>
     );
 }

@@ -86,7 +86,7 @@ export default function AdminProductsIndex({ products, zones, verticalOptions, f
                     </div>
                     <Link
                         href="/admin/products/create"
-                        className="inline-flex items-center gap-2 rounded-lg bg-[var(--admin-dark-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                        className="inline-flex items-center gap-2 rounded-lg bg-(--admin-dark-primary) px-4 py-2 text-sm font-medium text-white hover:opacity-90"
                     >
                         <Plus className="h-4 w-4" />
                         Add product
@@ -128,7 +128,7 @@ export default function AdminProductsIndex({ products, zones, verticalOptions, f
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             <Link
                                                 href={'/admin/products/' + p.id}
-                                                className="font-medium text-[var(--admin-dark-primary)] hover:underline"
+                                                className="font-medium text-(--admin-dark-primary) hover:underline"
                                             >
                                                 {p.name}
                                             </Link>

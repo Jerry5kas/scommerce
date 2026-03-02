@@ -1,4 +1,5 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Heart } from 'lucide-react';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
 import { FALLBACK_IMAGE_URL, handleImageFallbackError } from '@/lib/imageFallback';
@@ -29,6 +30,9 @@ interface SearchPageProps {
 
 export default function SearchPage({ query, vertical, products }: SearchPageProps) {
     const [searchQuery, setSearchQuery] = useState(query);
+    const [addingProductId, setAddingProductId] = useState<number | null>(null);
+    const auth = (usePage().props as { auth?: { user?: unknown; wishlisted_products?: number[] } }).auth;
+    const wishlistedProductIds = new Set(auth?.wishlisted_products || []);
 
     const fallbackImage = FALLBACK_IMAGE_URL;
 
@@ -47,6 +51,38 @@ export default function SearchPage({ query, vertical, products }: SearchPageProp
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get('/catalog/search', { q: searchQuery, vertical }, { preserveState: true });
+    };
+
+    const toggleWishlist = (event: React.MouseEvent, productId: number) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!auth?.user) {
+            router.get('/login');
+            return;
+        }
+
+        router.post(`/wishlist/toggle/${productId}`, {}, { preserveScroll: true, preserveState: true });
+    };
+
+    const addToCart = (event: React.MouseEvent, productId: number) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (addingProductId === productId) {
+            return;
+        }
+
+        setAddingProductId(productId);
+        router.post(
+            '/cart/add',
+            { product_id: productId, quantity: 1 },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setAddingProductId((current) => (current === productId ? null : current)),
+            },
+        );
     };
 
     return (
@@ -85,8 +121,19 @@ export default function SearchPage({ query, vertical, products }: SearchPageProp
                                 <Link
                                     key={product.id}
                                     href={productRoute(product.slug, { query: { vertical } })}
-                                    className="overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
+                                    className="relative overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                 >
+                                    <button
+                                        type="button"
+                                        onClick={(event) => toggleWishlist(event, product.id)}
+                                        aria-label={wishlistedProductIds.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                                        className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm transition-colors hover:bg-white"
+                                    >
+                                        <Heart
+                                            className={`h-4 w-4 ${wishlistedProductIds.has(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-500'}`}
+                                            strokeWidth={2}
+                                        />
+                                    </button>
                                     <img
                                         src={getSafeImageUrl(product.image)}
                                         alt={product.name}
@@ -104,6 +151,14 @@ export default function SearchPage({ query, vertical, products }: SearchPageProp
                                                 <span className="text-sm text-gray-500 line-through">₹{product.compare_at_price}</span>
                                             )}
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={(event) => addToCart(event, product.id)}
+                                            disabled={addingProductId === product.id}
+                                            className="mt-3 w-full rounded-md bg-(--theme-primary-1) px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-(--theme-primary-1-dark) disabled:cursor-not-allowed disabled:opacity-70"
+                                        >
+                                            {addingProductId === product.id ? 'Adding...' : 'Add to Cart'}
+                                        </button>
                                     </div>
                                 </Link>
                             ))}

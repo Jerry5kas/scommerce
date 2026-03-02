@@ -8,8 +8,11 @@ use App\Models\Collection;
 use App\Models\Coupon;
 use App\Models\Product;
 use App\Services\CouponService;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator as ValidatorFacade;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -86,26 +89,7 @@ class CouponController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'code' => ['required', 'string', 'min:3', 'max:50', 'unique:coupons,code'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'type' => ['required', 'in:percentage,fixed,free_shipping'],
-            'value' => ['required', 'numeric', 'min:0'],
-            'min_order_amount' => ['nullable', 'numeric', 'min:0'],
-            'max_discount' => ['nullable', 'numeric', 'min:0'],
-            'usage_limit' => ['nullable', 'integer', 'min:1'],
-            'usage_limit_per_user' => ['nullable', 'integer', 'min:1'],
-            'is_active' => ['boolean'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after:starts_at'],
-            'applicable_to' => ['required', 'in:all,products,categories,collections'],
-            'applicable_ids' => ['nullable', 'array'],
-            'exclude_free_samples' => ['boolean'],
-            'exclude_subscriptions' => ['boolean'],
-            'first_order_only' => ['boolean'],
-            'new_users_only' => ['boolean'],
-        ]);
+        $validated = $this->validateCouponPayload($request);
 
         $validated['code'] = strtoupper($validated['code']);
 
@@ -154,26 +138,7 @@ class CouponController extends Controller
      */
     public function update(Request $request, Coupon $coupon): RedirectResponse
     {
-        $validated = $request->validate([
-            'code' => ['required', 'string', 'min:3', 'max:50', 'unique:coupons,code,'.$coupon->id],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'type' => ['required', 'in:percentage,fixed,free_shipping'],
-            'value' => ['required', 'numeric', 'min:0'],
-            'min_order_amount' => ['nullable', 'numeric', 'min:0'],
-            'max_discount' => ['nullable', 'numeric', 'min:0'],
-            'usage_limit' => ['nullable', 'integer', 'min:1'],
-            'usage_limit_per_user' => ['nullable', 'integer', 'min:1'],
-            'is_active' => ['boolean'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after:starts_at'],
-            'applicable_to' => ['required', 'in:all,products,categories,collections'],
-            'applicable_ids' => ['nullable', 'array'],
-            'exclude_free_samples' => ['boolean'],
-            'exclude_subscriptions' => ['boolean'],
-            'first_order_only' => ['boolean'],
-            'new_users_only' => ['boolean'],
-        ]);
+        $validated = $this->validateCouponPayload($request, $coupon);
 
         $validated['code'] = strtoupper($validated['code']);
 
@@ -225,5 +190,87 @@ class CouponController extends Controller
             'coupon' => $coupon,
             'usages' => $usages,
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function validateCouponPayload(Request $request, ?Coupon $coupon = null): array
+    {
+        $rules = [
+            'code' => [
+                'required',
+                'string',
+                'min:3',
+                'max:50',
+                Rule::unique('coupons', 'code')->ignore($coupon?->id),
+            ],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'type' => ['required', Rule::in(['percentage', 'fixed', 'free_shipping'])],
+            'value' => ['required', 'numeric', 'min:0'],
+            'min_order_amount' => ['nullable', 'numeric', 'min:0'],
+            'max_discount' => ['nullable', 'numeric', 'min:0'],
+            'usage_limit' => ['nullable', 'integer', 'min:1'],
+            'usage_limit_per_user' => ['nullable', 'integer', 'min:1'],
+            'is_active' => ['boolean'],
+            'starts_at' => ['nullable', 'date'],
+            'ends_at' => ['nullable', 'date', 'after:starts_at'],
+            'applicable_to' => ['required', Rule::in(['all', 'products', 'categories', 'collections'])],
+            'applicable_ids' => ['required_unless:applicable_to,all', 'array'],
+            'applicable_ids.*' => ['integer'],
+            'exclude_free_samples' => ['boolean'],
+            'exclude_subscriptions' => ['boolean'],
+            'first_order_only' => ['boolean'],
+            'new_users_only' => ['boolean'],
+        ];
+
+        $validator = ValidatorFacade::make($request->all(), $rules);
+        $validator->after($this->couponAfterValidation($request));
+
+        return $validator->validate();
+    }
+
+    /**
+     * @return \Closure(\Illuminate\Contracts\Validation\Validator): void
+     */
+    protected function couponAfterValidation(Request $request): \Closure
+    {
+        return function (Validator $validator) use ($request): void {
+            $type = (string) $request->input('type');
+            $value = (float) $request->input('value', 0);
+            $applicableTo = (string) $request->input('applicable_to', 'all');
+            $applicableIds = $request->input('applicable_ids', []);
+
+            if ($type === Coupon::TYPE_PERCENTAGE && $value > 100) {
+                $validator->errors()->add('value', 'Percentage coupon value cannot exceed 100.');
+            }
+
+            if ($type === Coupon::TYPE_FREE_SHIPPING && $value !== 0.0) {
+                $validator->errors()->add('value', 'Free shipping coupon value must be 0.');
+            }
+
+            if ($applicableTo !== Coupon::APPLICABLE_ALL) {
+                if (! is_array($applicableIds) || count($applicableIds) === 0) {
+                    $validator->errors()->add('applicable_ids', 'Select at least one applicable item.');
+
+                    return;
+                }
+
+                $modelClass = match ($applicableTo) {
+                    Coupon::APPLICABLE_PRODUCTS => Product::class,
+                    Coupon::APPLICABLE_CATEGORIES => Category::class,
+                    Coupon::APPLICABLE_COLLECTIONS => Collection::class,
+                    default => null,
+                };
+
+                if ($modelClass !== null) {
+                    $validCount = $modelClass::query()->whereIn('id', $applicableIds)->count();
+                    if ($validCount !== count($applicableIds)) {
+                        $validator->errors()->add('applicable_ids', 'One or more selected items are invalid.');
+                    }
+                }
+            }
+        };
     }
 }

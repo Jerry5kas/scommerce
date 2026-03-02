@@ -21,6 +21,9 @@ export type SharedData = {
     name: string;
     auth: Auth;
     theme: AppTheme;
+    cart?: {
+        items_count: number;
+    };
     csrf_token?: string;
     zone?: Zone | null;
     [key: string]: unknown;

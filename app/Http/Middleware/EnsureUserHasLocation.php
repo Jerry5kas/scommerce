@@ -2,7 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\UserAddress;
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -18,24 +21,23 @@ class EnsureUserHasLocation
             if (session('guest_zone_id')) {
                 return $next($request);
             }
-            
-            // Allow access to location selection page and catalog routes
-            if ($request->routeIs('location.*') || $request->routeIs('login') || $request->routeIs('welcome') || $request->routeIs('catalog.*') || $request->routeIs('products.*')) {
+
+            if ($request->routeIs('login') || $request->routeIs('welcome') || $request->routeIs('home') || $request->routeIs('auth.*')) {
                 return $next($request);
             }
 
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Please set a delivery location.'], 422);
+                return response()->json(['message' => 'Please login to continue.'], 401);
             }
 
-            return redirect()->route('location.select');
+            return redirect()->route('login');
         }
 
-        $defaultAddress = $request->user()
+        $addressQuery = $request->user()
             ->addresses()
-            ->active()
-            ->where('is_default', true)
-            ->first();
+            ->active();
+
+        $defaultAddress = $this->resolveAddressForLocation($addressQuery);
 
         if ($defaultAddress === null || $defaultAddress->zone_id === null) {
             // Development bypass: if in debug mode and address exists, try to auto-assign zone
@@ -60,5 +62,30 @@ class EnsureUserHasLocation
         }
 
         return $next($request);
+    }
+
+    private function resolveAddressForLocation(Builder|HasMany $addressQuery): ?UserAddress
+    {
+        $defaultAddress = (clone $addressQuery)
+            ->where('is_default', true)
+            ->first();
+
+        if ($defaultAddress !== null && $defaultAddress->zone_id !== null) {
+            return $defaultAddress;
+        }
+
+        $fallbackAddress = (clone $addressQuery)
+            ->whereNotNull('zone_id')
+            ->latest('id')
+            ->first();
+
+        if ($fallbackAddress !== null && ($defaultAddress === null || $defaultAddress->id !== $fallbackAddress->id)) {
+            $addressQuery->update(['is_default' => false]);
+            $fallbackAddress->update(['is_default' => true]);
+
+            return $fallbackAddress;
+        }
+
+        return $defaultAddress;
     }
 }

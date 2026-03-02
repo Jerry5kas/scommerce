@@ -44,10 +44,7 @@ export default function AdminCategoriesShow({ category, verticalOptions }: Admin
         <AdminLayout title={category.name}>
             <Head title={`${category.name} - Admin`} />
             <div className="space-y-4">
-                <Link
-                    href="/admin/categories"
-                    className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--admin-dark-primary)]"
-                >
+                <Link href="/admin/categories" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-(--admin-dark-primary)">
                     <ArrowLeft className="h-4 w-4" />
                     Back to categories
                 </Link>
@@ -154,7 +151,7 @@ export default function AdminCategoriesShow({ category, verticalOptions }: Admin
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <Link
                                                     href={`/admin/products/${p.id}`}
-                                                    className="font-medium text-[var(--admin-dark-primary)] hover:underline"
+                                                    className="font-medium text-(--admin-dark-primary) hover:underline"
                                                 >
                                                     {p.name}
                                                 </Link>

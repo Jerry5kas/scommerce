@@ -170,8 +170,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
     // Helper to get the correct item for a plan based on the subVariantSearch
     const getPlanItem = (plan: SubscriptionPlan) => {
         // Try to find an item that contains the search string (case-insensitive)
-        return plan.items.find(i => i.product_name.toLowerCase().includes(subVariantSearch.toLowerCase())) 
-            || plan.items[0]; // Fallback to first item if not found
+        return plan.items.find((i) => i.product_name.toLowerCase().includes(subVariantSearch.toLowerCase())) || plan.items[0]; // Fallback to first item if not found
     };
 
     // Helper to get unique product names across all items to show tabs
@@ -317,11 +316,11 @@ export default function Home({ banners, categories, products = [], subscriptionP
                     <div className="animate-marquee-slow flex flex-1 items-center whitespace-nowrap">
                         {[...Array(3)].map((_, copyIndex) => (
                             <div key={copyIndex} className="flex min-w-max items-center gap-1.5 px-4 sm:gap-2 sm:px-6">
-                                <span className="inline-flex items-center gap-1 text-xs font-bold tracking-wide text-[var(--theme-secondary)] uppercase sm:text-sm">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold tracking-wide text-(--theme-secondary) uppercase sm:text-sm">
                                     <MapPinned className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
                                     We deliver to
                                 </span>
-                                <span className="inline-flex items-center gap-1 text-xs font-bold tracking-wide text-[var(--theme-secondary)] uppercase sm:text-sm">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold tracking-wide text-(--theme-secondary) uppercase sm:text-sm">
                                     <MapPinned className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
                                     Ernakulam
                                 </span>
@@ -334,7 +333,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                         {location}
                                     </span>
                                 ))}
-                                <span className="inline-flex items-center gap-1 text-xs font-bold tracking-wide text-[var(--theme-secondary)] uppercase sm:text-sm">
+                                <span className="inline-flex items-center gap-1 text-xs font-bold tracking-wide text-(--theme-secondary) uppercase sm:text-sm">
                                     <MapPinned className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
                                     Malappuram
                                 </span>
@@ -359,11 +358,11 @@ export default function Home({ banners, categories, products = [], subscriptionP
                     {/* Compact Header with Icon and Nav Buttons */}
                     <div className="mb-6 flex items-center justify-between sm:mb-5">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
-                                <Package className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5" />
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--theme-primary-1)/10 sm:h-9 sm:w-9">
+                                <Package className="h-4 w-4 text-(--theme-primary-1) sm:h-5 sm:w-5" />
                             </div>
                             <div>
-                                <h2 id="trending-categories-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
+                                <h2 id="trending-categories-heading" className="text-lg font-bold text-(--theme-primary-1-dark) sm:text-xl">
                                     Browse Categories
                                 </h2>
                                 <p className="text-xs text-gray-400 sm:text-sm">Fresh dairy delivered</p>
@@ -378,7 +377,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     const slider = document.getElementById('category-slider');
                                     if (slider) slider.scrollBy({ left: -slider.offsetWidth / 6, behavior: 'smooth' });
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark) hover:shadow-lg"
                                 aria-label="Previous categories"
                             >
                                 <ChevronLeft className="h-4 w-4" />
@@ -389,14 +388,14 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     const slider = document.getElementById('category-slider');
                                     if (slider) slider.scrollBy({ left: slider.offsetWidth / 6, behavior: 'smooth' });
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark) hover:shadow-lg"
                                 aria-label="Next categories"
                             >
                                 <ChevronRight className="h-4 w-4" />
                             </button>
                             <Link
                                 href="/products"
-                                className="ml-2 rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white sm:text-sm"
+                                className="ml-2 rounded-lg border border-(--theme-primary-1) px-3 py-1.5 text-xs font-medium text-(--theme-primary-1) transition-all hover:bg-(--theme-primary-1) hover:text-white sm:text-sm"
                             >
                                 View All
                             </Link>
@@ -405,7 +404,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                         {/* Mobile: View All only */}
                         <Link
                             href="/products"
-                            className="rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white sm:text-sm lg:hidden"
+                            className="rounded-lg border border-(--theme-primary-1) px-3 py-1.5 text-xs font-medium text-(--theme-primary-1) transition-all hover:bg-(--theme-primary-1) hover:text-white sm:text-sm lg:hidden"
                         >
                             View All
                         </Link>
@@ -432,9 +431,9 @@ export default function Home({ banners, categories, products = [], subscriptionP
                             <Link
                                 key={category.id}
                                 href={`/products?category=${category.slug}`}
-                                className="group relative w-[calc(50%-4px)] flex-shrink-0 snap-start overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-100 transition-all duration-200 hover:shadow-md hover:ring-[var(--theme-primary-1)]/20 sm:w-[calc(33.333%-8px)] lg:w-[calc(16.666%-10px)]"
+                                className="group relative w-[calc(50%-4px)] shrink-0 snap-start overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-100 transition-all duration-200 hover:shadow-md hover:ring-(--theme-primary-1)/20 sm:w-[calc(33.333%-8px)] lg:w-[calc(16.666%-10px)]"
                             >
-                                <div className="aspect-square w-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                                <div className="aspect-square w-full overflow-hidden bg-linear-to-br from-gray-50 to-gray-100">
                                     {category.image ? (
                                         <img
                                             src={category.image}
@@ -443,13 +442,13 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                             loading="lazy"
                                         />
                                     ) : (
-                                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[var(--theme-primary-1)]/10 to-[var(--theme-primary-1)]/5">
-                                            <Package className="h-6 w-6 text-[var(--theme-primary-1)]/30 sm:h-8 sm:w-8" strokeWidth={1.5} />
+                                        <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-(--theme-primary-1)/10 to-(--theme-primary-1)/5">
+                                            <Package className="h-6 w-6 text-(--theme-primary-1)/30 sm:h-8 sm:w-8" strokeWidth={1.5} />
                                         </div>
                                     )}
                                 </div>
                                 {/* Overlay with name */}
-                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 sm:p-2">
+                                <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/60 to-transparent p-1.5 sm:p-2">
                                     <h3 className="truncate text-center text-[10px] font-medium text-white sm:text-xs">{category.name}</h3>
                                 </div>
                             </Link>
@@ -467,7 +466,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     slider.scrollBy({ left: -cardWidth, behavior: 'smooth' });
                                 }
                             }}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                            className="flex h-9 w-9 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark) hover:shadow-lg"
                             aria-label="Previous categories"
                         >
                             <ChevronLeft className="h-5 w-5" />
@@ -492,7 +491,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                         }
                                     }}
                                     className={`h-2 w-2 rounded-full transition-colors ${
-                                        i === categoryActivePage ? 'bg-[var(--theme-primary-1)]' : 'bg-gray-300 hover:bg-gray-400'
+                                        i === categoryActivePage ? 'bg-(--theme-primary-1)' : 'bg-gray-300 hover:bg-gray-400'
                                     }`}
                                     aria-label={`Go to page ${i + 1}`}
                                 />
@@ -508,7 +507,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     slider.scrollBy({ left: cardWidth, behavior: 'smooth' });
                                 }
                             }}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                            className="flex h-9 w-9 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark) hover:shadow-lg"
                             aria-label="Next categories"
                         >
                             <ChevronRight className="h-5 w-5" />
@@ -519,7 +518,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
 
             {/* How Subscription Works Section - Compact Enhanced */}
             <section
-                className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 py-10 sm:py-12 lg:py-14"
+                className="relative overflow-hidden bg-linear-to-b from-gray-50 to-gray-100 py-10 sm:py-12 lg:py-14"
                 aria-labelledby="subscription-steps-heading"
             >
                 {/* Background decorative icons */}
@@ -628,9 +627,9 @@ export default function Home({ banners, categories, products = [], subscriptionP
                 <div className="relative z-10 container mx-auto px-3 sm:px-4 lg:px-6">
                     {/* Compact Header with Icon - Row Layout */}
                     <div className="mb-6 flex flex-row items-center justify-center gap-3 sm:mb-5 sm:gap-4">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--theme-primary-1)/10 sm:h-9 sm:w-9">
                             <svg
-                                className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5"
+                                className="h-4 w-4 text-(--theme-primary-1) sm:h-5 sm:w-5"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -644,7 +643,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                             </svg>
                         </div>
                         <div className="text-left">
-                            <h2 id="subscription-steps-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
+                            <h2 id="subscription-steps-heading" className="text-lg font-bold text-(--theme-primary-1-dark) sm:text-xl">
                                 How Subscription Works
                             </h2>
                             <p className="text-xs text-gray-400 sm:text-sm">Simple steps to get fresh dairy</p>
@@ -689,21 +688,21 @@ export default function Home({ banners, categories, products = [], subscriptionP
                         ].map((item, index) => (
                             <article
                                 key={`step-${index}`}
-                                className="subscription-card group relative h-full min-h-[200px] w-full overflow-hidden sm:min-h-[240px] lg:min-h-[280px]"
+                                className="subscription-card group relative h-full min-h-50 w-full overflow-hidden sm:min-h-60 lg:min-h-70"
                             >
                                 {/* Animated Blob Background */}
                                 <div className="subscription-card-blob" style={{ backgroundColor: item.blobColor }} />
                                 {/* Step Number Badge */}
-                                <div className="absolute top-3 left-3 z-30 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-[var(--theme-primary-1)] shadow-sm sm:top-4 sm:left-4 sm:h-7 sm:w-7 sm:text-sm">
+                                <div className="absolute top-3 left-3 z-30 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-(--theme-primary-1) shadow-sm sm:top-4 sm:left-4 sm:h-7 sm:w-7 sm:text-sm">
                                     {item.step}
                                 </div>
                                 {/* Card Content */}
                                 <div className="subscription-card-bg flex flex-col items-center justify-center p-4 sm:p-5">
                                     {/* Image Container with Enhanced Hover */}
-                                    <div className="mb-4 flex flex-shrink-0 flex-col items-center">
-                                        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--theme-primary-1)]/10 to-[var(--theme-primary-1)]/5 p-2.5 shadow-inner transition-all duration-400 group-hover:scale-110 group-hover:shadow-[var(--theme-primary-1)]/10 group-hover:shadow-lg sm:h-24 sm:w-24 sm:p-3 lg:h-28 lg:w-28">
+                                    <div className="mb-4 flex shrink-0 flex-col items-center">
+                                        <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-linear-to-br from-(--theme-primary-1)/10 to-(--theme-primary-1)/5 p-2.5 shadow-inner transition-all duration-400 group-hover:scale-110 group-hover:shadow-(--theme-primary-1)/10 group-hover:shadow-lg sm:h-24 sm:w-24 sm:p-3 lg:h-28 lg:w-28">
                                             {/* Subtle ring on hover */}
-                                            <div className="absolute inset-0 rounded-2xl ring-1 ring-black/5 ring-inset group-hover:ring-[var(--theme-primary-1)]/20" />
+                                            <div className="absolute inset-0 rounded-2xl ring-1 ring-black/5 ring-inset group-hover:ring-(--theme-primary-1)/20" />
                                             <img
                                                 src={item.image}
                                                 alt={item.imageAlt}
@@ -713,7 +712,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                         </div>
                                     </div>
                                     {/* Title with Enhanced Typography */}
-                                    <h3 className="mb-2 text-center text-sm leading-tight font-bold text-gray-800 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
+                                    <h3 className="mb-2 text-center text-sm leading-tight font-bold text-gray-800 transition-colors duration-300 group-hover:text-(--theme-primary-1) sm:text-base">
                                         {item.title}
                                     </h3>
                                     {/* Description with Better Visual Hierarchy */}
@@ -728,16 +727,16 @@ export default function Home({ banners, categories, products = [], subscriptionP
             </section>
 
             {/* Our Products – Slider with Navigation (Same layout as Categories) */}
-            <section id="products" className="bg-gradient-to-b from-white to-gray-50/30 py-10 sm:py-12 lg:py-14" aria-labelledby="products-heading">
+            <section id="products" className="bg-linear-to-b from-white to-gray-50/30 py-10 sm:py-12 lg:py-14" aria-labelledby="products-heading">
                 <div className="container mx-auto px-3 sm:px-4 lg:px-6">
                     {/* Compact Header with Icon and Nav Buttons */}
                     <div className="mb-6 flex items-center justify-between sm:mb-5">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
-                                <Package className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5" />
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--theme-primary-1)/10 sm:h-9 sm:w-9">
+                                <Package className="h-4 w-4 text-(--theme-primary-1) sm:h-5 sm:w-5" />
                             </div>
                             <div>
-                                <h2 id="products-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
+                                <h2 id="products-heading" className="text-lg font-bold text-(--theme-primary-1-dark) sm:text-xl">
                                     Our Products
                                 </h2>
                                 <p className="text-xs text-gray-400 sm:text-sm">Fresh dairy delivered</p>
@@ -752,7 +751,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     const slider = document.getElementById('product-slider');
                                     if (slider) slider.scrollBy({ left: -slider.offsetWidth / 4, behavior: 'smooth' });
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark) hover:shadow-lg"
                                 aria-label="Previous products"
                             >
                                 <ChevronLeft className="h-4 w-4" />
@@ -763,14 +762,14 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     const slider = document.getElementById('product-slider');
                                     if (slider) slider.scrollBy({ left: slider.offsetWidth / 4, behavior: 'smooth' });
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark) hover:shadow-lg"
                                 aria-label="Next products"
                             >
                                 <ChevronRight className="h-4 w-4" />
                             </button>
                             <Link
                                 href="/products"
-                                className="ml-2 rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white sm:text-sm"
+                                className="ml-2 rounded-lg border border-(--theme-primary-1) px-3 py-1.5 text-xs font-medium text-(--theme-primary-1) transition-all hover:bg-(--theme-primary-1) hover:text-white sm:text-sm"
                             >
                                 View All
                             </Link>
@@ -779,7 +778,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                         {/* Mobile: View All only */}
                         <Link
                             href="/products"
-                            className="rounded-lg border border-[var(--theme-primary-1)] px-3 py-1.5 text-xs font-medium text-[var(--theme-primary-1)] transition-all hover:bg-[var(--theme-primary-1)] hover:text-white sm:text-sm lg:hidden"
+                            className="rounded-lg border border-(--theme-primary-1) px-3 py-1.5 text-xs font-medium text-(--theme-primary-1) transition-all hover:bg-(--theme-primary-1) hover:text-white sm:text-sm lg:hidden"
                         >
                             View All
                         </Link>
@@ -825,12 +824,12 @@ export default function Home({ banners, categories, products = [], subscriptionP
                             return (
                                 <article
                                     key={product.id}
-                                    className="group relative flex w-[calc(50%-6px)] flex-shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-[var(--theme-primary-1)]/40 hover:shadow-lg sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)]"
+                                    className="group relative flex w-[calc(50%-6px)] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:border-(--theme-primary-1)/40 hover:shadow-lg sm:w-[calc(50%-8px)] lg:w-[calc(25%-12px)]"
                                 >
                                     {/* ── Image area ── */}
                                     <Link
                                         href={productRoute(product.slug)}
-                                        className="relative aspect-square w-full overflow-hidden bg-[var(--theme-secondary)]/10 sm:aspect-[4/3]"
+                                        className="relative aspect-square w-full overflow-hidden bg-(--theme-secondary)/10 sm:aspect-4/3"
                                     >
                                         <ProductCardMedia
                                             media={mediaList}
@@ -869,7 +868,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     <div className="flex flex-1 flex-col p-2.5 sm:p-3">
                                         {/* Product name */}
                                         <Link href={productRoute(product.slug)}>
-                                            <h3 className="mb-1 line-clamp-1 text-xs font-semibold text-gray-800 transition-colors group-hover:text-[var(--theme-primary-1)] sm:text-sm">
+                                            <h3 className="mb-1 line-clamp-1 text-xs font-semibold text-gray-800 transition-colors group-hover:text-(--theme-primary-1) sm:text-sm">
                                                 {product.name}
                                             </h3>
                                         </Link>
@@ -895,7 +894,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                                             onClick={() => setSelectedVariants((prev) => ({ ...prev, [product.id]: v.id }))}
                                                             className={`rounded-md border px-2 py-0.5 text-[9px] font-medium transition-all sm:text-[10px] ${
                                                                 activeVariantId === v.id
-                                                                    ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
+                                                                    ? 'border-(--theme-primary-1) bg-(--theme-primary-1)/10 text-(--theme-primary-1)'
                                                                     : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
                                                             }`}
                                                         >
@@ -908,7 +907,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                         {/* Price row */}
                                         {!isPlan && (
                                             <div className="mt-auto mb-2 flex items-baseline gap-1.5">
-                                                <span className="text-sm font-bold text-[var(--theme-primary-1)] sm:text-base">
+                                                <span className="text-sm font-bold text-(--theme-primary-1) sm:text-base">
                                                     {formatPrice(displayPrice)}
                                                 </span>
                                                 {hasDiscount && (
@@ -920,7 +919,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                         )}
                                         {isPlan && (
                                             <div className="mt-auto mb-2 flex items-baseline gap-1.5">
-                                                <span className="text-sm font-bold text-[var(--theme-primary-1)] sm:text-base">
+                                                <span className="text-sm font-bold text-(--theme-primary-1) sm:text-base">
                                                     {formatPrice(displayPrice)}/ Unit
                                                 </span>
                                             </div>
@@ -928,7 +927,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
 
                                         <Link
                                             href={isPlan ? `/subscription?product=${product.id}` : productRoute(product.slug)}
-                                            className="mt-auto flex w-full items-center justify-center gap-1.5 rounded-md bg-[var(--theme-primary-1)] py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[var(--theme-primary-1-dark)] hover:shadow-md active:scale-[0.97] sm:py-2.5 sm:text-xs"
+                                            className="mt-auto flex w-full items-center justify-center gap-1.5 rounded-md bg-(--theme-primary-1) py-2 text-center text-[11px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-(--theme-primary-1-dark) hover:shadow-md active:scale-[0.97] sm:py-2.5 sm:text-xs"
                                         >
                                             {isPlan ? (
                                                 'Subscribe'
@@ -956,7 +955,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     slider.scrollBy({ left: -cardWidth, behavior: 'smooth' });
                                 }
                             }}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                            className="flex h-9 w-9 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark) hover:shadow-lg"
                             aria-label="Previous products"
                         >
                             <ChevronLeft className="h-5 w-5" />
@@ -978,7 +977,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                         }
                                     }}
                                     className={`h-2 w-2 rounded-full transition-colors ${
-                                        i === productActivePage ? 'bg-[var(--theme-primary-1)]' : 'bg-gray-300 hover:bg-gray-400'
+                                        i === productActivePage ? 'bg-(--theme-primary-1)' : 'bg-gray-300 hover:bg-gray-400'
                                     }`}
                                     aria-label={`Go to products page ${i + 1}`}
                                 />
@@ -994,7 +993,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     slider.scrollBy({ left: cardWidth, behavior: 'smooth' });
                                 }
                             }}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                            className="flex h-9 w-9 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark) hover:shadow-lg"
                             aria-label="Next products"
                         >
                             <ChevronRight className="h-5 w-5" />
@@ -1004,14 +1003,14 @@ export default function Home({ banners, categories, products = [], subscriptionP
             </section>
 
             {/* Why Choose Us – Auto-scrolling Slider with Consistent Pattern */}
-            <section className="bg-gradient-to-b from-white via-gray-50/50 to-white py-10 sm:py-12 lg:py-14" aria-labelledby="why-choose-heading">
+            <section className="bg-linear-to-b from-white via-gray-50/50 to-white py-10 sm:py-12 lg:py-14" aria-labelledby="why-choose-heading">
                 <div className="container mx-auto px-3 sm:px-4 lg:px-6">
                     {/* Centered Header with Icon */}
                     <div className="mb-6 flex flex-col items-center justify-center sm:mb-5">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--theme-primary-1)/10 sm:h-9 sm:w-9">
                                 <svg
-                                    className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5"
+                                    className="h-4 w-4 text-(--theme-primary-1) sm:h-5 sm:w-5"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -1021,7 +1020,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                 </svg>
                             </div>
                             <div className="text-center">
-                                <h2 id="why-choose-heading" className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">
+                                <h2 id="why-choose-heading" className="text-lg font-bold text-(--theme-primary-1-dark) sm:text-xl">
                                     Why Choose Us
                                 </h2>
                                 <p className="text-xs text-gray-400 sm:text-sm">Building trust through quality</p>
@@ -1069,7 +1068,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                             ].map((item, index) => (
                                 <div
                                     key={`${item.title}-${index}`}
-                                    className="group flex w-[calc(33.333%-8px)] flex-shrink-0 flex-col items-center sm:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)]"
+                                    className="group flex w-[calc(33.333%-8px)] shrink-0 flex-col items-center sm:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)]"
                                 >
                                     {/* Icon container - larger, no bg */}
                                     <div className="relative mb-2 flex h-16 w-16 items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 sm:h-20 sm:w-20">
@@ -1082,7 +1081,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     </div>
 
                                     {/* Title - centered, compact */}
-                                    <h3 className="text-center text-[10px] leading-tight font-semibold text-gray-700 transition-colors duration-200 group-hover:text-[var(--theme-primary-1)] sm:text-xs">
+                                    <h3 className="text-center text-[10px] leading-tight font-semibold text-gray-700 transition-colors duration-200 group-hover:text-(--theme-primary-1) sm:text-xs">
                                         {item.title}
                                     </h3>
                                 </div>
@@ -1093,7 +1092,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
             </section>
 
             {/* Morning Delivery Promise – Modern Compact Design */}
-            <section className="relative overflow-hidden bg-[var(--theme-primary-1)] py-8 sm:py-10 lg:py-12">
+            <section className="relative overflow-hidden bg-(--theme-primary-1) py-8 sm:py-10 lg:py-12">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10" aria-hidden>
                     <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-white/20 blur-3xl sm:h-96 sm:w-96" />
@@ -1107,7 +1106,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                             {/* Left: Content */}
                             <div className="flex-1 p-5 sm:p-6 lg:p-8">
                                 {/* Badge */}
-                                <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-[var(--theme-primary-1)]/10 px-2.5 py-1 text-[10px] font-semibold text-[var(--theme-primary-1)] sm:text-xs">
+                                <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-(--theme-primary-1)/10 px-2.5 py-1 text-[10px] font-semibold text-(--theme-primary-1) sm:text-xs">
                                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -1116,7 +1115,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
 
                                 {/* Heading */}
                                 <h2 className="mb-3 text-xl leading-tight font-bold text-gray-900 sm:text-2xl lg:text-3xl">
-                                    Wake Up to <span className="text-[var(--theme-primary-1)]">Freshness</span> Every Day
+                                    Wake Up to <span className="text-(--theme-primary-1)">Freshness</span> Every Day
                                 </h2>
 
                                 {/* Description */}
@@ -1135,9 +1134,9 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     ].map((point) => (
                                         <div
                                             key={point.text}
-                                            className="group rounded-lg bg-gray-50 p-2.5 transition-all hover:bg-[var(--theme-primary-1)]/5 hover:shadow-md sm:p-3"
+                                            className="group rounded-lg bg-gray-50 p-2.5 transition-all hover:bg-(--theme-primary-1)/5 hover:shadow-md sm:p-3"
                                         >
-                                            <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-md bg-[var(--theme-primary-1)] text-white shadow-sm transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
+                                            <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-md bg-(--theme-primary-1) text-white shadow-sm transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
                                                 {point.icon === 'clock' && (
                                                     <svg
                                                         className="h-4 w-4 sm:h-5 sm:w-5"
@@ -1209,7 +1208,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                 <div className="flex flex-wrap gap-2.5 sm:gap-3">
                                     <a
                                         href="/login"
-                                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[var(--theme-primary-1)] px-4 py-2.5 text-xs font-bold text-white shadow-[var(--theme-primary-1)]/30 shadow-md transition-all hover:-translate-y-0.5 hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg active:scale-95 sm:px-5 sm:py-3 sm:text-sm"
+                                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-(--theme-primary-1) px-4 py-2.5 text-xs font-bold text-white shadow-(--theme-primary-1)/30 shadow-md transition-all hover:-translate-y-0.5 hover:bg-(--theme-primary-1-dark) hover:shadow-lg active:scale-95 sm:px-5 sm:py-3 sm:text-sm"
                                     >
                                         Subscribe Now
                                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1218,7 +1217,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     </a>
                                     <a
                                         href="#"
-                                        className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 transition-all hover:border-[var(--theme-primary-1)] hover:text-[var(--theme-primary-1)] active:scale-95 sm:px-5 sm:py-3 sm:text-sm"
+                                        className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-gray-700 transition-all hover:border-(--theme-primary-1) hover:text-(--theme-primary-1) active:scale-95 sm:px-5 sm:py-3 sm:text-sm"
                                     >
                                         Check delivery area
                                     </a>
@@ -1238,14 +1237,14 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     aria-label="Fresh milk delivery"
                                 />
                                 <div
-                                    className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-transparent lg:from-white/30"
+                                    className="absolute inset-0 bg-linear-to-r from-white/20 via-transparent to-transparent lg:from-white/30"
                                     aria-hidden
                                 />
 
                                 {/* Floating Stats Card */}
                                 <div className="absolute bottom-3 left-3 rounded-lg bg-white/95 p-2 shadow-lg backdrop-blur-sm sm:bottom-4 sm:left-4 sm:p-3 lg:bottom-6 lg:left-6">
                                     <div className="flex items-center gap-2">
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] sm:h-10 sm:w-10">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-(--theme-primary-1)/10 text-(--theme-primary-1) sm:h-10 sm:w-10">
                                             <svg
                                                 className="h-4 w-4 sm:h-5 sm:w-5"
                                                 fill="none"
@@ -1269,7 +1268,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
             </section>
 
             {/* Our Stories – Slider with Navigation (Same layout as Categories/Products) */}
-            <section className="bg-[var(--theme-primary-1)] py-10 sm:py-12 lg:py-14" aria-labelledby="our-stories-heading">
+            <section className="bg-(--theme-primary-1) py-10 sm:py-12 lg:py-14" aria-labelledby="our-stories-heading">
                 <div className="container mx-auto px-3 sm:px-4 lg:px-6">
                     {/* Compact Header with Icon and Nav Buttons */}
                     <div className="mb-6 flex items-center justify-between sm:mb-5">
@@ -1293,7 +1292,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     const slider = document.getElementById('stories-slider');
                                     if (slider) slider.scrollBy({ left: -slider.offsetWidth / 6, behavior: 'smooth' });
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--theme-primary-1)] shadow-md transition-all hover:bg-white/90 hover:shadow-lg"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-(--theme-primary-1) shadow-md transition-all hover:bg-white/90 hover:shadow-lg"
                                 aria-label="Previous stories"
                             >
                                 <ChevronLeft className="h-4 w-4" />
@@ -1304,7 +1303,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     const slider = document.getElementById('stories-slider');
                                     if (slider) slider.scrollBy({ left: slider.offsetWidth / 6, behavior: 'smooth' });
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--theme-primary-1)] shadow-md transition-all hover:bg-white/90 hover:shadow-lg"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-(--theme-primary-1) shadow-md transition-all hover:bg-white/90 hover:shadow-lg"
                                 aria-label="Next stories"
                             >
                                 <ChevronRight className="h-4 w-4" />
@@ -1334,12 +1333,12 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                 key={story.id}
                                 type="button"
                                 onClick={() => setStoryViewerIndex(index)}
-                                className="group flex w-[calc(33.333%-8px)] flex-shrink-0 snap-start flex-col rounded-xl text-left focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[var(--theme-primary-1)] focus:outline-none sm:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)]"
+                                className="group flex w-[calc(33.333%-8px)] shrink-0 snap-start flex-col rounded-xl text-left focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-(--theme-primary-1) focus:outline-none sm:w-[calc(25%-12px)] lg:w-[calc(16.666%-14px)]"
                                 aria-label={`Watch short: ${story.label}`}
                             >
                                 {/* Short video preview – vertical 9:16 */}
                                 <div className="relative w-full overflow-hidden rounded-lg bg-gray-200">
-                                    <div className="aspect-[9/16] w-full">
+                                    <div className="aspect-9/16 w-full">
                                         <video
                                             src={story.src}
                                             className="h-full w-full object-cover"
@@ -1352,7 +1351,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity group-hover:bg-black/30">
                                             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md sm:h-12 sm:w-12">
                                                 <Play
-                                                    className="h-5 w-5 text-[var(--theme-primary-1)] sm:h-6 sm:w-6"
+                                                    className="h-5 w-5 text-(--theme-primary-1) sm:h-6 sm:w-6"
                                                     strokeWidth={2}
                                                     fill="currentColor"
                                                 />
@@ -1385,7 +1384,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                 const slider = document.getElementById('stories-slider');
                                 if (slider) slider.scrollBy({ left: -slider.offsetWidth / 2, behavior: 'smooth' });
                             }}
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--theme-primary-1)] shadow-md transition-all hover:bg-white/90"
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-(--theme-primary-1) shadow-md transition-all hover:bg-white/90"
                             aria-label="Previous stories"
                         >
                             <ChevronLeft className="h-4 w-4" />
@@ -1415,7 +1414,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                 const slider = document.getElementById('stories-slider');
                                 if (slider) slider.scrollBy({ left: slider.offsetWidth / 2, behavior: 'smooth' });
                             }}
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--theme-primary-1)] shadow-md transition-all hover:bg-white/90"
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-(--theme-primary-1) shadow-md transition-all hover:bg-white/90"
                             aria-label="Next stories"
                         >
                             <ChevronRight className="h-4 w-4" />
@@ -1501,8 +1500,8 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                 onClick={() => handleSubVariantChange(v as '480ml' | '1L')}
                                 className={`rounded-lg border-2 px-5 py-2.5 text-sm font-semibold transition-all sm:px-6 sm:py-3 sm:text-base ${
                                     subVariantSearch === v
-                                        ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)] text-white'
-                                        : 'border-gray-300 bg-white text-gray-700 hover:border-[var(--theme-primary-1)] hover:text-[var(--theme-primary-1)]'
+                                        ? 'border-(--theme-primary-1) bg-(--theme-primary-1) text-white'
+                                        : 'border-gray-300 bg-white text-gray-700 hover:border-(--theme-primary-1) hover:text-(--theme-primary-1)'
                                 }`}
                             >
                                 {v}
@@ -1516,16 +1515,14 @@ export default function Home({ banners, categories, products = [], subscriptionP
                             return (
                                 <div
                                     key={plan.id}
-                                    className="flex flex-col rounded-xl border-2 border-[var(--theme-primary-1)] bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6"
+                                    className="flex flex-col rounded-xl border-2 border-(--theme-primary-1) bg-white p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6"
                                 >
                                     <div className="mb-3 flex items-start justify-between gap-2">
-                                        <h3 className="text-lg font-bold text-gray-900 sm:text-xl">
-                                            {plan.name}
-                                        </h3>
+                                        <h3 className="text-lg font-bold text-gray-900 sm:text-xl">{plan.name}</h3>
                                         {plan.discount_type !== 'none' && plan.discount_value > 0 && (
-                                            <span className="shrink-0 rounded bg-[var(--theme-primary-1)] px-2 py-0.5 text-xs font-bold text-white">
-                                                {plan.discount_type === 'percentage' 
-                                                    ? `${Math.round(plan.discount_value)}% OFF` 
+                                            <span className="shrink-0 rounded bg-(--theme-primary-1) px-2 py-0.5 text-xs font-bold text-white">
+                                                {plan.discount_type === 'percentage'
+                                                    ? `${Math.round(plan.discount_value)}% OFF`
                                                     : `₹${Math.round(plan.discount_value)} OFF`}
                                             </span>
                                         )}
@@ -1534,14 +1531,18 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                         <>
                                             <p className="mb-2 text-sm text-gray-600">{item.product_name}</p>
                                             <p className="mb-2 text-sm text-gray-600">{item.units} Unit(s)</p>
-                                            <p className="mb-1 text-xl font-bold text-[var(--theme-primary-1)] sm:text-2xl">₹{Math.round(item.total_price)}</p>
+                                            <p className="mb-1 text-xl font-bold text-(--theme-primary-1) sm:text-2xl">
+                                                ₹{Math.round(item.total_price)}
+                                            </p>
                                             <p className="mb-3 text-sm font-medium text-gray-700">₹{Math.round(item.per_unit_price)}/Unit(s)</p>
                                         </>
                                     )}
                                     <ul className="mb-4 space-y-1.5 border-t border-gray-100 pt-3" role="list">
                                         {plan.features.map((feature) => (
                                             <li key={feature.id} className="flex items-center gap-2 text-sm text-gray-700">
-                                                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${feature.highlight ? 'bg-[var(--theme-secondary)] text-[var(--theme-primary-1)]' : 'bg-gray-100 text-gray-500'}`}>
+                                                <span
+                                                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${feature.highlight ? 'bg-(--theme-secondary) text-(--theme-primary-1)' : 'bg-gray-100 text-gray-500'}`}
+                                                >
                                                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                     </svg>
@@ -1552,7 +1553,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     </ul>
                                     <Link
                                         href={`/subscription?plan=${plan.id}`}
-                                        className="mt-auto rounded-lg bg-[var(--theme-primary-1)] px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] sm:py-3 sm:text-base"
+                                        className="mt-auto rounded-lg bg-(--theme-primary-1) px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-(--theme-primary-1-dark) sm:py-3 sm:text-base"
                                     >
                                         Subscribe
                                     </Link>
@@ -1607,9 +1608,9 @@ export default function Home({ banners, categories, products = [], subscriptionP
                     {/* Compact Header with Icon and Nav Buttons */}
                     <div className="mb-6 flex items-center justify-between sm:mb-5">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--theme-primary-1)]/10 sm:h-9 sm:w-9">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--theme-primary-1)/10 sm:h-9 sm:w-9">
                                 <svg
-                                    className="h-4 w-4 text-[var(--theme-primary-1)] sm:h-5 sm:w-5"
+                                    className="h-4 w-4 text-(--theme-primary-1) sm:h-5 sm:w-5"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -1623,7 +1624,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-[var(--theme-primary-1-dark)] sm:text-xl">What Our Customers Say</h2>
+                                <h2 className="text-lg font-bold text-(--theme-primary-1-dark) sm:text-xl">What Our Customers Say</h2>
                                 <p className="text-xs text-gray-400 sm:text-sm">Real feedback from Kerala</p>
                             </div>
                         </div>
@@ -1636,7 +1637,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     const slider = document.getElementById('testimonials-slider');
                                     if (slider) slider.scrollBy({ left: -slider.offsetWidth / 3, behavior: 'smooth' });
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark) hover:shadow-lg"
                                 aria-label="Previous testimonials"
                             >
                                 <ChevronLeft className="h-4 w-4" />
@@ -1647,7 +1648,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     const slider = document.getElementById('testimonials-slider');
                                     if (slider) slider.scrollBy({ left: slider.offsetWidth / 3, behavior: 'smooth' });
                                 }}
-                                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)] hover:shadow-lg"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark) hover:shadow-lg"
                                 aria-label="Next testimonials"
                             >
                                 <ChevronRight className="h-4 w-4" />
@@ -1676,28 +1677,28 @@ export default function Home({ banners, categories, products = [], subscriptionP
                         {TESTIMONIALS.map((t, index) => (
                             <article
                                 key={index}
-                                className="flex w-[calc(85%-8px)] flex-shrink-0 snap-start flex-col rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-14px)]"
+                                className="flex w-[calc(85%-8px)] shrink-0 snap-start flex-col rounded-xl border border-gray-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-14px)]"
                                 role="listitem"
                             >
                                 <div className="mb-2 flex items-center justify-between gap-2">
-                                    <div className="flex gap-0.5 text-[var(--theme-tertiary)]">
+                                    <div className="flex gap-0.5 text-(--theme-tertiary)">
                                         {[...Array(5)].map((_, i) => (
                                             <svg key={i} className="h-4 w-4 fill-current" viewBox="0 0 20 20" aria-hidden>
                                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                             </svg>
                                         ))}
                                     </div>
-                                    <span className="text-[10px] font-medium text-[var(--theme-primary-1)] sm:text-xs">{t.recent}</span>
+                                    <span className="text-[10px] font-medium text-(--theme-primary-1) sm:text-xs">{t.recent}</span>
                                 </div>
                                 <p className="mb-3 line-clamp-3 flex-1 text-sm leading-relaxed text-gray-700 sm:text-base">"{t.quote}"</p>
                                 <div className="flex items-center gap-2 border-t border-gray-100 pt-2 sm:pt-3">
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--theme-primary-1)]/15 text-xs font-bold text-[var(--theme-primary-1)] sm:h-9 sm:w-9 sm:text-sm">
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-(--theme-primary-1)/15 text-xs font-bold text-(--theme-primary-1) sm:h-9 sm:w-9 sm:text-sm">
                                         {t.name.charAt(0)}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-semibold text-gray-900">{t.name}</p>
                                         <p className="flex items-center gap-1 truncate text-xs text-gray-600">
-                                            <MapPin className="h-3 w-3 shrink-0 text-[var(--theme-primary-1)]" strokeWidth={2} />
+                                            <MapPin className="h-3 w-3 shrink-0 text-(--theme-primary-1)" strokeWidth={2} />
                                             {t.location}, Kerala
                                         </p>
                                     </div>
@@ -1714,7 +1715,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                 const slider = document.getElementById('testimonials-slider');
                                 if (slider) slider.scrollBy({ left: -slider.offsetWidth / 1.5, behavior: 'smooth' });
                             }}
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)]"
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark)"
                             aria-label="Previous testimonials"
                         >
                             <ChevronLeft className="h-4 w-4" />
@@ -1731,7 +1732,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                         if (slider) slider.scrollTo({ left: i * slider.offsetWidth * 0.7, behavior: 'smooth' });
                                     }}
                                     className={`h-2 w-2 rounded-full transition-all ${
-                                        i === testimonialsActivePage ? 'bg-[var(--theme-primary-1)]' : 'bg-gray-300 hover:bg-gray-400'
+                                        i === testimonialsActivePage ? 'bg-(--theme-primary-1)' : 'bg-gray-300 hover:bg-gray-400'
                                     }`}
                                     aria-label={`Go to testimonials page ${i + 1}`}
                                 />
@@ -1744,7 +1745,7 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                 const slider = document.getElementById('testimonials-slider');
                                 if (slider) slider.scrollBy({ left: slider.offsetWidth / 1.5, behavior: 'smooth' });
                             }}
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--theme-primary-1)] text-white shadow-md transition-all hover:bg-[var(--theme-primary-1-dark)]"
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-(--theme-primary-1) text-white shadow-md transition-all hover:bg-(--theme-primary-1-dark)"
                             aria-label="Next testimonials"
                         >
                             <ChevronRight className="h-4 w-4" />
@@ -1754,12 +1755,12 @@ export default function Home({ banners, categories, products = [], subscriptionP
             </section>
 
             {/* Support – enhanced compact design */}
-            <section className="bg-gradient-to-b from-white to-gray-50/30 py-8 sm:py-10 lg:py-12">
+            <section className="bg-linear-to-b from-white to-gray-50/30 py-8 sm:py-10 lg:py-12">
                 <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch lg:gap-6">
                         {/* Col 1: Active Support GIF + App CTA */}
                         <div className="flex w-full flex-col gap-4">
-                            <div className="group relative flex h-[160px] w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/10 to-[var(--theme-primary-1)]/5 shadow-md transition-all duration-500 hover:shadow-lg sm:h-[200px] lg:h-[220px]">
+                            <div className="group relative flex h-40 w-full items-center justify-center overflow-hidden rounded-xl bg-linear-to-br from-(--theme-primary-1)/10 to-(--theme-primary-1)/5 shadow-md transition-all duration-500 hover:shadow-lg sm:h-50 lg:h-55">
                                 <img
                                     src="/images/Active%20Support.gif"
                                     alt="Mobile app support"
@@ -1767,14 +1768,14 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     loading="lazy"
                                 />
                             </div>
-                            <div className="shrink-0 rounded-xl bg-gradient-to-r from-[var(--theme-primary-1)] to-[var(--theme-primary-1-dark)] p-4 shadow-lg sm:p-5">
+                            <div className="shrink-0 rounded-xl bg-linear-to-r from-(--theme-primary-1) to-(--theme-primary-1-dark) p-4 shadow-lg sm:p-5">
                                 <p className="text-xs font-semibold text-white/95 sm:text-sm">
                                     Manage subscriptions from your phone — pause, increase, decrease anytime.
                                 </p>
                                 <div className="mt-3 flex flex-wrap gap-2">
                                     <a
                                         href="/login"
-                                        className="rounded-lg bg-white px-4 py-2 text-xs font-semibold text-[var(--theme-primary-1)] shadow-sm transition-all duration-300 hover:scale-105 hover:bg-white/95 hover:shadow-md active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm"
+                                        className="rounded-lg bg-white px-4 py-2 text-xs font-semibold text-(--theme-primary-1) shadow-sm transition-all duration-300 hover:scale-105 hover:bg-white/95 hover:shadow-md active:scale-95 sm:px-5 sm:py-2.5 sm:text-sm"
                                     >
                                         Get Started
                                     </a>
@@ -1790,26 +1791,26 @@ export default function Home({ banners, categories, products = [], subscriptionP
 
                         {/* Col 2: Support contact card */}
                         <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition-all duration-300 hover:shadow-lg">
-                            <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-4 py-3 sm:px-5 sm:py-3.5">
+                            <div className="border-b border-gray-100 bg-linear-to-r from-gray-50 to-white px-4 py-3 sm:px-5 sm:py-3.5">
                                 <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Support</h2>
                                 <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">We're here to help you</p>
                             </div>
                             <div className="divide-y divide-gray-100">
                                 <a
                                     href="tel:7736121233"
-                                    className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5"
+                                    className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-(--theme-primary-1)/5 sm:px-5 sm:py-3.5"
                                 >
-                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/20 to-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-[var(--theme-primary-1)]/30 group-hover:to-[var(--theme-primary-1)]/20 sm:h-10 sm:w-10">
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-(--theme-primary-1)/20 to-(--theme-primary-1)/10 text-(--theme-primary-1) shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-(--theme-primary-1)/30 group-hover:to-(--theme-primary-1)/20 sm:h-10 sm:w-10">
                                         <Phone className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
                                     </span>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
+                                        <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-(--theme-primary-1) sm:text-base">
                                             Call Us
                                         </p>
                                         <p className="text-xs text-gray-600 sm:text-sm">7736121233</p>
                                     </div>
                                     <ExternalLink
-                                        className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--theme-primary-1)] sm:h-5 sm:w-5"
+                                        className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-(--theme-primary-1) sm:h-5 sm:w-5"
                                         strokeWidth={2}
                                         aria-hidden
                                     />
@@ -1818,9 +1819,9 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                     href="https://wa.me/917736121233"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5"
+                                    className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-(--theme-primary-1)/5 sm:px-5 sm:py-3.5"
                                 >
-                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#25D366]/20 to-[#25D366]/10 text-[#25D366] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-[#25D366]/30 group-hover:to-[#25D366]/20 sm:h-10 sm:w-10">
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-[#25D366]/20 to-[#25D366]/10 text-[#25D366] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-[#25D366]/30 group-hover:to-[#25D366]/20 sm:h-10 sm:w-10">
                                         <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
                                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
                                         </svg>
@@ -1839,25 +1840,25 @@ export default function Home({ banners, categories, products = [], subscriptionP
                                 </a>
                                 <a
                                     href="mailto:support@freshtick.in"
-                                    className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-[var(--theme-primary-1)]/5 sm:px-5 sm:py-3.5"
+                                    className="group flex items-center gap-3 px-4 py-3 transition-all duration-300 hover:bg-(--theme-primary-1)/5 sm:px-5 sm:py-3.5"
                                 >
-                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/20 to-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-[var(--theme-primary-1)]/30 group-hover:to-[var(--theme-primary-1)]/20 sm:h-10 sm:w-10">
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-(--theme-primary-1)/20 to-(--theme-primary-1)/10 text-(--theme-primary-1) shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:from-(--theme-primary-1)/30 group-hover:to-(--theme-primary-1)/20 sm:h-10 sm:w-10">
                                         <Mail className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
                                     </span>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-[var(--theme-primary-1)] sm:text-base">
+                                        <p className="text-sm font-semibold text-gray-900 transition-colors duration-300 group-hover:text-(--theme-primary-1) sm:text-base">
                                             Email Us
                                         </p>
                                         <p className="text-xs text-gray-600 sm:text-sm">support@freshtick.in</p>
                                     </div>
                                     <ExternalLink
-                                        className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-[var(--theme-primary-1)] sm:h-5 sm:w-5"
+                                        className="h-4 w-4 shrink-0 text-gray-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-(--theme-primary-1) sm:h-5 sm:w-5"
                                         strokeWidth={2}
                                         aria-hidden
                                     />
                                 </a>
                                 <div className="flex items-start gap-3 px-4 py-3 sm:px-5 sm:py-3.5">
-                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--theme-primary-1)]/20 to-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)] shadow-sm sm:h-10 sm:w-10">
+                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-(--theme-primary-1)/20 to-(--theme-primary-1)/10 text-(--theme-primary-1) shadow-sm sm:h-10 sm:w-10">
                                         <MapPin className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
                                     </span>
                                     <div className="min-w-0 flex-1">

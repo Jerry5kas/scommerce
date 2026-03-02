@@ -1,7 +1,9 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Heart } from 'lucide-react';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
-import { BusinessVertical } from '@/types';
+import { handleImageFallbackError, toSafeImageUrl } from '@/lib/imageFallback';
+import { product as productRoute } from '@/routes/catalog';
 
 interface Banner {
     id: number;
@@ -47,19 +49,47 @@ interface CatalogHomeProps {
     featuredProducts: Product[];
 }
 
-export default function CatalogHome({
-    vertical,
-    verticalOptions,
-    zone,
-    banners,
-    categories,
-    featuredProducts,
-}: CatalogHomeProps) {
+export default function CatalogHome({ vertical, verticalOptions, banners, categories, featuredProducts }: CatalogHomeProps) {
     const [selectedVertical, setSelectedVertical] = useState(vertical);
+    const [addingProductId, setAddingProductId] = useState<number | null>(null);
+    const auth = (usePage().props as { auth?: { user?: unknown; wishlisted_products?: number[] } }).auth;
+    const wishlistedProductIds = new Set(auth?.wishlisted_products || []);
 
     const handleVerticalChange = (newVertical: string) => {
         setSelectedVertical(newVertical);
         router.get('/catalog', { vertical: newVertical }, { preserveState: true, preserveScroll: true });
+    };
+
+    const toggleWishlist = (event: React.MouseEvent, productId: number) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!auth?.user) {
+            router.get('/login');
+            return;
+        }
+
+        router.post(`/wishlist/toggle/${productId}`, {}, { preserveScroll: true, preserveState: true });
+    };
+
+    const addToCart = (event: React.MouseEvent, productId: number) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (addingProductId === productId) {
+            return;
+        }
+
+        setAddingProductId(productId);
+        router.post(
+            '/cart/add',
+            { product_id: productId, quantity: 1 },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setAddingProductId((current) => (current === productId ? null : current)),
+            },
+        );
     };
 
     return (
@@ -67,17 +97,15 @@ export default function CatalogHome({
             <Head title="Catalog" />
             <div className="min-h-screen bg-gray-50">
                 {/* Vertical Tabs */}
-                <div className="bg-white border-b sticky top-0 z-10">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="sticky top-0 z-10 border-b bg-white">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div className="flex space-x-1">
                             {Object.entries(verticalOptions).map(([value, label]) => (
                                 <button
                                     key={value}
                                     onClick={() => handleVerticalChange(value)}
-                                    className={`px-6 py-4 font-medium text-sm transition-colors ${
-                                        selectedVertical === value
-                                            ? 'border-b-2 border-blue-600 text-blue-600'
-                                            : 'text-gray-600 hover:text-gray-900'
+                                    className={`px-6 py-4 text-sm font-medium transition-colors ${
+                                        selectedVertical === value ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600 hover:text-gray-900'
                                     }`}
                                 >
                                     {label}
@@ -89,22 +117,18 @@ export default function CatalogHome({
 
                 {/* Hero Banners */}
                 {banners.length > 0 && (
-                    <div className="relative w-full h-64 md:h-96 overflow-hidden">
+                    <div className="relative h-64 w-full overflow-hidden md:h-96">
                         <div className="flex h-full transition-transform duration-500">
                             {banners.map((banner) => (
-                                <div key={banner.id} className="min-w-full h-full relative">
-                                    <img
-                                        src={banner.banner_image}
-                                        alt={banner.name}
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <div key={banner.id} className="relative h-full min-w-full">
+                                    <img src={banner.banner_image} alt={banner.name} className="h-full w-full object-cover" />
+                                    <div className="bg-opacity-20 absolute inset-0 flex items-center justify-center bg-black">
                                         <div className="text-center text-white">
-                                            <h2 className="text-3xl md:text-4xl font-bold mb-2">{banner.name}</h2>
+                                            <h2 className="mb-2 text-3xl font-bold md:text-4xl">{banner.name}</h2>
                                             {banner.link_url && (
                                                 <Link
                                                     href={banner.link_url}
-                                                    className="inline-block mt-4 px-6 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100"
+                                                    className="mt-4 inline-block rounded-lg bg-white px-6 py-2 text-gray-900 hover:bg-gray-100"
                                                 >
                                                     Shop Now
                                                 </Link>
@@ -117,39 +141,35 @@ export default function CatalogHome({
                     </div>
                 )}
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                     {/* Categories Grid */}
                     {categories.length > 0 ? (
                         <section className="mb-12">
-                            <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            <h2 className="mb-6 text-2xl font-bold">Shop by Category</h2>
+                            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
                                 {categories.map((category) => (
                                     <Link
                                         key={category.id}
                                         href={`/categories/${category.slug}?vertical=${selectedVertical}`}
-                                        className="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow"
+                                        className="rounded-lg bg-white p-4 text-center transition-shadow hover:shadow-md"
                                     >
                                         {category.image ? (
-                                            <img
-                                                src={category.image}
-                                                alt={category.name}
-                                                className="w-full h-24 object-cover rounded mb-2"
-                                            />
+                                            <img src={category.image} alt={category.name} className="mb-2 h-24 w-full rounded object-cover" />
                                         ) : (
-                                            <div className="w-full h-24 bg-gray-200 rounded mb-2 flex items-center justify-center">
+                                            <div className="mb-2 flex h-24 w-full items-center justify-center rounded bg-gray-200">
                                                 {category.icon || '📦'}
                                             </div>
                                         )}
-                                        <h3 className="font-medium text-sm">{category.name}</h3>
-                                        <p className="text-xs text-gray-500 mt-1">{category.products_count} products</p>
+                                        <h3 className="text-sm font-medium">{category.name}</h3>
+                                        <p className="mt-1 text-xs text-gray-500">{category.products_count} products</p>
                                     </Link>
                                 ))}
                             </div>
                         </section>
                     ) : (
                         <section className="mb-12">
-                            <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
-                            <div className="bg-white rounded-lg p-8 text-center">
+                            <h2 className="mb-6 text-2xl font-bold">Shop by Category</h2>
+                            <div className="rounded-lg bg-white p-8 text-center">
                                 <p className="text-gray-500">No categories available for this vertical yet.</p>
                             </div>
                         </section>
@@ -158,31 +178,47 @@ export default function CatalogHome({
                     {/* Featured Products */}
                     {featuredProducts.length > 0 ? (
                         <section>
-                            <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            <h2 className="mb-6 text-2xl font-bold">Featured Products</h2>
+                            <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
                                 {featuredProducts.map((product) => (
                                     <Link
                                         key={product.id}
                                         href={productRoute(product.slug, { query: { vertical: selectedVertical } })}
-                                        className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                                        className="relative overflow-hidden rounded-lg bg-white transition-shadow hover:shadow-md"
                                     >
-                                        {product.image && (
-                                            <img
-                                                src={product.image}
-                                                alt={product.name}
-                                                className="w-full h-48 object-cover"
+                                        <button
+                                            type="button"
+                                            onClick={(event) => toggleWishlist(event, product.id)}
+                                            aria-label={wishlistedProductIds.has(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                                            className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm transition-colors hover:bg-white"
+                                        >
+                                            <Heart
+                                                className={`h-4 w-4 ${wishlistedProductIds.has(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-500'}`}
+                                                strokeWidth={2}
                                             />
-                                        )}
+                                        </button>
+                                        <img
+                                            src={toSafeImageUrl(product.image)}
+                                            alt={product.name}
+                                            className="h-48 w-full object-cover"
+                                            onError={handleImageFallbackError}
+                                        />
                                         <div className="p-4">
-                                            <h3 className="font-medium text-sm mb-2 line-clamp-2">{product.name}</h3>
+                                            <h3 className="mb-2 line-clamp-2 text-sm font-medium">{product.name}</h3>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-lg font-bold">₹{product.price}</span>
                                                 {product.compare_at_price && (
-                                                    <span className="text-sm text-gray-500 line-through">
-                                                        ₹{product.compare_at_price}
-                                                    </span>
+                                                    <span className="text-sm text-gray-500 line-through">₹{product.compare_at_price}</span>
                                                 )}
                                             </div>
+                                            <button
+                                                type="button"
+                                                onClick={(event) => addToCart(event, product.id)}
+                                                disabled={addingProductId === product.id}
+                                                className="mt-3 w-full rounded-md bg-(--theme-primary-1) px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-(--theme-primary-1-dark) disabled:cursor-not-allowed disabled:opacity-70"
+                                            >
+                                                {addingProductId === product.id ? 'Adding...' : 'Add to Cart'}
+                                            </button>
                                         </div>
                                     </Link>
                                 ))}
@@ -190,8 +226,8 @@ export default function CatalogHome({
                         </section>
                     ) : (
                         <section>
-                            <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
-                            <div className="bg-white rounded-lg p-8 text-center">
+                            <h2 className="mb-6 text-2xl font-bold">Featured Products</h2>
+                            <div className="rounded-lg bg-white p-8 text-center">
                                 <p className="text-gray-500">No featured products available for this vertical yet.</p>
                             </div>
                         </section>
@@ -201,4 +237,3 @@ export default function CatalogHome({
         </UserLayout>
     );
 }
-

@@ -216,7 +216,7 @@ export default function AdminProductsEdit({ product, verticalOptions, categories
     };
 
     const inputCls =
-        'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[var(--admin-dark-primary)] focus:ring-1 focus:ring-[var(--admin-dark-primary)]';
+        'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-(--admin-dark-primary) focus:ring-1 focus:ring-(--admin-dark-primary)';
     const labelCls = 'block text-sm font-medium text-gray-700';
 
     return (
@@ -225,7 +225,7 @@ export default function AdminProductsEdit({ product, verticalOptions, categories
             <form onSubmit={submit} className="space-y-6">
                 <Link
                     href={'/admin/products/' + product.id}
-                    className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--admin-dark-primary)]"
+                    className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-(--admin-dark-primary)"
                 >
                     <ArrowLeft className="h-4 w-4" /> Back to product
                 </Link>
@@ -362,7 +362,7 @@ export default function AdminProductsEdit({ product, verticalOptions, categories
                                     </button>
                                 </div>
                             )}
-                            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-[var(--admin-dark-primary)] hover:bg-gray-100">
+                            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-(--admin-dark-primary) hover:bg-gray-100">
                                 <Upload className="h-4 w-4" />
                                 <span>{imageFile ? imageFile.name : 'Choose image'}</span>
                                 <input
@@ -443,7 +443,7 @@ export default function AdminProductsEdit({ product, verticalOptions, categories
                                     ))}
                                 </div>
                             )}
-                            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-[var(--admin-dark-primary)] hover:bg-gray-100">
+                            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 hover:border-(--admin-dark-primary) hover:bg-gray-100">
                                 <Upload className="h-4 w-4" />
                                 <span>{galleryFiles.length > 0 ? `${galleryFiles.length} file(s)` : 'Choose gallery images'}</span>
                                 <input
@@ -750,7 +750,7 @@ export default function AdminProductsEdit({ product, verticalOptions, categories
                     <button
                         type="submit"
                         disabled={form.processing || isUploading}
-                        className="rounded-lg bg-[var(--admin-dark-primary)] px-6 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-70"
+                        className="rounded-lg bg-(--admin-dark-primary) px-6 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-70"
                     >
                         {isUploading ? 'Uploading…' : form.processing ? 'Saving…' : 'Save changes'}
                     </button>

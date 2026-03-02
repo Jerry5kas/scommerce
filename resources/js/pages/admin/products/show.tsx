@@ -86,7 +86,7 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
         <AdminLayout title={product.name}>
             <Head title={product.name + ' - Admin'} />
             <div className="space-y-4">
-                <Link href="/admin/products" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--admin-dark-primary)]">
+                <Link href="/admin/products" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-(--admin-dark-primary)">
                     <ArrowLeft className="h-4 w-4" />
                     Back to products
                 </Link>
@@ -156,10 +156,7 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                             <dt className="text-sm font-medium text-gray-500">Category</dt>
                             <dd className="mt-0.5 text-sm text-gray-900">
                                 {product.category ? (
-                                    <Link
-                                        href={`/admin/categories/${product.category.id}`}
-                                        className="text-[var(--admin-dark-primary)] hover:underline"
-                                    >
+                                    <Link href={`/admin/categories/${product.category.id}`} className="text-(--admin-dark-primary) hover:underline">
                                         {product.category.name}
                                     </Link>
                                 ) : (
@@ -173,7 +170,7 @@ export default function AdminProductsShow({ product, verticalOptions }: AdminPro
                                 {product.collection ? (
                                     <Link
                                         href={`/admin/collections/${product.collection.id}`}
-                                        className="text-[var(--admin-dark-primary)] hover:underline"
+                                        className="text-(--admin-dark-primary) hover:underline"
                                     >
                                         {product.collection.name}
                                     </Link>
