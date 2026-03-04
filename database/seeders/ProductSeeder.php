@@ -136,8 +136,9 @@ class ProductSeeder extends Seeder
                 ->where('slug', $group['category'])
                 ->first();
 
-            if (!$category) {
+            if (! $category) {
                 $this->command->warn("⚠️  Category [{$group['category']}] not found — skipping.");
+
                 continue;
             }
 
@@ -151,30 +152,30 @@ class ProductSeeder extends Seeder
                 // ── Upsert the parent product ────────────────────────────────
                 /** @var Product $product */
                 $product = Product::query()->updateOrCreate(
-                ['slug' => $baseSlug],
-                [
-                    'name' => $productData['name'],
-                    'slug' => $baseSlug,
-                    'sku' => $this->buildSku($category->slug, $productData['name']),
-                    'description' => $productData['description'],
-                    'short_description' => $productData['description'],
-                    'category_id' => $category->id,
-                    'image' => $productData['image'],
-                    'price' => $primaryVariant['price'],
-                    'compare_at_price' => null,
-                    'stock_quantity' => 200,
-                    'is_in_stock' => true,
-                    'is_subscription_eligible' => false,
-                    'requires_bottle' => false,
-                    'is_one_time_purchase' => true,
-                    'min_quantity' => 1,
-                    'max_quantity' => 20,
-                    'unit' => $primaryVariant['unit'],
-                    'weight' => $primaryVariant['weight'],
-                    'display_order' => 0,
-                    'is_active' => true,
-                    'vertical' => $group['vertical'],
-                ],
+                    ['slug' => $baseSlug],
+                    [
+                        'name' => $productData['name'],
+                        'slug' => $baseSlug,
+                        'sku' => $this->buildSku($category->slug, $productData['name']),
+                        'description' => $productData['description'],
+                        'short_description' => $productData['description'],
+                        'category_id' => $category->id,
+                        'image' => $productData['image'],
+                        'price' => $primaryVariant['price'],
+                        'compare_at_price' => null,
+                        'stock_quantity' => 200,
+                        'is_in_stock' => true,
+                        'is_subscription_eligible' => false,
+                        'requires_bottle' => false,
+                        'is_one_time_purchase' => true,
+                        'min_quantity' => 1,
+                        'max_quantity' => 20,
+                        'unit' => $primaryVariant['unit'],
+                        'weight' => $primaryVariant['weight'],
+                        'display_order' => 0,
+                        'is_active' => true,
+                        'vertical' => $group['vertical'],
+                    ],
                 );
 
                 // ── Upsert each variant ──────────────────────────────────────
@@ -186,15 +187,15 @@ class ProductSeeder extends Seeder
                     );
 
                     ProductVariant::query()->updateOrCreate(
-                    ['sku' => $variantSku],
-                    [
-                        'product_id' => $product->id,
-                        'name' => $variant['label'],
-                        'sku' => $variantSku,
-                        'price' => $variant['price'],
-                        'stock_quantity' => 200,
-                        'is_active' => true,
-                    ],
+                        ['sku' => $variantSku],
+                        [
+                            'product_id' => $product->id,
+                            'name' => $variant['label'],
+                            'sku' => $variantSku,
+                            'price' => $variant['price'],
+                            'stock_quantity' => 200,
+                            'is_active' => true,
+                        ],
                     );
                 }
 

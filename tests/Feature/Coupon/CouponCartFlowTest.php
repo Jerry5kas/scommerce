@@ -53,9 +53,10 @@ class CouponCartFlowTest extends TestCase
 
         $response = $this->actingAs($user)
             ->from('/cart')
+            ->withSession(['_token' => 'test-csrf-token'])
             ->post('/coupons/apply', [
                 'code' => 'SAVE10',
-            ]);
+            ], ['X-CSRF-TOKEN' => 'test-csrf-token']);
 
         $response->assertRedirect('/cart');
         $response->assertSessionHas('success');
@@ -101,7 +102,8 @@ class CouponCartFlowTest extends TestCase
 
         $response = $this->actingAs($user)
             ->from('/cart')
-            ->delete('/coupons/remove');
+            ->withSession(['_token' => 'test-csrf-token'])
+            ->delete('/coupons/remove', [], ['X-CSRF-TOKEN' => 'test-csrf-token']);
 
         $response->assertRedirect('/cart');
         $response->assertSessionHas('success', 'Coupon removed.');
@@ -116,9 +118,10 @@ class CouponCartFlowTest extends TestCase
 
     public function test_guest_is_redirected_when_trying_to_apply_coupon(): void
     {
-        $response = $this->post('/coupons/apply', [
-            'code' => 'SAVE10',
-        ]);
+        $response = $this->withSession(['_token' => 'test-csrf-token'])
+            ->post('/coupons/apply', [
+                'code' => 'SAVE10',
+            ], ['X-CSRF-TOKEN' => 'test-csrf-token']);
 
         $response->assertRedirect('/login');
     }

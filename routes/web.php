@@ -108,7 +108,7 @@ Route::get('/', function () {
         'products' => $products,
         'subscriptionPlans' => $subscriptionPlans,
     ]);
-})->name('home');
+})->name('home')->middleware(['auth', 'location']);
 
 Route::middleware('location')->group(function () {
     // Catalog home

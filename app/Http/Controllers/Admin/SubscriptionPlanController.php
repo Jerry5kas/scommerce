@@ -90,7 +90,7 @@ class SubscriptionPlanController extends Controller
             $plan->items()->create($item);
         }
 
-        if (!empty($validated['features'])) {
+        if (! empty($validated['features'])) {
             foreach ($validated['features'] as $feature) {
                 $plan->features()->create($feature);
             }
@@ -163,7 +163,7 @@ class SubscriptionPlanController extends Controller
 
         // Sync features: Delete all and recreate
         $subscriptionPlan->features()->delete();
-        if (!empty($validated['features'])) {
+        if (! empty($validated['features'])) {
             foreach ($validated['features'] as $feature) {
                 $subscriptionPlan->features()->create($feature);
             }

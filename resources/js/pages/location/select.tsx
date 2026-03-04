@@ -73,9 +73,11 @@ export default function LocationSelect() {
                             </div>
 
                             <LocationPicker
-                                fromNavbar={false}
+                                onSuccess={() => router.visit('/')}
                                 onCancel={() => router.visit('/')}
-                                className="sm:rounded-2xl sm:border sm:border-gray-200 sm:bg-white sm:p-4 lg:p-4"
+                                initialLocation={null}
+                                fromNavbar={false}
+                                className="pb-0"
                             />
                         </section>
                     </div>

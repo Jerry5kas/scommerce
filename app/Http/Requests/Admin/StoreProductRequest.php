@@ -11,7 +11,7 @@ class StoreProductRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool)$this->user('admin');
+        return (bool) $this->user('admin');
     }
 
     protected function prepareForValidation(): void
@@ -72,7 +72,7 @@ class StoreProductRequest extends FormRequest
         ];
 
         // Require either an image URL or an uploaded image file
-        if ($this->isMethod('post') && !$this->filled('image') && !$this->hasFile('image_file')) {
+        if ($this->isMethod('post') && ! $this->filled('image') && ! $this->hasFile('image_file')) {
             $rules['image'] = ['required', 'string', 'max:500'];
         }
 

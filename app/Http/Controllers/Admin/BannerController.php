@@ -14,6 +14,7 @@ use Inertia\Response;
 class BannerController extends Controller
 {
     use HandlesImageUploads;
+
     /**
      * Display banners list.
      */

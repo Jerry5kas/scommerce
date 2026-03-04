@@ -1,8 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import * as L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import { MapPin, Plus, User, Pencil, Trash2, Star, Map as MapIcon, Search, Crosshair, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
 import type { SharedData } from '@/types';
 
@@ -30,6 +29,15 @@ interface UserAddressData {
 interface AddressesPageProps {
     addresses: UserAddressData[];
 }
+
+interface AddressSearchResult {
+    placeId: string;
+    label: string;
+    lat: number;
+    lng: number;
+}
+
+const ADDRESS_MAP_DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
 
 const emptyAddress = {
     type: 'home' as AddressType,
@@ -123,9 +131,7 @@ export default function ProfileAddresses({ addresses }: AddressesPageProps) {
                 <p className="mt-1 text-sm text-gray-600">Manage your delivery addresses.</p>
 
                 {flash?.message && (
-                    <div className="mt-4 rounded-lg bg-[var(--theme-primary-1)]/10 px-4 py-3 text-sm text-[var(--theme-primary-1)]">
-                        {flash.message}
-                    </div>
+                    <div className="mt-4 rounded-lg bg-(--theme-primary-1)/10 px-4 py-3 text-sm text-(--theme-primary-1)">{flash.message}</div>
                 )}
 
                 <div className="mt-6 flex flex-col gap-6 sm:flex-row">
@@ -139,7 +145,7 @@ export default function ProfileAddresses({ addresses }: AddressesPageProps) {
                         </Link>
                         <Link
                             href="/profile/addresses"
-                            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-[var(--theme-primary-1)] bg-white shadow-sm"
+                            className="flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-medium text-(--theme-primary-1) shadow-sm"
                         >
                             <MapPin className="h-4 w-4" />
                             Addresses
@@ -151,7 +157,7 @@ export default function ProfileAddresses({ addresses }: AddressesPageProps) {
                             <button
                                 type="button"
                                 onClick={() => setShowAddForm(true)}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 py-6 text-sm font-medium text-gray-600 hover:border-[var(--theme-primary-1)] hover:text-[var(--theme-primary-1)]"
+                                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 py-6 text-sm font-medium text-gray-600 hover:border-(--theme-primary-1) hover:text-(--theme-primary-1)"
                             >
                                 <Plus className="h-5 w-5" />
                                 Add address
@@ -165,7 +171,7 @@ export default function ProfileAddresses({ addresses }: AddressesPageProps) {
                                         <button
                                             type="submit"
                                             disabled={addForm.processing}
-                                            className="rounded-lg bg-[var(--theme-primary-1)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-70"
+                                            className="rounded-lg bg-(--theme-primary-1) px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-70"
                                         >
                                             {addForm.processing ? 'Adding…' : 'Add address'}
                                         </button>
@@ -191,23 +197,17 @@ export default function ProfileAddresses({ addresses }: AddressesPageProps) {
                         )}
 
                         {addresses.map((addr) => (
-                            <div
-                                key={addr.id}
-                                className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
-                            >
+                            <div key={addr.id} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                                 {editingId === addr.id ? (
                                     <>
                                         <h2 className="text-lg font-semibold text-gray-900">Edit address</h2>
-                                        <form
-                                            onSubmit={(e) => handleUpdate(addr.id, e)}
-                                            className="mt-4 space-y-4"
-                                        >
+                                        <form onSubmit={(e) => handleUpdate(addr.id, e)} className="mt-4 space-y-4">
                                             <AddressFormFields form={editForm} formId={`edit-${addr.id}`} />
                                             <div className="flex gap-2">
                                                 <button
                                                     type="submit"
                                                     disabled={editForm.processing}
-                                                    className="rounded-lg bg-[var(--theme-primary-1)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-70"
+                                                    className="rounded-lg bg-(--theme-primary-1) px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-70"
                                                 >
                                                     Save
                                                 </button>
@@ -230,7 +230,7 @@ export default function ProfileAddresses({ addresses }: AddressesPageProps) {
                                                         {ADDRESS_TYPES.find((t) => t.value === addr.type)?.label ?? addr.type}
                                                     </span>
                                                     {addr.is_default && (
-                                                        <span className="flex items-center gap-1 rounded bg-[var(--theme-primary-1)]/10 px-2 py-0.5 text-xs font-medium text-[var(--theme-primary-1)]">
+                                                        <span className="flex items-center gap-1 rounded bg-(--theme-primary-1)/10 px-2 py-0.5 text-xs font-medium text-(--theme-primary-1)">
                                                             <Star className="h-3 w-3 fill-current" />
                                                             Default
                                                         </span>
@@ -240,9 +240,7 @@ export default function ProfileAddresses({ addresses }: AddressesPageProps) {
                                                     {addr.address_line_1}
                                                     {addr.address_line_2 && `, ${addr.address_line_2}`}
                                                 </p>
-                                                {addr.landmark && (
-                                                    <p className="text-xs text-gray-500">Landmark: {addr.landmark}</p>
-                                                )}
+                                                {addr.landmark && <p className="text-xs text-gray-500">Landmark: {addr.landmark}</p>}
                                                 <p className="mt-1 text-sm text-gray-600">
                                                     {addr.city}, {addr.state} – {addr.pincode}
                                                 </p>
@@ -252,7 +250,7 @@ export default function ProfileAddresses({ addresses }: AddressesPageProps) {
                                                     <button
                                                         type="button"
                                                         onClick={() => handleSetDefault(addr.id)}
-                                                        className="rounded p-2 text-gray-400 hover:bg-gray-100 hover:text-[var(--theme-primary-1)]"
+                                                        className="rounded p-2 text-gray-400 hover:bg-gray-100 hover:text-(--theme-primary-1)"
                                                         title="Set as default"
                                                     >
                                                         <Star className="h-4 w-4" />
@@ -294,106 +292,256 @@ function AddressFormFields({
     form: ReturnType<typeof useForm<typeof emptyAddress & { address_line_1?: string; city?: string; state?: string; pincode?: string }>>;
     formId?: string;
 }) {
+    const { googleMapsApiKey } = usePage<SharedData>().props;
+    const apiKey = typeof googleMapsApiKey === 'string' ? googleMapsApiKey : '';
+
+    const { isLoaded: isGoogleMapsLoaded, loadError: googleMapsLoadError } = useJsApiLoader({
+        id: 'profile-addresses-google-map-script',
+        googleMapsApiKey: apiKey,
+    });
+
     const [isMapOpen, setIsMapOpen] = useState(false);
-    const mapContainerRef = useRef<HTMLDivElement | null>(null);
-    const mapInstanceRef = useRef<L.Map | null>(null);
-    const markerRef = useRef<L.Marker | null>(null);
+    const mapRef = useRef<google.maps.Map | null>(null);
+    const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searchResults, setSearchResults] = useState<AddressSearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
+    const [isLocating, setIsLocating] = useState(false);
+    const [toolMessage, setToolMessage] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!isMapOpen || !mapContainerRef.current) return;
-        if (mapInstanceRef.current) return;
+    const ensureMarker = useCallback(async (): Promise<google.maps.marker.AdvancedMarkerElement | null> => {
+        if (!mapRef.current || !window.google?.maps) {
+            return null;
+        }
 
-        const map = L.map(mapContainerRef.current).setView([10.081, 76.205], 13);
-        mapInstanceRef.current = map;
+        if (markerRef.current) {
+            markerRef.current.map = mapRef.current;
+            return markerRef.current;
+        }
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap contributors',
-        }).addTo(map);
-
-        map.on('click', (e: L.LeafletMouseEvent) => {
-            const { lat, lng } = e.latlng;
-            setMapLocation({ lat, lng });
-            if (markerRef.current) {
-                markerRef.current.setLatLng(e.latlng);
-            } else {
-                markerRef.current = L.marker(e.latlng).addTo(map);
-            }
+        const markerLibrary = (await google.maps.importLibrary('marker')) as google.maps.MarkerLibrary;
+        const marker = new markerLibrary.AdvancedMarkerElement({
+            map: mapRef.current,
+            title: 'Selected address location',
         });
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-               map.setView([pos.coords.latitude, pos.coords.longitude], 14);
-            }, () => {});
-        }
+        markerRef.current = marker;
 
-        return () => {
-            map.remove();
-            mapInstanceRef.current = null;
-            markerRef.current = null;
-        };
-    }, [isMapOpen]);
+        return marker;
+    }, []);
+
+    const setMarkerPosition = useCallback(
+        async (lat: number, lng: number): Promise<void> => {
+            if (!mapRef.current) {
+                return;
+            }
+
+            const marker = await ensureMarker();
+            if (!marker) {
+                return;
+            }
+
+            marker.map = mapRef.current;
+            marker.position = { lat, lng };
+            mapRef.current.panTo({ lat, lng });
+        },
+        [ensureMarker],
+    );
 
     useEffect(() => {
-        if (mapInstanceRef.current && mapLocation) {
-            mapInstanceRef.current.setView([mapLocation.lat, mapLocation.lng], 15);
-            if (markerRef.current) {
-                markerRef.current.setLatLng([mapLocation.lat, mapLocation.lng]);
-            } else {
-                markerRef.current = L.marker([mapLocation.lat, mapLocation.lng]).addTo(mapInstanceRef.current);
-            }
+        if (!isMapOpen || !isGoogleMapsLoaded || mapLocation || !navigator.geolocation) {
+            return;
         }
-    }, [mapLocation]);
 
-    const handleSearchLocation = async () => {
-        if (!searchQuery.trim()) return;
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = Number(position.coords.latitude.toFixed(6));
+                const lng = Number(position.coords.longitude.toFixed(6));
+
+                setMapLocation({ lat, lng });
+                if (mapRef.current) {
+                    mapRef.current.setCenter({ lat, lng });
+                    mapRef.current.setZoom(14);
+                }
+            },
+            () => {},
+            {
+                enableHighAccuracy: true,
+                timeout: 8000,
+                maximumAge: 0,
+            },
+        );
+    }, [isGoogleMapsLoaded, isMapOpen, mapLocation]);
+
+    useEffect(() => {
+        if (!mapLocation) {
+            return;
+        }
+
+        void setMarkerPosition(mapLocation.lat, mapLocation.lng);
+        if (mapRef.current) {
+            const currentZoom = mapRef.current.getZoom() ?? 12;
+            mapRef.current.setZoom(Math.max(currentZoom, 15));
+        }
+    }, [mapLocation, setMarkerPosition]);
+
+    const getAddressComponent = (components: google.maps.GeocoderAddressComponent[], type: string): string => {
+        const component = components.find((addressComponent) => addressComponent.types.includes(type));
+
+        return component?.long_name ?? '';
+    };
+
+    const handleSearchLocation = async (): Promise<void> => {
+        if (!searchQuery.trim() || !isGoogleMapsLoaded || !window.google?.maps) {
+            return;
+        }
+
+        setToolMessage(null);
         setIsSearching(true);
+        setSearchResults([]);
+
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`);
-            const data = await res.json();
-            setSearchResults(data);
+            const geocoder = new google.maps.Geocoder();
+            const geocodeResult = await geocoder.geocode({
+                address: searchQuery,
+                componentRestrictions: { country: 'IN' },
+            });
+
+            const results: AddressSearchResult[] = (geocodeResult.results ?? []).slice(0, 5).map((result) => {
+                const location = result.geometry.location;
+
+                return {
+                    placeId: result.place_id,
+                    label: result.formatted_address,
+                    lat: Number(location.lat().toFixed(6)),
+                    lng: Number(location.lng().toFixed(6)),
+                };
+            });
+
+            setSearchResults(results);
         } catch (error) {
             console.error('Error fetching location:', error);
+            setSearchResults([]);
         } finally {
             setIsSearching(false);
         }
     };
 
-    const handleSelectSearchResult = (result: any) => {
-        const lat = parseFloat(result.lat);
-        const lng = parseFloat(result.lon);
-        setMapLocation({ lat, lng });
-        setSearchQuery(result.display_name);
+    const handleSelectSearchResult = (result: AddressSearchResult): void => {
+        setToolMessage(null);
+        setMapLocation({ lat: result.lat, lng: result.lng });
+        setSearchQuery(result.label);
         setSearchResults([]);
+
+        if (mapRef.current) {
+            mapRef.current.setCenter({ lat: result.lat, lng: result.lng });
+            mapRef.current.setZoom(15);
+        }
     };
 
-    const handleConfirmMapLocation = async () => {
-        if (!mapLocation) return;
-        setIsReverseGeocoding(true);
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${mapLocation.lat}&lon=${mapLocation.lng}`);
-            const data = await res.json();
-            
-            if (data && data.address) {
-                const add = data.address;
-                const road = add.road || add.neighbourhood || add.suburb || '';
-                const city = add.city || add.town || add.village || add.county || add.state_district || '';
-                const state = add.state || '';
-                const postcode = add.postcode || '';
+    const handleGoogleMapClick = (event: google.maps.MapMouseEvent): void => {
+        if (!event.latLng) {
+            return;
+        }
 
-                form.setData({
-                    ...form.data,
-                    address_line_1: road ? `${add.building ? add.building + ', ' : ''}${road}, ${data.display_name.split(',')[0]}` : data.display_name,
-                    city: city,
-                    state: state,
-                    pincode: postcode,
-                });
+        setToolMessage(null);
+        const lat = Number(event.latLng.lat().toFixed(6));
+        const lng = Number(event.latLng.lng().toFixed(6));
+        setMapLocation({ lat, lng });
+    };
+
+    const handleDetectCurrentLocation = useCallback((): void => {
+        if (!navigator.geolocation) {
+            setToolMessage('Geolocation is not supported on this browser.');
+            return;
+        }
+
+        setToolMessage(null);
+        setIsLocating(true);
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = Number(position.coords.latitude.toFixed(6));
+                const lng = Number(position.coords.longitude.toFixed(6));
+
+                setMapLocation({ lat, lng });
+
+                if (mapRef.current) {
+                    mapRef.current.setCenter({ lat, lng });
+                    mapRef.current.setZoom(15);
+                }
+
+                setIsLocating(false);
+            },
+            () => {
+                setToolMessage('Unable to fetch your current location.');
+                setIsLocating(false);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 12000,
+                maximumAge: 0,
+            },
+        );
+    }, []);
+
+    const handleClearMapSelection = useCallback((): void => {
+        setToolMessage(null);
+        setMapLocation(null);
+        setSearchResults([]);
+        setSearchQuery('');
+
+        if (markerRef.current) {
+            markerRef.current.map = null;
+        }
+
+        if (mapRef.current) {
+            mapRef.current.setCenter(ADDRESS_MAP_DEFAULT_CENTER);
+            mapRef.current.setZoom(6);
+        }
+    }, []);
+
+    const handleConfirmMapLocation = async (): Promise<void> => {
+        if (!mapLocation || !isGoogleMapsLoaded || !window.google?.maps) {
+            return;
+        }
+
+        setIsReverseGeocoding(true);
+
+        try {
+            const geocoder = new google.maps.Geocoder();
+            const geocodeResult = await geocoder.geocode({
+                location: mapLocation,
+            });
+            const firstResult = geocodeResult.results?.[0];
+
+            if (!firstResult) {
+                return;
             }
+
+            const addressComponents = firstResult.address_components;
+            const streetNumber = getAddressComponent(addressComponents, 'street_number');
+            const route = getAddressComponent(addressComponents, 'route');
+            const premise = getAddressComponent(addressComponents, 'premise');
+            const subPremise = getAddressComponent(addressComponents, 'subpremise');
+            const city =
+                getAddressComponent(addressComponents, 'locality') ||
+                getAddressComponent(addressComponents, 'administrative_area_level_3') ||
+                getAddressComponent(addressComponents, 'administrative_area_level_2');
+            const state = getAddressComponent(addressComponents, 'administrative_area_level_1');
+            const pincode = getAddressComponent(addressComponents, 'postal_code');
+
+            const primaryAddress = [premise, subPremise, streetNumber, route].filter((value) => value.length > 0).join(', ');
+
+            form.setData({
+                ...form.data,
+                address_line_1: primaryAddress || firstResult.formatted_address,
+                city,
+                state,
+                pincode,
+            });
         } catch (error) {
             console.error('Error reverse geocoding:', error);
         } finally {
@@ -409,69 +557,133 @@ function AddressFormFields({
                     <button
                         type="button"
                         onClick={() => setIsMapOpen(true)}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 hover:text-[var(--theme-primary-1)] transition-colors shadow-sm"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-100 hover:text-(--theme-primary-1)"
                     >
                         <MapIcon className="h-4 w-4" />
                         Pick on map (Auto-fill address)
                     </button>
                 ) : (
-                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 relative ring-1 ring-gray-900/5 shadow-inner">
+                    <div className="relative rounded-xl border border-gray-200 bg-gray-50 p-4 shadow-inner ring-1 ring-gray-900/5">
                         <button
                             type="button"
                             onClick={() => setIsMapOpen(false)}
-                            className="absolute right-2 top-2 z-10 p-1.5 rounded-md bg-white text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100"
+                            className="absolute top-2 right-2 z-10 rounded-md border border-gray-100 bg-white p-1.5 text-gray-400 shadow-sm hover:text-gray-600"
                         >
                             <X className="h-4 w-4" />
                         </button>
-                        <h3 className="text-sm font-bold text-gray-800 mb-3">Find your location</h3>
-                        
+                        <h3 className="mb-3 text-sm font-bold text-gray-800">Find your location</h3>
+
                         <div className="relative mb-3 flex gap-2">
                             <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="text"
                                     placeholder="Search area..."
-                                    className="block w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm text-gray-900 shadow-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)]"
+                                    className="block w-full rounded-lg border border-gray-300 py-2 pr-3 pl-9 text-sm text-gray-900 shadow-sm focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1)"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearchLocation())}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            void handleSearchLocation();
+                                        }
+                                    }}
                                 />
                             </div>
                             <button
                                 type="button"
-                                onClick={handleSearchLocation}
-                                disabled={isSearching || !searchQuery.trim()}
+                                onClick={() => void handleSearchLocation()}
+                                disabled={isSearching || !searchQuery.trim() || !isGoogleMapsLoaded}
                                 className="shrink-0 rounded-lg bg-gray-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black disabled:opacity-50"
                             >
                                 {isSearching ? '...' : 'Search'}
                             </button>
                         </div>
 
+                        <div className="mb-3 flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={handleDetectCurrentLocation}
+                                disabled={isLocating || !isGoogleMapsLoaded}
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                <Crosshair className="h-3.5 w-3.5" />
+                                {isLocating ? 'Locating…' : 'Use my location'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleClearMapSelection}
+                                disabled={!mapLocation && searchQuery.trim() === ''}
+                                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                <X className="h-3.5 w-3.5" />
+                                Clear pin
+                            </button>
+                        </div>
+
+                        {toolMessage && <div className="mb-2 text-xs text-red-600">{toolMessage}</div>}
+
+                        <p className="mb-2 text-xs text-gray-500">Search, detect, clear, or tap on map to pick the exact address point.</p>
+
                         {searchResults.length > 0 && (
-                            <div className="absolute z-[1001] mt-1 max-h-40 w-[calc(100%-2rem)] overflow-auto rounded-lg bg-white shadow-xl border border-gray-100">
+                            <div className="absolute z-1001 mt-1 max-h-40 w-[calc(100%-2rem)] overflow-auto rounded-lg border border-gray-100 bg-white shadow-xl">
                                 <ul className="py-1">
-                                    {searchResults.map((res: any) => (
+                                    {searchResults.map((result) => (
                                         <li
-                                            key={res.place_id}
-                                            onClick={() => handleSelectSearchResult(res)}
-                                            className="cursor-pointer py-2 pl-3 pr-4 text-gray-800 hover:bg-gray-50 hover:text-[var(--theme-primary-1)] text-xs border-b border-gray-50 last:border-0"
+                                            key={`${result.placeId}-${result.lat}-${result.lng}`}
+                                            onClick={() => handleSelectSearchResult(result)}
+                                            className="cursor-pointer border-b border-gray-50 py-2 pr-4 pl-3 text-xs text-gray-800 last:border-0 hover:bg-gray-50 hover:text-(--theme-primary-1)"
                                         >
-                                            <span className="block truncate font-medium">{res.display_name}</span>
+                                            <span className="block truncate font-medium">{result.label}</span>
                                         </li>
                                     ))}
                                 </ul>
                             </div>
                         )}
 
-                        <div className="relative w-full rounded-lg overflow-hidden border border-gray-300 shadow-sm h-[240px] z-0">
-                            <div ref={mapContainerRef} className="h-full w-full" />
-                            
-                            <div className="absolute bottom-3 left-0 right-0 z-[1000] flex justify-center pointer-events-none px-3">
+                        <div className="relative z-0 h-60 w-full overflow-hidden rounded-lg border border-gray-300 shadow-sm">
+                            {!apiKey || googleMapsLoadError ? (
+                                <div className="flex h-full items-center justify-center bg-red-50 px-3 text-center text-xs text-red-700">
+                                    Google Maps is unavailable. Check your API key and enabled APIs.
+                                </div>
+                            ) : !isGoogleMapsLoaded ? (
+                                <div className="flex h-full items-center justify-center bg-gray-50 px-3 text-xs text-gray-500">Loading map...</div>
+                            ) : (
+                                <GoogleMap
+                                    mapContainerStyle={{ width: '100%', height: '100%' }}
+                                    center={mapLocation ?? ADDRESS_MAP_DEFAULT_CENTER}
+                                    zoom={mapLocation ? 15 : 6}
+                                    onLoad={(map) => {
+                                        mapRef.current = map;
+
+                                        if (mapLocation) {
+                                            void setMarkerPosition(mapLocation.lat, mapLocation.lng);
+                                        }
+                                    }}
+                                    onUnmount={() => {
+                                        if (markerRef.current) {
+                                            markerRef.current.map = null;
+                                        }
+
+                                        markerRef.current = null;
+                                        mapRef.current = null;
+                                    }}
+                                    onClick={handleGoogleMapClick}
+                                    options={{
+                                        streetViewControl: false,
+                                        fullscreenControl: true,
+                                        mapTypeControl: true,
+                                        gestureHandling: 'greedy',
+                                    }}
+                                />
+                            )}
+
+                            <div className="pointer-events-none absolute right-0 bottom-3 left-0 z-1000 flex justify-center px-3">
                                 <button
                                     type="button"
                                     onClick={handleConfirmMapLocation}
-                                    disabled={isReverseGeocoding || !mapLocation}
-                                    className="pointer-events-auto shadow-md bg-[var(--theme-primary-1)] rounded-full px-5 py-2.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-0 disabled:translate-y-4 transition-all duration-300 flex items-center gap-2"
+                                    disabled={isReverseGeocoding || !mapLocation || !isGoogleMapsLoaded}
+                                    className="pointer-events-auto flex items-center gap-2 rounded-full bg-(--theme-primary-1) px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all duration-300 hover:opacity-90 disabled:translate-y-4 disabled:opacity-0"
                                 >
                                     <Crosshair className="h-3.5 w-3.5" />
                                     {isReverseGeocoding ? 'Fetching...' : 'Confirm Location'}
@@ -486,7 +698,7 @@ function AddressFormFields({
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Type</label>
                     <select
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] sm:text-sm"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1) sm:text-sm"
                         value={form.data.type}
                         onChange={(e) => form.setData('type', e.target.value as AddressType)}
                     >
@@ -501,7 +713,7 @@ function AddressFormFields({
                     <label className="block text-sm font-medium text-gray-700">Label (optional)</label>
                     <input
                         type="text"
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] sm:text-sm"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1) sm:text-sm"
                         value={form.data.label}
                         onChange={(e) => form.setData('label', e.target.value)}
                         placeholder="e.g. Home, Office"
@@ -513,19 +725,17 @@ function AddressFormFields({
                 <input
                     type="text"
                     required
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] sm:text-sm"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1) sm:text-sm"
                     value={form.data.address_line_1}
                     onChange={(e) => form.setData('address_line_1', e.target.value)}
                 />
-                {form.errors.address_line_1 && (
-                    <p className="mt-1 text-sm text-red-600">{form.errors.address_line_1}</p>
-                )}
+                {form.errors.address_line_1 && <p className="mt-1 text-sm text-red-600">{form.errors.address_line_1}</p>}
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700">Address line 2 (optional)</label>
                 <input
                     type="text"
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] sm:text-sm"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1) sm:text-sm"
                     value={form.data.address_line_2}
                     onChange={(e) => form.setData('address_line_2', e.target.value)}
                 />
@@ -534,7 +744,7 @@ function AddressFormFields({
                 <label className="block text-sm font-medium text-gray-700">Landmark (optional)</label>
                 <input
                     type="text"
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] sm:text-sm"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1) sm:text-sm"
                     value={form.data.landmark}
                     onChange={(e) => form.setData('landmark', e.target.value)}
                 />
@@ -545,46 +755,40 @@ function AddressFormFields({
                     <input
                         type="text"
                         required
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] sm:text-sm"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1) sm:text-sm"
                         value={form.data.city}
                         onChange={(e) => form.setData('city', e.target.value)}
                     />
-                    {form.errors.city && (
-                        <p className="mt-1 text-sm text-red-600">{form.errors.city}</p>
-                    )}
+                    {form.errors.city && <p className="mt-1 text-sm text-red-600">{form.errors.city}</p>}
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">State *</label>
                     <input
                         type="text"
                         required
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] sm:text-sm"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1) sm:text-sm"
                         value={form.data.state}
                         onChange={(e) => form.setData('state', e.target.value)}
                     />
-                    {form.errors.state && (
-                        <p className="mt-1 text-sm text-red-600">{form.errors.state}</p>
-                    )}
+                    {form.errors.state && <p className="mt-1 text-sm text-red-600">{form.errors.state}</p>}
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Pincode *</label>
                     <input
                         type="text"
                         required
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] sm:text-sm"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1) sm:text-sm"
                         value={form.data.pincode}
                         onChange={(e) => form.setData('pincode', e.target.value)}
                     />
-                    {form.errors.pincode && (
-                        <p className="mt-1 text-sm text-red-600">{form.errors.pincode}</p>
-                    )}
+                    {form.errors.pincode && <p className="mt-1 text-sm text-red-600">{form.errors.pincode}</p>}
                 </div>
             </div>
             <div className="flex items-center gap-2">
                 <input
                     id={`is_default_${formId}`}
                     type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 text-[var(--theme-primary-1)] focus:ring-[var(--theme-primary-1)]"
+                    className="h-4 w-4 rounded border-gray-300 text-(--theme-primary-1) focus:ring-(--theme-primary-1)"
                     checked={form.data.is_default}
                     onChange={(e) => form.setData('is_default', e.target.checked)}
                 />

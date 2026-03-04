@@ -93,11 +93,11 @@ class RouteController extends Controller
     public function searchAddresses(Request $request)
     {
         $query = $request->input('q');
-        
+
         $addresses = UserAddress::with('user:id,name,phone')
-            ->whereHas('user', function($q) use ($query) {
+            ->whereHas('user', function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('phone', 'like', "%{$query}%");
+                    ->orWhere('phone', 'like', "%{$query}%");
             })
             ->orWhere('address_line_1', 'like', "%{$query}%")
             ->orWhere('city', 'like', "%{$query}%")

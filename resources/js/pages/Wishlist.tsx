@@ -1,8 +1,8 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { product as productRoute } from '@/routes/catalog';
-import { Heart, ShoppingCart, X, ArrowRight, PackageOpen, Tag, Star } from 'lucide-react';
+import { Head, Link, router } from '@inertiajs/react';
+import { Heart, X, ArrowRight, PackageOpen, Tag, Star } from 'lucide-react';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
+import { product as productRoute } from '@/routes/catalog';
 
 interface ProductVariant {
     id: number;

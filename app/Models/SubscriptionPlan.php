@@ -12,12 +12,17 @@ class SubscriptionPlan extends Model
     use HasFactory;
 
     public const FREQUENCY_DAILY = 'daily';
+
     public const FREQUENCY_ALTERNATE = 'alternate';
+
     public const FREQUENCY_WEEKLY = 'weekly';
+
     public const FREQUENCY_CUSTOM = 'custom';
 
     public const DISCOUNT_NONE = 'none';
+
     public const DISCOUNT_PERCENTAGE = 'percentage';
+
     public const DISCOUNT_FLAT = 'flat';
 
     protected $fillable = [
@@ -34,8 +39,8 @@ class SubscriptionPlan extends Model
     {
         return [
             'discount_value' => 'decimal:2',
-            'is_active'      => 'boolean',
-            'sort_order'     => 'integer',
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 

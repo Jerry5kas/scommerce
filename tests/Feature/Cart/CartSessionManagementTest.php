@@ -21,10 +21,12 @@ class CartSessionManagementTest extends TestCase
         $this->startSession();
         session(['guest_zone_id' => $zone->id]);
 
-        $response = $this->from('/products')->post('/cart/add', [
-            'product_id' => $product->id,
-            'quantity' => 2,
-        ]);
+        $response = $this->from('/products')
+            ->withSession(['_token' => 'test-csrf-token'])
+            ->post('/cart/add', [
+                'product_id' => $product->id,
+                'quantity' => 2,
+            ], ['X-CSRF-TOKEN' => 'test-csrf-token']);
 
         $response->assertRedirect('/products');
 
@@ -63,16 +65,20 @@ class CartSessionManagementTest extends TestCase
             'is_subscription' => false,
         ]);
 
-        $updateResponse = $this->from('/cart')->put("/cart/items/{$cartItem->id}", [
-            'quantity' => 3,
-        ]);
+        $updateResponse = $this->from('/cart')
+            ->withSession(['_token' => 'test-csrf-token'])
+            ->put("/cart/items/{$cartItem->id}", [
+                'quantity' => 3,
+            ], ['X-CSRF-TOKEN' => 'test-csrf-token']);
 
         $updateResponse->assertRedirect('/cart');
 
         $cartItem->refresh();
         $this->assertSame(3, $cartItem->quantity);
 
-        $deleteResponse = $this->from('/cart')->delete("/cart/items/{$cartItem->id}");
+        $deleteResponse = $this->from('/cart')
+            ->withSession(['_token' => 'test-csrf-token'])
+            ->delete("/cart/items/{$cartItem->id}", [], ['X-CSRF-TOKEN' => 'test-csrf-token']);
 
         $deleteResponse->assertRedirect('/cart');
         $this->assertDatabaseMissing('cart_items', ['id' => $cartItem->id]);

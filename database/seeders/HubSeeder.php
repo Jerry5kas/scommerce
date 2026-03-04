@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Hub;
 use App\Enums\BusinessVertical;
+use App\Models\Hub;
 use Illuminate\Database\Seeder;
 
 class HubSeeder extends Seeder

@@ -124,6 +124,7 @@ class HandleInertiaRequests extends Middleware
             // zone is null when user is unauthenticated or has no default address
             'zone' => $zone,
             'location' => $location,
+            'googleMapsApiKey' => config('maps.google.api_key'),
         ];
     }
 }

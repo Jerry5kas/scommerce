@@ -25,13 +25,13 @@ function Section({ title, description, children }: { title: string; description?
                 <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
                 {description && <p className="mt-0.5 text-xs text-gray-500">{description}</p>}
             </div>
-            <div className="p-5 space-y-5">{children}</div>
+            <div className="space-y-5 p-5">{children}</div>
         </div>
     );
 }
 
 const inputCls =
-    'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[var(--admin-dark-primary)] focus:ring-1 focus:ring-[var(--admin-dark-primary)]';
+    'mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-(--admin-dark-primary) focus:ring-1 focus:ring-(--admin-dark-primary)';
 const labelCls = 'block text-sm font-medium text-gray-700';
 
 export default function AdminHubsEdit({ hub, verticalOptions }: AdminHubsEditProps) {
@@ -44,12 +44,8 @@ export default function AdminHubsEdit({ hub, verticalOptions }: AdminHubsEditPro
         longitude: hub.longitude ?? '',
     });
 
-
-
     const toggleVertical = (value: string) => {
-        const next = form.data.verticals.includes(value)
-            ? form.data.verticals.filter((v) => v !== value)
-            : [...form.data.verticals, value];
+        const next = form.data.verticals.includes(value) ? form.data.verticals.filter((v) => v !== value) : [...form.data.verticals, value];
         form.setData('verticals', next);
     };
 
@@ -63,10 +59,7 @@ export default function AdminHubsEdit({ hub, verticalOptions }: AdminHubsEditPro
                 }}
                 className="space-y-6"
             >
-                <Link
-                    href="/admin/hubs"
-                    className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[var(--admin-dark-primary)]"
-                >
+                <Link href="/admin/hubs" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-(--admin-dark-primary)">
                     <ArrowLeft className="h-4 w-4" /> Back to hubs
                 </Link>
 
@@ -99,10 +92,10 @@ export default function AdminHubsEdit({ hub, verticalOptions }: AdminHubsEditPro
                         <p className="mt-0.5 text-xs text-gray-500">Which verticals this hub serves</p>
                         <div className="mt-2 flex flex-wrap gap-4">
                             {Object.entries(verticalOptions).map(([value, label]) => (
-                                <label key={value} className="flex items-center gap-2 cursor-pointer">
+                                <label key={value} className="flex cursor-pointer items-center gap-2">
                                     <input
                                         type="checkbox"
-                                        className="h-4 w-4 rounded border-gray-300 text-[var(--admin-dark-primary)] focus:ring-[var(--admin-dark-primary)]"
+                                        className="h-4 w-4 rounded border-gray-300 text-(--admin-dark-primary) focus:ring-(--admin-dark-primary)"
                                         checked={form.data.verticals.includes(value)}
                                         onChange={() => toggleVertical(value)}
                                     />
@@ -112,10 +105,10 @@ export default function AdminHubsEdit({ hub, verticalOptions }: AdminHubsEditPro
                         </div>
                     </div>
 
-                    <label className="flex items-center gap-2 cursor-pointer mt-4 border border-gray-200 p-3 rounded-lg w-max">
+                    <label className="mt-4 flex w-max cursor-pointer items-center gap-2 rounded-lg border border-gray-200 p-3">
                         <input
                             type="checkbox"
-                            className="h-5 w-5 rounded border-gray-300 text-[var(--admin-dark-primary)] focus:ring-[var(--admin-dark-primary)]"
+                            className="h-5 w-5 rounded border-gray-300 text-(--admin-dark-primary) focus:ring-(--admin-dark-primary)"
                             checked={form.data.is_active}
                             onChange={(e) => form.setData('is_active', e.target.checked)}
                         />
@@ -124,7 +117,7 @@ export default function AdminHubsEdit({ hub, verticalOptions }: AdminHubsEditPro
                 </Section>
 
                 <Section title="Location" description="Set the location for this hub by picking a point on the map.">
-                    <div className="grid gap-5 sm:grid-cols-2 mb-4">
+                    <div className="mb-4 grid gap-5 sm:grid-cols-2">
                         <div>
                             <label className={labelCls}>Latitude</label>
                             <input
@@ -152,18 +145,25 @@ export default function AdminHubsEdit({ hub, verticalOptions }: AdminHubsEditPro
                             {form.errors.longitude && <p className="mt-1 text-sm text-red-600">{form.errors.longitude}</p>}
                         </div>
                     </div>
-                    
-                    <div className="text-sm text-gray-600 flex items-center gap-2 mb-2 bg-blue-50 text-blue-800 p-2 rounded w-max">
+
+                    <div className="mb-2 flex w-max items-center gap-2 rounded bg-blue-50 p-2 text-sm text-blue-800">
                         <MapPin className="h-4 w-4" /> Tap on the map to drop a pin and set coordinates
                     </div>
-                    <LocationMapPicker 
+                    <LocationMapPicker
                         latitude={form.data.latitude}
                         longitude={form.data.longitude}
                         onLocationSelect={(lat, lng, label) => {
                             form.setData((data) => ({
                                 ...data,
                                 latitude: lat,
-                                longitude: lng
+                                longitude: lng,
+                            }));
+                        }}
+                        onLocationClear={() => {
+                            form.setData((data) => ({
+                                ...data,
+                                latitude: '',
+                                longitude: '',
                             }));
                         }}
                         mapHeight="h-96"
@@ -174,13 +174,13 @@ export default function AdminHubsEdit({ hub, verticalOptions }: AdminHubsEditPro
                     <button
                         type="submit"
                         disabled={form.processing}
-                        className="rounded-lg bg-[var(--admin-dark-primary)] px-6 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-70"
+                        className="rounded-lg bg-(--admin-dark-primary) px-6 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-70"
                     >
                         {form.processing ? 'Saving…' : 'Update Hub'}
                     </button>
                     <Link
                         href="/admin/hubs"
-                        className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                        className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
                     >
                         Cancel
                     </Link>

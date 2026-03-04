@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Route;
 use App\Http\Requests\StoreRouteRequest;
 use App\Http\Requests\UpdateRouteRequest;
+use App\Models\Route;
 
 class RouteController extends Controller
 {

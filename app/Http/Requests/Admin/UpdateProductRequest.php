@@ -11,7 +11,7 @@ class UpdateProductRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return (bool)$this->user('admin');
+        return (bool) $this->user('admin');
     }
 
     /**

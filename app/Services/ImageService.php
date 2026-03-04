@@ -82,7 +82,7 @@ class ImageService
         }
 
         // If existing file exists but with different endpoint (credentials changed), log it
-        if ($existingFile !== null && !str_starts_with($existingFile->url, $currentEndpoint)) {
+        if ($existingFile !== null && ! str_starts_with($existingFile->url, $currentEndpoint)) {
             Log::debug('Existing file found but endpoint changed, re-uploading to new account', [
                 'file_hash' => $fileHash,
                 'old_url' => $existingFile->url,

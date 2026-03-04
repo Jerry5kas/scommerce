@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\UserAddress;
 use App\Models\Driver;
 use App\Models\Hub;
 use App\Models\Route;
+use App\Models\User;
+use App\Models\UserAddress;
 use App\Models\Zone;
 use Illuminate\Database\Seeder;
 
@@ -17,7 +17,7 @@ class RouteSeeder extends Seeder
         $hub = Hub::where('name', 'Freshtick Default Hub (vypin-co-op society)')->first();
         $zone = Zone::where('code', 'VYPIN')->first();
 
-        if (!$hub || !$zone) {
+        if (! $hub || ! $zone) {
             return;
         }
 
@@ -54,7 +54,7 @@ class RouteSeeder extends Seeder
                 'address_line_1' => 'Njarakkal Fish Farm Road',
                 'latitude' => 10.074000,
                 'longitude' => 76.208000,
-            ]
+            ],
         ];
 
         $addressIds = [];
@@ -133,7 +133,7 @@ class RouteSeeder extends Seeder
             $syncData[$addressId] = ['sequence' => $index + 1];
         }
         $route->addresses()->sync($syncData);
-        
+
         $this->command->info('✅ Vypin Route created with 4 stops and assigned to Driver.');
     }
 }

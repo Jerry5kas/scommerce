@@ -106,26 +106,20 @@ export default function HeroBanner({ banners, autoPlay = true, interval = 4000 }
                 </div>
             </div>
 
-            {/* Desktop: Fixed height with thumbnails on image */}
-            <div className="hidden h-[460px] w-full lg:block">
-                <div
-                    className="relative h-full w-full overflow-hidden"
-                    onMouseEnter={() => setIsPaused(true)}
-                    onMouseLeave={() => setIsPaused(false)}
-                >
+            {/* Desktop: Full width with auto height and thumbnails on image */}
+            <div className="hidden w-full lg:block">
+                <div className="relative w-full overflow-hidden" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
                     {displayBanners.map((banner, index) => (
                         <div
                             key={banner.id}
-                            className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
-                                index === currentSlide ? 'opacity-100' : 'opacity-0'
-                            }`}
+                            className={`relative transition-opacity duration-500 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}
                         >
                             {banner.link ? (
-                                <Link href={banner.link} className="block h-full w-full">
+                                <Link href={banner.link} className="block w-full">
                                     <img
                                         src={banner.image}
                                         alt={banner.title || 'Banner'}
-                                        className="h-full w-full object-cover object-center"
+                                        className="h-auto w-full object-contain"
                                         loading={index === 0 ? 'eager' : 'lazy'}
                                     />
                                 </Link>
@@ -133,7 +127,7 @@ export default function HeroBanner({ banners, autoPlay = true, interval = 4000 }
                                 <img
                                     src={banner.image}
                                     alt={banner.title || 'Banner'}
-                                    className="h-full w-full object-cover object-center"
+                                    className="h-auto w-full object-contain"
                                     loading={index === 0 ? 'eager' : 'lazy'}
                                 />
                             )}

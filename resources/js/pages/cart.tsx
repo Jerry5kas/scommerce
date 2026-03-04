@@ -1,18 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import {
-    ChevronLeft,
-    MapPin,
-    Calendar,
-    Clock,
-    Plus,
-    Minus,
-    Trash2,
-    Tag,
-    Truck,
-    FileText,
-    CheckCircle2,
-    AlertCircle,
-} from 'lucide-react';
+import { ChevronLeft, MapPin, Calendar, Clock, Plus, Minus, Trash2, Tag, Truck, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import UserLayout from '@/layouts/UserLayout';
 
@@ -78,7 +65,7 @@ const MOCK_ADDRESSES: SavedAddress[] = [
 
 export default function Cart() {
     const [cartItems, setCartItems] = useState<CartLineItem[]>(MOCK_CART_ITEMS);
-    const [addresses, setAddresses] = useState<SavedAddress[]>(MOCK_ADDRESSES);
+    const [addresses] = useState<SavedAddress[]>(MOCK_ADDRESSES);
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(MOCK_ADDRESSES[0]?.id ?? null);
     const [deliverySlot, setDeliverySlot] = useState<string>(DELIVERY_SLOTS[0].id);
     const [deliveryDate, setDeliveryDate] = useState<string>('2026-02-01');
@@ -93,23 +80,19 @@ export default function Cart() {
     const discount = appliedCoupon?.discount ?? 0;
     const toPay = Math.max(0, itemTotal + deliveryFee - discount);
 
-    const updateQuantity = (lineId: string, delta: number) => {
+    const updateQuantity = (lineId: string, delta: number): void => {
         setCartItems((prev) =>
             prev
-                .map((item) =>
-                    item.id === lineId
-                        ? { ...item, quantity: Math.max(1, Math.min(99, item.quantity + delta)) }
-                        : item
-                )
-                .filter((item) => item.quantity > 0)
+                .map((item) => (item.id === lineId ? { ...item, quantity: Math.max(1, Math.min(99, item.quantity + delta)) } : item))
+                .filter((item) => item.quantity > 0),
         );
     };
 
-    const removeItem = (lineId: string) => {
+    const removeItem = (lineId: string): void => {
         setCartItems((prev) => prev.filter((item) => item.id !== lineId));
     };
 
-    const applyCoupon = () => {
+    const applyCoupon = (): void => {
         const code = couponCode.trim().toUpperCase();
         if (!code) {
             setCouponError('Enter a coupon code');
@@ -124,12 +107,10 @@ export default function Cart() {
         setAppliedCoupon(null);
     };
 
-    const removeCoupon = () => {
+    const removeCoupon = (): void => {
         setAppliedCoupon(null);
         setCouponError(null);
     };
-
-    const selectedAddress = addresses.find((a) => a.id === selectedAddressId);
     const isEmpty = cartItems.length === 0;
 
     return (
@@ -141,12 +122,14 @@ export default function Cart() {
                     <nav className="mb-6 flex items-center gap-3 sm:mb-8" aria-label="Breadcrumb">
                         <Link
                             href="/products"
-                            className="flex items-center gap-1.5 text-sm font-medium text-gray-600 transition-colors hover:text-[var(--theme-primary-1)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 rounded-lg"
+                            className="flex items-center gap-1.5 rounded-lg text-sm font-medium text-gray-600 transition-colors hover:text-[var(--theme-primary-1)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                         >
                             <ChevronLeft className="h-5 w-5 shrink-0" strokeWidth={2} />
                             <span className="hidden sm:inline">Review Cart</span>
                         </Link>
-                        <span className="text-sm text-gray-400" aria-hidden>|</span>
+                        <span className="text-sm text-gray-400" aria-hidden>
+                            |
+                        </span>
                         <h1 className="text-lg font-bold text-gray-900 sm:text-xl">Cart</h1>
                     </nav>
 
@@ -159,7 +142,7 @@ export default function Cart() {
                             <p className="mt-2 text-sm text-gray-600">Add products from our catalog to get started.</p>
                             <Link
                                 href="/products"
-                                className="mt-6 inline-flex items-center justify-center rounded-xl bg-[var(--theme-primary-1)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                className="mt-6 inline-flex items-center justify-center rounded-xl bg-[var(--theme-primary-1)] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                             >
                                 Shop Products
                             </Link>
@@ -196,7 +179,7 @@ export default function Cart() {
 
                                     {/* Time slots */}
                                     <div className="mt-4">
-                                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Time slot</p>
+                                        <p className="mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">Time slot</p>
                                         <div className="flex flex-wrap gap-2 sm:gap-3">
                                             {DELIVERY_SLOTS.map((slot) => {
                                                 const Icon = slot.icon;
@@ -206,7 +189,7 @@ export default function Cart() {
                                                         key={slot.id}
                                                         type="button"
                                                         onClick={() => setDeliverySlot(slot.id)}
-                                                        className={`flex flex-1 min-w-[120px] items-center gap-2 rounded-xl border-2 px-4 py-3 text-left transition-colors sm:min-w-0 ${
+                                                        className={`flex min-w-[120px] flex-1 items-center gap-2 rounded-xl border-2 px-4 py-3 text-left transition-colors sm:min-w-0 ${
                                                             isSelected
                                                                 ? 'border-[var(--theme-primary-1)] bg-[var(--theme-primary-1)]/10 text-[var(--theme-primary-1)]'
                                                                 : 'border-gray-200 bg-gray-50/80 text-gray-700 hover:border-gray-300'
@@ -225,7 +208,10 @@ export default function Cart() {
 
                                     {/* Date */}
                                     <div className="mt-4">
-                                        <label htmlFor="delivery-date" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                        <label
+                                            htmlFor="delivery-date"
+                                            className="mb-2 block text-xs font-semibold tracking-wider text-gray-500 uppercase"
+                                        >
                                             Delivery date
                                         </label>
                                         <input
@@ -234,7 +220,7 @@ export default function Cart() {
                                             value={deliveryDate}
                                             onChange={(e) => setDeliveryDate(e.target.value)}
                                             min={new Date().toISOString().slice(0, 10)}
-                                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50/50 px-4 py-3 text-sm font-medium text-gray-900 transition-colors focus:border-[var(--theme-primary-1)] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)]/20"
+                                            className="w-full rounded-xl border-2 border-gray-200 bg-gray-50/50 px-4 py-3 text-sm font-medium text-gray-900 transition-colors focus:border-[var(--theme-primary-1)] focus:bg-white focus:ring-2 focus:ring-[var(--theme-primary-1)]/20 focus:outline-none"
                                         />
                                     </div>
                                 </section>
@@ -295,14 +281,16 @@ export default function Cart() {
                                         <button
                                             type="button"
                                             onClick={() => setShowAddAddress(true)}
-                                            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--theme-primary-1)]/50 bg-[var(--theme-primary-1)]/5 py-3 text-sm font-semibold text-[var(--theme-primary-1)] transition-colors hover:bg-[var(--theme-primary-1)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--theme-primary-1)]/50 bg-[var(--theme-primary-1)]/5 py-3 text-sm font-semibold text-[var(--theme-primary-1)] transition-colors hover:bg-[var(--theme-primary-1)]/10 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                                         >
                                             <Plus className="h-4 w-4" strokeWidth={2} />
                                             Add new address
                                         </button>
                                     ) : (
                                         <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4">
-                                            <p className="mb-3 text-xs font-semibold text-gray-500">New address (form placeholder – connect to backend)</p>
+                                            <p className="mb-3 text-xs font-semibold text-gray-500">
+                                                New address (form placeholder – connect to backend)
+                                            </p>
                                             <button
                                                 type="button"
                                                 onClick={() => setShowAddAddress(false)}
@@ -334,21 +322,16 @@ export default function Cart() {
                                                         href={`/products/${item.productId}`}
                                                         className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-[var(--theme-secondary)]/20 sm:h-20 sm:w-20"
                                                     >
-                                                        <img
-                                                            src={item.image}
-                                                            alt=""
-                                                            className="h-full w-full object-contain p-1"
-                                                            loading="lazy"
-                                                        />
+                                                        <img src={item.image} alt="" className="h-full w-full object-contain p-1" loading="lazy" />
                                                     </Link>
                                                     <div className="min-w-0 flex-1">
                                                         <Link
                                                             href={`/products/${item.productId}`}
-                                                            className="font-semibold text-gray-900 hover:text-[var(--theme-primary-1)] line-clamp-2 text-sm sm:text-base"
+                                                            className="line-clamp-2 text-sm font-semibold text-gray-900 hover:text-[var(--theme-primary-1)] sm:text-base"
                                                         >
                                                             {item.name} – ({item.variant})
                                                         </Link>
-                                                        <p className="mt-0.5 text-xs text-[var(--theme-primary-1)] font-semibold sm:text-sm">
+                                                        <p className="mt-0.5 text-xs font-semibold text-[var(--theme-primary-1)] sm:text-sm">
                                                             ₹{item.unitPrice}/unit
                                                         </p>
                                                         <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -356,18 +339,21 @@ export default function Cart() {
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => updateQuantity(item.id, -1)}
-                                                                    className="flex h-8 w-8 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--theme-primary-1)] rounded-l-lg"
+                                                                    className="flex h-8 w-8 items-center justify-center rounded-l-lg text-gray-600 transition-colors hover:bg-gray-100 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:outline-none focus:ring-inset"
                                                                     aria-label="Decrease quantity"
                                                                 >
                                                                     <Minus className="h-4 w-4" strokeWidth={2} />
                                                                 </button>
-                                                                <span className="flex h-8 min-w-[2rem] items-center justify-center text-sm font-semibold text-gray-900" aria-live="polite">
+                                                                <span
+                                                                    className="flex h-8 min-w-[2rem] items-center justify-center text-sm font-semibold text-gray-900"
+                                                                    aria-live="polite"
+                                                                >
                                                                     {item.quantity}
                                                                 </span>
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => updateQuantity(item.id, 1)}
-                                                                    className="flex h-8 w-8 items-center justify-center text-gray-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--theme-primary-1)] rounded-r-lg"
+                                                                    className="flex h-8 w-8 items-center justify-center rounded-r-lg text-gray-600 transition-colors hover:bg-gray-100 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:outline-none focus:ring-inset"
                                                                     aria-label="Increase quantity"
                                                                 >
                                                                     <Plus className="h-4 w-4" strokeWidth={2} />
@@ -376,7 +362,7 @@ export default function Cart() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => removeItem(item.id)}
-                                                                className="flex items-center gap-1 text-xs font-medium text-red-600 hover:underline focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
+                                                                className="flex items-center gap-1 rounded text-xs font-medium text-red-600 hover:underline focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none"
                                                                 aria-label={`Remove ${item.name} from cart`}
                                                             >
                                                                 <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
@@ -389,7 +375,7 @@ export default function Cart() {
                                                                     type="text"
                                                                     placeholder="Delivery instruction (e.g. Leave at gate)"
                                                                     defaultValue={item.instruction}
-                                                                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:border-[var(--theme-primary-1)] focus:outline-none focus:ring-1 focus:ring-[var(--theme-primary-1)]"
+                                                                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs focus:border-[var(--theme-primary-1)] focus:ring-1 focus:ring-[var(--theme-primary-1)] focus:outline-none"
                                                                     onBlur={() => setEditingInstructionId(null)}
                                                                     onKeyDown={(e) => e.key === 'Enter' && setEditingInstructionId(null)}
                                                                 />
@@ -411,7 +397,7 @@ export default function Cart() {
                                         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
                                             <Link
                                                 href="/products"
-                                                className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[var(--theme-primary-1)] bg-white px-4 py-2 text-sm font-semibold text-[var(--theme-primary-1)] transition-colors hover:bg-[var(--theme-primary-1)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                                className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[var(--theme-primary-1)] bg-white px-4 py-2 text-sm font-semibold text-[var(--theme-primary-1)] transition-colors hover:bg-[var(--theme-primary-1)]/10 focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                                             >
                                                 <Plus className="h-4 w-4" strokeWidth={2} />
                                                 Add more items
@@ -453,12 +439,12 @@ export default function Cart() {
                                                         setCouponError(null);
                                                     }}
                                                     onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
-                                                    className="min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-gray-50/50 px-4 py-3 text-sm font-medium uppercase placeholder:normal-case placeholder:text-gray-400 focus:border-[var(--theme-primary-1)] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)]/20"
+                                                    className="min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-gray-50/50 px-4 py-3 text-sm font-medium uppercase placeholder:text-gray-400 placeholder:normal-case focus:border-[var(--theme-primary-1)] focus:bg-white focus:ring-2 focus:ring-[var(--theme-primary-1)]/20 focus:outline-none"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={applyCoupon}
-                                                    className="shrink-0 rounded-xl bg-[var(--theme-primary-1)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                                    className="shrink-0 rounded-xl bg-[var(--theme-primary-1)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                                                 >
                                                     Apply
                                                 </button>
@@ -505,7 +491,7 @@ export default function Cart() {
                                         </dl>
                                         <Link
                                             href="#"
-                                            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--theme-primary-1)] py-4 text-base font-bold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--theme-primary-1)] py-4 text-base font-bold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                                         >
                                             Proceed to pay ₹{toPay}
                                         </Link>
@@ -517,15 +503,15 @@ export default function Cart() {
 
                     {/* Sticky CTA on mobile when cart has items */}
                     {!isEmpty && (
-                        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] lg:hidden">
-                            <div className="container mx-auto max-w-7xl flex items-center justify-between gap-4">
+                        <div className="fixed right-0 bottom-0 left-0 z-30 border-t border-gray-200 bg-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] lg:hidden">
+                            <div className="container mx-auto flex max-w-7xl items-center justify-between gap-4">
                                 <div>
                                     <p className="text-xs text-gray-500">To pay</p>
                                     <p className="text-xl font-bold text-gray-900">₹{toPay}</p>
                                 </div>
                                 <Link
                                     href="#"
-                                    className="flex flex-1 max-w-[200px] items-center justify-center rounded-xl bg-[var(--theme-primary-1)] py-3.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2"
+                                    className="flex max-w-[200px] flex-1 items-center justify-center rounded-xl bg-[var(--theme-primary-1)] py-3.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-[var(--theme-primary-1-dark)] focus:ring-2 focus:ring-[var(--theme-primary-1)] focus:ring-offset-2 focus:outline-none"
                                 >
                                     Pay ₹{toPay}
                                 </Link>

@@ -6,10 +6,18 @@
 |--------------------------------------------------------------------------
 */
 
+use App\Http\Controllers\Api\ConfigController;
 use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\Driver\BottleController as DriverBottleController;
 use App\Http\Controllers\Api\V1\Driver\DeliveryController as DriverDeliveryController;
 use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Public Config Routes (no auth required)
+|--------------------------------------------------------------------------
+*/
+Route::get('google-maps-key', [ConfigController::class, 'googleMapsKey']);
 
 /*
 |--------------------------------------------------------------------------
