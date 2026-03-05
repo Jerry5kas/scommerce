@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Cart;
 use App\Models\ThemeSetting;
+use App\Models\User;
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -38,20 +39,27 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $customer = $request->user();
+        if (! $customer instanceof User) {
+            $customer = null;
+        }
+
+        $admin = $request->user('admin');
+
         // compute user's default zone for sharing (nullable)
         $zone = null;
         $location = null;
         $cartItemsCount = 0;
 
-        if ($request->user()) {
-            $defaultAddress = $request->user()
+        if ($customer !== null) {
+            $defaultAddress = $customer
                 ->addresses()
                 ->active()
                 ->where('is_default', true)
                 ->first();
 
             if ($defaultAddress === null || $defaultAddress->zone_id === null) {
-                $fallbackAddress = $request->user()
+                $fallbackAddress = $customer
                     ->addresses()
                     ->active()
                     ->whereNotNull('zone_id')
@@ -59,7 +67,7 @@ class HandleInertiaRequests extends Middleware
                     ->first();
 
                 if ($fallbackAddress instanceof UserAddress && ($defaultAddress === null || $defaultAddress->id !== $fallbackAddress->id)) {
-                    $request->user()->addresses()->active()->update(['is_default' => false]);
+                    $customer->addresses()->active()->update(['is_default' => false]);
                     $fallbackAddress->update(['is_default' => true]);
                     $defaultAddress = $fallbackAddress;
                 }
@@ -67,7 +75,7 @@ class HandleInertiaRequests extends Middleware
 
             $userCart = Cart::query()
                 ->notExpired()
-                ->forUser($request->user()->id)
+                ->forUser($customer->id)
                 ->latest('id')
                 ->first();
 
@@ -110,9 +118,9 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'csrf_token' => csrf_token(),
             'auth' => [
-                'user' => $request->user(),
-                'admin' => $request->user('admin'),
-                'wishlisted_products' => $request->user() ? $request->user()->wishlists()->pluck('product_id')->toArray() : [],
+                'user' => $customer,
+                'admin' => $admin,
+                'wishlisted_products' => $customer ? $customer->wishlists()->pluck('product_id')->toArray() : [],
             ],
             'theme' => ThemeSetting::getTheme(),
             'cart' => [
