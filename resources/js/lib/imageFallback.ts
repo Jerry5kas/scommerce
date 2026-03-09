@@ -7,8 +7,16 @@ export function toSafeImageUrl(url: string | null | undefined): string {
         return FALLBACK_IMAGE_URL;
     }
 
+    if (url === 'default.png' || url === '/demo/milk.png' || url === 'demo/milk.png') {
+        return FALLBACK_IMAGE_URL;
+    }
+
     if (url.startsWith('http') || url.startsWith('/')) {
         return url;
+    }
+
+    if (url.startsWith('demo/')) {
+        return `/${url}`;
     }
 
     return `/storage/${url}`;

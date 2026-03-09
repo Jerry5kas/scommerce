@@ -82,21 +82,35 @@ export default function AdminCollectionsCreate({
         if (isUploading || form.processing) return;
         try {
             const hasFiles = bannerImageFile || bannerMobileImageFile;
+            let nextBannerImage = form.data.banner_image;
+            let nextBannerMobileImage = form.data.banner_mobile_image;
+
             if (hasFiles) setIsUploading(true);
             if (bannerImageFile) {
                 const url = await uploadImageToAdmin(bannerImageFile, 'collections', csrfToken);
-                form.setData('banner_image', url);
+                nextBannerImage = url;
                 setBannerImageFile(null);
                 setBannerImagePreview(null);
             }
             if (bannerMobileImageFile) {
                 const url = await uploadImageToAdmin(bannerMobileImageFile, 'collections', csrfToken);
-                form.setData('banner_mobile_image', url);
+                nextBannerMobileImage = url;
                 setBannerMobileImageFile(null);
                 setBannerMobileImagePreview(null);
             }
             if (hasFiles) setIsUploading(false);
-            form.post('/admin/collections');
+
+            form.transform((data) => ({
+                ...data,
+                banner_image: nextBannerImage,
+                banner_mobile_image: nextBannerMobileImage,
+            }));
+
+            form.post('/admin/collections', {
+                onFinish: () => {
+                    form.transform((data) => data);
+                },
+            });
         } catch (err) {
             setIsUploading(false);
             alert('Failed to upload image: ' + (err instanceof Error ? err.message : 'Unknown error'));
@@ -445,6 +459,7 @@ export default function AdminCollectionsCreate({
                                 }}
                                 disabled={!!bannerMobileImageFile}
                             />
+                            {form.errors.banner_mobile_image && <p className="mt-1 text-sm text-red-600">{form.errors.banner_mobile_image}</p>}
                         </div>
                     </div>
                 </Section>

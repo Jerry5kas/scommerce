@@ -218,15 +218,27 @@ class BannerVerticalTest extends TestCase
             'is_in_stock' => true,
         ]);
 
+        $societyCategory = Category::factory()->create([
+            'vertical' => BusinessVertical::SocietyFresh->value,
+        ]);
+
+        $productC = Product::factory()->create([
+            'name' => 'C Society Product',
+            'category_id' => $societyCategory->id,
+            'vertical' => BusinessVertical::SocietyFresh->value,
+            'is_active' => true,
+            'is_in_stock' => true,
+        ]);
+
         Collection::query()->create([
             'name' => 'Customer Favourites - daily fresh',
             'slug' => 'customer-favourites-daily-fresh',
             'description' => 'Daily favourites',
             'category_id' => $category->id,
             'product_selection_mode' => Collection::PRODUCT_SELECTION_MANUAL,
-            'category_selection_mode' => Collection::CATEGORY_SELECTION_SELECTED,
-            'category_ids' => [$category->id],
-            'product_ids' => [$productA->id, $productB->id],
+            'category_selection_mode' => Collection::CATEGORY_SELECTION_ALL,
+            'category_ids' => [],
+            'product_ids' => [$productA->id, $productB->id, $productC->id],
             'random_products_limit' => 12,
             'banner_image' => '/images/customer-favourites-web.png',
             'banner_mobile_image' => '/images/customer-favourites-mobile.png',
@@ -248,9 +260,60 @@ class BannerVerticalTest extends TestCase
             ->where('customerFavouritesCollection.slug', 'customer-favourites-daily-fresh')
             ->where('customerFavouritesCollection.banner_image', '/images/customer-favourites-web.png')
             ->where('customerFavouritesCollection.banner_mobile_image', '/images/customer-favourites-mobile.png')
-            ->has('customerFavouritesCollection.products', 2)
+            ->has('customerFavouritesCollection.products', 3)
             ->where('customerFavouritesCollection.products.0.id', $productA->id)
             ->where('customerFavouritesCollection.products.1.id', $productB->id)
+            ->where('customerFavouritesCollection.products.2.id', $productC->id)
+        );
+    }
+
+    public function test_home_route_cache_refreshes_after_banner_update(): void
+    {
+        /** @var User $user */
+        $user = User::factory()->create();
+        $zone = Zone::factory()->create(['is_active' => true]);
+
+        UserAddress::factory()->create([
+            'user_id' => $user->id,
+            'zone_id' => $zone->id,
+            'is_default' => true,
+            'is_active' => true,
+        ]);
+
+        $banner = Banner::query()->create([
+            'name' => 'Daily Cache Banner',
+            'type' => Banner::TYPE_HOME,
+            'vertical' => BusinessVertical::DailyFresh->value,
+            'title' => 'Initial Home Banner',
+            'description' => null,
+            'image' => 'https://example.com/cache-banner.jpg',
+            'mobile_image' => null,
+            'link_url' => null,
+            'link_type' => Banner::LINK_NONE,
+            'link_id' => null,
+            'display_order' => 1,
+            'is_active' => true,
+            'starts_at' => null,
+            'ends_at' => null,
+            'zones' => null,
+        ]);
+
+        $firstResponse = $this->actingAs($user)->get(route('home', ['vertical' => BusinessVertical::DailyFresh->value]));
+        $firstResponse->assertOk();
+        $firstResponse->assertInertia(fn (Assert $page) => $page
+            ->component('home')
+            ->where('banners.0.title', 'Initial Home Banner')
+        );
+
+        $banner->update([
+            'title' => 'Updated Home Banner',
+        ]);
+
+        $secondResponse = $this->actingAs($user)->get(route('home', ['vertical' => BusinessVertical::DailyFresh->value]));
+        $secondResponse->assertOk();
+        $secondResponse->assertInertia(fn (Assert $page) => $page
+            ->component('home')
+            ->where('banners.0.title', 'Updated Home Banner')
         );
     }
 }

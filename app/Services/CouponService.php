@@ -8,6 +8,7 @@ use App\Models\CouponUsage;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class CouponService
 {
@@ -205,9 +206,15 @@ class CouponService
      */
     protected function cartHasFreeSamples(Cart $cart): bool
     {
-        return $cart->items()
-            ->whereHas('product', fn ($q) => $q->where('is_free_sample', true))
-            ->exists();
+        $query = $cart->items()->where(function ($itemQuery) {
+            $itemQuery->where('price', '<=', 0)->orWhere('subtotal', '<=', 0);
+        });
+
+        if (Schema::hasColumn('products', 'is_free_sample')) {
+            $query->orWhereHas('product', fn ($productQuery) => $productQuery->where('is_free_sample', true));
+        }
+
+        return $query->exists();
     }
 
     /**

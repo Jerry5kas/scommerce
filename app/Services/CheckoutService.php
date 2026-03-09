@@ -8,9 +8,11 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserAddress;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -98,6 +100,94 @@ class CheckoutService
     }
 
     /**
+     * Add current cart items to the next available delivery order.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{success: bool, order?: Order, merged?: bool, scheduled_delivery_date?: string, error?: string}
+     */
+    public function addCartToNextDelivery(
+        Cart $cart,
+        User $user,
+        UserAddress $address,
+        array $data = []
+    ): array {
+        $validation = $this->validateCheckout($cart, $user, $address);
+        if (! $validation['valid']) {
+            return [
+                'success' => false,
+                'error' => implode(' ', $validation['errors']),
+            ];
+        }
+
+        try {
+            return DB::transaction(function () use ($cart, $user, $address, $data) {
+                $deliveryDate = $this->getEarliestDeliveryDate();
+
+                $existingOrder = Order::query()
+                    ->where('user_id', $user->id)
+                    ->where('user_address_id', $address->id)
+                    ->where('type', Order::TYPE_ONE_TIME)
+                    ->whereDate('scheduled_delivery_date', $deliveryDate->toDateString())
+                    ->whereIn('status', [Order::STATUS_PENDING, Order::STATUS_CONFIRMED, Order::STATUS_PROCESSING])
+                    ->with('items')
+                    ->first();
+
+                if ($existingOrder) {
+                    $this->mergeCartItemsIntoOrder($existingOrder, $cart);
+
+                    if (! empty($data['delivery_instructions']) && empty($existingOrder->delivery_instructions)) {
+                        $existingOrder->delivery_instructions = (string) $data['delivery_instructions'];
+                    }
+
+                    $existingOrder->save();
+
+                    if (! $existingOrder->delivery()->exists()) {
+                        $this->createDeliveryForOrder($existingOrder, $address, $data);
+                    }
+
+                    $cart->clear();
+
+                    return [
+                        'success' => true,
+                        'order' => $existingOrder->fresh(['items']),
+                        'merged' => true,
+                        'scheduled_delivery_date' => $deliveryDate->toDateString(),
+                    ];
+                }
+
+                $orderPayload = array_merge($data, [
+                    'scheduled_delivery_date' => $deliveryDate->toDateString(),
+                    'payment_method' => Payment::METHOD_WALLET,
+                ]);
+
+                $order = $this->createOrderFromCart($cart, $user, $address, $orderPayload);
+                $this->createOrderItems($order, $cart);
+                $this->createDeliveryForOrder($order, $address, $orderPayload);
+
+                $cart->clear();
+
+                return [
+                    'success' => true,
+                    'order' => $order->fresh(['items']),
+                    'merged' => false,
+                    'scheduled_delivery_date' => $deliveryDate->toDateString(),
+                ];
+            });
+        } catch (\Throwable $exception) {
+            Log::error('Add to next delivery failed', [
+                'user_id' => $user->id,
+                'cart_id' => $cart->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Unable to add items to next delivery. Please try again.',
+            ];
+        }
+    }
+
+    /**
      * Process payment for order
      *
      * @return array{success: bool, payment?: Payment, error?: string}
@@ -114,7 +204,7 @@ class CheckoutService
                 throw new \Exception('Insufficient wallet balance.');
             }
 
-            $result = $this->paymentService->processWalletPayment($order, $wallet);
+            $result = $this->paymentService->processWalletPayment($user, $order, $total);
 
             if ($result['success']) {
                 $order->update([
@@ -282,8 +372,14 @@ class CheckoutService
         // Apply plan discount
         $discount = 0;
         $plan = $subscription->plan;
-        if ($plan && $plan->discount_percent > 0) {
-            $discount = $subtotal * ($plan->discount_percent / 100);
+        if ($plan) {
+            if ($plan->discount_type === SubscriptionPlan::DISCOUNT_PERCENTAGE && (float) $plan->discount_value > 0) {
+                $discount = $subtotal * (((float) $plan->discount_value) / 100);
+            }
+
+            if ($plan->discount_type === SubscriptionPlan::DISCOUNT_FLAT && (float) $plan->discount_value > 0) {
+                $discount = min($subtotal, (float) $plan->discount_value);
+            }
         }
 
         $deliveryCharge = $zone ? (float) ($zone->delivery_charge ?? 0) : 0;
@@ -305,6 +401,10 @@ class CheckoutService
             'delivery_charge' => $deliveryCharge,
             'total' => $subtotal - $discount + $deliveryCharge,
             'payment_status' => Order::PAYMENT_PENDING, // Will be processed later
+            'payment_method' => Payment::METHOD_WALLET,
+            'payment_attempts' => 0,
+            'next_payment_retry_at' => null,
+            'payment_failed_at' => null,
             'delivery_instructions' => $subscription->notes,
             'scheduled_delivery_date' => $deliveryDate,
         ]);
@@ -372,17 +472,16 @@ class CheckoutService
     /**
      * Calculate delivery date based on vertical
      */
-    protected function calculateDeliveryDate(?string $requestedDate, string $vertical): Carbon
+    protected function calculateDeliveryDate(?string $requestedDate, string $vertical): CarbonInterface
     {
         if ($requestedDate) {
             $date = Carbon::parse($requestedDate);
-            if ($date->gt(Carbon::today())) {
+            if ($date->gte($this->getEarliestDeliveryDate())) {
                 return $date;
             }
         }
 
-        // Default: next day for daily_fresh, tomorrow or later for society_fresh
-        return Carbon::tomorrow();
+        return $this->getEarliestDeliveryDate();
     }
 
     /**
@@ -393,7 +492,7 @@ class CheckoutService
     public function getAvailableDeliveryDates(string $vertical, int $days = 7): array
     {
         $dates = [];
-        $start = Carbon::tomorrow();
+        $start = $this->getEarliestDeliveryDate();
 
         for ($i = 0; $i < $days; $i++) {
             $date = $start->copy()->addDays($i);
@@ -407,5 +506,60 @@ class CheckoutService
         }
 
         return $dates;
+    }
+
+    public function getEarliestDeliveryDate(?CarbonInterface $asOf = null): CarbonInterface
+    {
+        $reference = $asOf ? Carbon::instance($asOf) : now();
+        $cutoffTime = (string) config('business.next_day_cutoff_time', '22:30');
+        $cutoffAt = Carbon::parse($reference->toDateString().' '.$cutoffTime, $reference->getTimezone());
+
+        if ($reference->lessThanOrEqualTo($cutoffAt)) {
+            return $reference->copy()->addDay()->startOfDay();
+        }
+
+        return $reference->copy()->addDays(2)->startOfDay();
+    }
+
+    private function mergeCartItemsIntoOrder(Order $order, Cart $cart): void
+    {
+        $cartItems = $cart->items()->with(['product', 'variant'])->get();
+
+        foreach ($cartItems as $cartItem) {
+            $variantLabel = $cartItem->variant?->name;
+            $productName = $variantLabel
+                ? "{$cartItem->product->name} ({$variantLabel})"
+                : $cartItem->product->name;
+
+            $matchingItem = $order->items
+                ->first(fn (OrderItem $item) => (int) $item->product_id === (int) $cartItem->product_id
+                    && (string) $item->product_name === (string) $productName
+                    && abs((float) $item->price - (float) $cartItem->price) < 0.01
+                );
+
+            if ($matchingItem) {
+                $matchingItem->quantity += (int) $cartItem->quantity;
+                $matchingItem->subtotal = (float) $matchingItem->price * (int) $matchingItem->quantity;
+                $matchingItem->save();
+
+                continue;
+            }
+
+            OrderItem::createFromCartItem($order, $cartItem);
+        }
+
+        $order->refresh()->load('items');
+
+        $orderSubtotal = (float) $order->items->sum(fn (OrderItem $item) => (float) $item->subtotal);
+        $cartDiscount = (float) $cart->discount;
+        $newDiscount = (float) $order->discount + $cartDiscount;
+
+        $order->update([
+            'subtotal' => $orderSubtotal,
+            'discount' => $newDiscount,
+            'total' => $orderSubtotal - $newDiscount + (float) $order->delivery_charge,
+            'coupon_code' => $order->coupon_code ?: $cart->coupon_code,
+            'coupon_id' => $order->coupon_id ?: $cart->coupon_id,
+        ]);
     }
 }

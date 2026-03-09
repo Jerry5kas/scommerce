@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Delivery;
 use App\Models\Driver;
+use App\Models\Order;
 use App\Models\Zone;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -18,13 +19,17 @@ class RouteAssignmentService
      *
      * @return array{success: bool, assigned: int, error?: string}
      */
-    public function autoAssignDeliveries($date, ?int $zoneId = null): array
+    public function autoAssignDeliveries($date, ?int $zoneId = null, bool $subscriptionOnly = false): array
     {
         try {
             $query = Delivery::query()
                 ->where('status', Delivery::STATUS_PENDING)
                 ->whereNull('driver_id')
                 ->whereDate('scheduled_date', $date);
+
+            if ($subscriptionOnly) {
+                $query->whereHas('order', fn ($orderQuery) => $orderQuery->where('type', Order::TYPE_SUBSCRIPTION));
+            }
 
             if ($zoneId) {
                 $query->where('zone_id', $zoneId);
@@ -49,6 +54,7 @@ class RouteAssignmentService
             Log::info('Auto-assigned deliveries', [
                 'date' => $date,
                 'zone_id' => $zoneId,
+                'subscription_only' => $subscriptionOnly,
                 'total_assigned' => $totalAssigned,
             ]);
 
@@ -68,10 +74,10 @@ class RouteAssignmentService
      */
     protected function assignDeliveriesInZone(Collection $deliveries, Zone $zone, $date): int
     {
-        // Get available drivers in this zone
+        // Get available drivers in this zone based on drivers.zone_id.
         $drivers = Driver::query()
             ->where('is_active', true)
-            ->whereHas('zones', fn ($q) => $q->where('zones.id', $zone->id))
+            ->where('zone_id', $zone->id)
             ->get();
 
         if ($drivers->isEmpty()) {

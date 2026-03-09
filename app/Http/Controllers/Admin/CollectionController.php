@@ -28,12 +28,24 @@ class CollectionController extends Controller
             $query->forVertical($vertical);
         }
 
-        $collections = $query->get()->map(function (Collection $collection) use ($vertical) {
+        $collections = $query->get();
+
+        $allConfiguredCategoryIds = $collections
+            ->flatMap(fn (Collection $collection) => array_values(array_filter(array_map('intval', $collection->category_ids ?? []))))
+            ->unique()
+            ->values()
+            ->all();
+
+        $categoryNamesById = Category::query()
+            ->whereIn('id', $allConfiguredCategoryIds)
+            ->ordered()
+            ->pluck('name', 'id');
+
+        $collections = $collections->map(function (Collection $collection) use ($vertical, $categoryNamesById) {
             $configuredCategoryIds = array_values(array_filter(array_map('intval', $collection->category_ids ?? [])));
-            $configuredCategoryNames = Category::query()
-                ->whereIn('id', $configuredCategoryIds)
-                ->ordered()
-                ->pluck('name')
+            $configuredCategoryNames = collect($configuredCategoryIds)
+                ->map(fn (int $categoryId) => $categoryNamesById->get($categoryId))
+                ->filter()
                 ->values();
 
             $collection->setAttribute('products_count', $collection->configuredProductsCount($vertical !== '' ? $vertical : 'all'));

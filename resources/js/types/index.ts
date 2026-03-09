@@ -21,6 +21,7 @@ export type SharedData = {
     name: string;
     auth: Auth;
     theme: AppTheme;
+    currentVertical?: BusinessVertical;
     cart?: {
         items_count: number;
     };

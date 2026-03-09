@@ -152,4 +152,74 @@ class AdminCollectionCustomizationTest extends TestCase
 
         $this->assertSame(1, $collection->configuredProductsCount(BusinessVertical::DailyFresh->value));
     }
+
+    public function test_admin_can_update_collection_banners_and_metadata_fields(): void
+    {
+        /** @var Admin $admin */
+        $admin = Admin::factory()->create();
+        $category = Category::factory()->create();
+        $collection = Collection::factory()->create([
+            'name' => 'Customer Favourites',
+            'slug' => 'customer-favourites',
+            'description' => 'Initial description',
+            'category_id' => $category->id,
+            'product_selection_mode' => Collection::PRODUCT_SELECTION_MANUAL,
+            'category_selection_mode' => Collection::CATEGORY_SELECTION_ALL,
+            'category_ids' => [],
+            'product_ids' => [],
+            'random_products_limit' => 12,
+            'banner_image' => '/images/old-desktop.png',
+            'banner_mobile_image' => '/images/old-mobile.png',
+            'display_order' => 0,
+            'is_active' => true,
+            'vertical' => BusinessVertical::DailyFresh->value,
+            'starts_at' => null,
+            'ends_at' => null,
+            'link_url' => null,
+            'meta_title' => null,
+            'meta_description' => null,
+        ]);
+
+        $response = $this->actingAs($admin, 'admin')->put(route('admin.collections.update', $collection), [
+            'name' => 'Customer Favourites Updated',
+            'slug' => 'customer-favourites-updated',
+            'description' => 'Updated description',
+            'category_id' => null,
+            'product_selection_mode' => Collection::PRODUCT_SELECTION_CATEGORY,
+            'category_selection_mode' => Collection::CATEGORY_SELECTION_ALL,
+            'category_ids' => [],
+            'product_ids' => [],
+            'random_products_limit' => 15,
+            'banner_image' => 'https://ik.imagekit.io/example/new-desktop.png',
+            'banner_mobile_image' => 'https://ik.imagekit.io/example/new-mobile.png',
+            'display_order' => 3,
+            'is_active' => false,
+            'vertical' => Collection::VERTICAL_BOTH,
+            'starts_at' => '2026-03-08 08:00:00',
+            'ends_at' => '2026-03-12 20:00:00',
+            'link_url' => 'https://example.com/collections/customer-favourites',
+            'meta_title' => 'Updated Meta Title',
+            'meta_description' => 'Updated Meta Description',
+        ]);
+
+        $response->assertRedirect(route('admin.collections.index'));
+
+        $collection->refresh();
+
+        $this->assertSame('Customer Favourites Updated', $collection->name);
+        $this->assertSame('customer-favourites-updated', $collection->slug);
+        $this->assertSame('Updated description', $collection->description);
+        $this->assertNull($collection->category_id);
+        $this->assertSame(Collection::PRODUCT_SELECTION_CATEGORY, $collection->product_selection_mode);
+        $this->assertSame(Collection::CATEGORY_SELECTION_ALL, $collection->category_selection_mode);
+        $this->assertSame(15, $collection->random_products_limit);
+        $this->assertSame('https://ik.imagekit.io/example/new-desktop.png', $collection->banner_image);
+        $this->assertSame('https://ik.imagekit.io/example/new-mobile.png', $collection->banner_mobile_image);
+        $this->assertSame(3, $collection->display_order);
+        $this->assertFalse($collection->is_active);
+        $this->assertSame(Collection::VERTICAL_BOTH, $collection->vertical);
+        $this->assertSame('https://example.com/collections/customer-favourites', $collection->link_url);
+        $this->assertSame('Updated Meta Title', $collection->meta_title);
+        $this->assertSame('Updated Meta Description', $collection->meta_description);
+    }
 }

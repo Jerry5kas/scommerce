@@ -1,8 +1,9 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { ChevronLeft, MapPin, Calendar, Clock, Plus, Minus, Tag, Repeat, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import UserLayout from '@/layouts/UserLayout';
 import { FALLBACK_IMAGE_URL, handleImageFallbackError } from '@/lib/imageFallback';
+import type { SharedData } from '@/types';
 
 const DELIVERY_SLOTS = [
     { id: 'morning', label: 'Morning', time: '6 AM – 9 AM' },
@@ -93,6 +94,7 @@ interface SubscriptionPageProps {
 }
 
 export default function Subscription({ subscriptionPlans = [], selectedPlanId, userAddresses = [] }: SubscriptionPageProps) {
+    const { auth } = usePage<SharedData>().props;
     const fallbackImage = FALLBACK_IMAGE_URL;
 
     const getSafeImageUrl = (url: string | null | undefined): string => {
@@ -100,8 +102,16 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
             return fallbackImage;
         }
 
+        if (url === 'default.png' || url === '/demo/milk.png' || url === 'demo/milk.png') {
+            return fallbackImage;
+        }
+
         if (url.startsWith('http') || url.startsWith('/')) {
             return url;
+        }
+
+        if (url.startsWith('demo/')) {
+            return `/${url}`;
         }
 
         return `/storage/${url}`;
@@ -146,6 +156,15 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
     const [showAddInstruction, setShowAddInstruction] = useState(false);
     const [customInstruction, setCustomInstruction] = useState('');
 
+    const subscriptionForm = useForm({
+        subscription_plan_id: 0,
+        user_address_id: 0,
+        start_date: '',
+        billing_cycle: 'monthly',
+        notes: '',
+        items: [] as Array<{ product_id: number; quantity: number }>,
+    });
+
     // Derived values
     const selectedItem = currentPlan?.items[selectedItemIndex] || currentPlan?.items[0];
     const mrp = selectedItem ? selectedItem.total_price : 0;
@@ -189,6 +208,72 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
     const removeCoupon = () => {
         setAppliedCoupon(null);
         setCouponError(null);
+    };
+
+    const buildSubscriptionNotes = (): string => {
+        const selectedInstructionLabels = DELIVERY_INSTRUCTIONS.filter((instruction) => instructionIds.has(instruction.id))
+            .map((instruction) => instruction.label)
+            .join(', ');
+
+        const notes = [
+            `slot:${deliverySlot}`,
+            `pattern:${pattern}`,
+            selectedInstructionLabels !== '' ? `instructions:${selectedInstructionLabels}` : null,
+            otherInstruction.trim() !== '' ? `other:${otherInstruction.trim()}` : null,
+            customInstruction.trim() !== '' ? `note:${customInstruction.trim()}` : null,
+        ].filter((entry): entry is string => entry !== null);
+
+        return notes.join(' | ');
+    };
+
+    const handleProceedToCreateSubscription = (): void => {
+        if (!auth.user) {
+            window.location.assign('/login');
+
+            return;
+        }
+
+        if (!currentPlan || !selectedItem || !selectedAddressId) {
+            return;
+        }
+
+        const selectedAddressNumericId = Number(selectedAddressId);
+
+        if (!Number.isInteger(selectedAddressNumericId) || selectedAddressNumericId <= 0) {
+            return;
+        }
+
+        const billingCycle = pattern === 'weekly' ? 'weekly' : 'monthly';
+        const payload = {
+            subscription_plan_id: currentPlan.id,
+            user_address_id: selectedAddressNumericId,
+            start_date: startDate,
+            billing_cycle: billingCycle,
+            notes: buildSubscriptionNotes(),
+            items: [
+                {
+                    product_id: selectedItem.product_id,
+                    quantity: Math.max(1, quantityPerDelivery),
+                },
+            ],
+        };
+
+        if (typeof subscriptionForm.post !== 'function') {
+            router.post('/subscriptions', payload, {
+                preserveScroll: true,
+            });
+
+            return;
+        }
+
+        subscriptionForm
+            .transform(() => payload)
+            .post('/subscriptions', {
+                preserveScroll: true,
+                onFinish: () => {
+                    subscriptionForm.transform((data) => data);
+                },
+            });
     };
 
     return (
@@ -506,14 +591,13 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                     </div>
                                 ) : null}
                                 {!showAddAddress ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowAddAddress(true)}
+                                    <Link
+                                        href="/profile/addresses"
                                         className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-(--theme-primary-1)/50 bg-(--theme-primary-1)/5 py-3 text-sm font-semibold text-(--theme-primary-1) transition-colors hover:bg-(--theme-primary-1)/10 focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none"
                                     >
                                         <Plus className="h-4 w-4" strokeWidth={2} />
-                                        Add new address
-                                    </button>
+                                        Manage addresses
+                                    </Link>
                                 ) : (
                                     <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4">
                                         <p className="mb-3 text-xs font-semibold text-gray-500">New address (connect to backend)</p>
@@ -715,12 +799,23 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                             <dd>₹{toPay}</dd>
                                         </div>
                                     </dl>
-                                    <Link
-                                        href="#"
-                                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-(--theme-primary-1) py-4 text-base font-bold text-white shadow-sm transition-colors hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none"
+                                    <button
+                                        type="button"
+                                        onClick={handleProceedToCreateSubscription}
+                                        disabled={!selectedItem || !selectedAddressId || subscriptionForm.processing}
+                                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-(--theme-primary-1) py-4 text-base font-bold text-white shadow-sm transition-colors hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
                                     >
-                                        Proceed to pay ₹{toPay}
-                                    </Link>
+                                        {subscriptionForm.processing ? 'Creating subscription...' : `Create subscription • ₹${toPay}`}
+                                    </button>
+                                    {(subscriptionForm.errors.items ||
+                                        subscriptionForm.errors.user_address_id ||
+                                        subscriptionForm.errors.subscription_plan_id) && (
+                                        <p className="mt-2 text-xs text-red-600">
+                                            {subscriptionForm.errors.items ||
+                                                subscriptionForm.errors.user_address_id ||
+                                                subscriptionForm.errors.subscription_plan_id}
+                                        </p>
+                                    )}
                                 </section>
                             </div>
                         </div>
@@ -733,12 +828,14 @@ export default function Subscription({ subscriptionPlans = [], selectedPlanId, u
                                 <p className="text-xs text-gray-500">To pay</p>
                                 <p className="text-xl font-bold text-gray-900">₹{toPay}</p>
                             </div>
-                            <Link
-                                href="#"
-                                className="flex max-w-50 flex-1 items-center justify-center rounded-xl bg-(--theme-primary-1) py-3.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none"
+                            <button
+                                type="button"
+                                onClick={handleProceedToCreateSubscription}
+                                disabled={!selectedItem || !selectedAddressId || subscriptionForm.processing}
+                                className="flex max-w-50 flex-1 items-center justify-center rounded-xl bg-(--theme-primary-1) py-3.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-(--theme-primary-1-dark) focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
                             >
-                                Pay ₹{toPay}
-                            </Link>
+                                {subscriptionForm.processing ? 'Creating...' : `Create • ₹${toPay}`}
+                            </button>
                         </div>
                     </div>
                 </div>

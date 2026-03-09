@@ -1,5 +1,5 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Mail, Smartphone } from 'lucide-react';
+import { Chrome, Smartphone } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { SharedData } from '@/types';
 
@@ -11,21 +11,33 @@ const LANGUAGES = [
 
 type Language = (typeof LANGUAGES)[number]['value'];
 
-type AuthStep = 'language' | 'method' | 'phone' | 'otp' | 'email';
+type AuthStep = 'language' | 'method' | 'phone' | 'otp';
 
 interface LoginPageProps {
     otp_sent?: boolean;
     phone?: string;
     message?: string;
+    debug_otp?: string;
+    resend_available_in?: number;
+    otp_expires_in?: number;
     errors?: Record<string, string | string[]>;
 }
 
-export default function Login({ otp_sent, phone: initialPhone, message, errors: serverErrors }: LoginPageProps) {
+export default function Login({
+    otp_sent,
+    phone: initialPhone,
+    message,
+    debug_otp,
+    resend_available_in,
+    otp_expires_in,
+    errors: serverErrors,
+}: LoginPageProps) {
     const { theme } = (usePage().props as unknown as SharedData) ?? {};
 
     const [showSplash, setShowSplash] = useState(true);
     const [step, setStep] = useState<AuthStep>(otp_sent && initialPhone ? 'otp' : 'language');
     const [phoneValue, setPhoneValue] = useState(initialPhone ?? '');
+    const [resendInSeconds, setResendInSeconds] = useState<number>(resend_available_in ?? 0);
 
     const sendOtpForm = useForm({
         phone: initialPhone ?? '',
@@ -36,14 +48,6 @@ export default function Login({ otp_sent, phone: initialPhone, message, errors: 
     const verifyOtpForm = useForm({
         phone: initialPhone ?? '',
         otp: '',
-        language: 'en' as Language,
-        consent: false,
-    });
-
-    const emailForm = useForm({
-        email: '',
-        password: '',
-        password_confirmation: '',
         language: 'en' as Language,
         consent: false,
     });
@@ -66,6 +70,24 @@ export default function Login({ otp_sent, phone: initialPhone, message, errors: 
             window.clearTimeout(timer);
         };
     }, []);
+
+    useEffect(() => {
+        setResendInSeconds(resend_available_in ?? 0);
+    }, [resend_available_in]);
+
+    useEffect(() => {
+        if (step !== 'otp' || resendInSeconds <= 0) {
+            return;
+        }
+
+        const timer = window.setInterval(() => {
+            setResendInSeconds((previous) => (previous > 0 ? previous - 1 : 0));
+        }, 1000);
+
+        return () => {
+            window.clearInterval(timer);
+        };
+    }, [step, resendInSeconds]);
 
     useEffect(() => {
         if (!initialPhone) {
@@ -91,17 +113,14 @@ export default function Login({ otp_sent, phone: initialPhone, message, errors: 
             return verifyOtpForm.errors.otp || (Array.isArray(serverErrors?.otp) ? serverErrors.otp[0] : serverErrors?.otp);
         }
 
-        if (step === 'email') {
-            return emailForm.errors.email || (Array.isArray(serverErrors?.email) ? serverErrors.email[0] : serverErrors?.email);
+        if (step === 'method') {
+            return Array.isArray(serverErrors?.google) ? serverErrors.google[0] : serverErrors?.google;
         }
 
         return null;
-    }, [step, sendOtpForm.errors.phone, verifyOtpForm.errors.otp, emailForm.errors.email, serverErrors]);
+    }, [step, sendOtpForm.errors.phone, verifyOtpForm.errors.otp, serverErrors]);
 
-    const consentError =
-        sendOtpForm.errors.consent ||
-        emailForm.errors.consent ||
-        (Array.isArray(serverErrors?.consent) ? serverErrors.consent[0] : serverErrors?.consent);
+    const consentError = sendOtpForm.errors.consent || (Array.isArray(serverErrors?.consent) ? serverErrors.consent[0] : serverErrors?.consent);
 
     const handleLanguageNext = (): void => {
         setStep('method');
@@ -110,13 +129,11 @@ export default function Login({ otp_sent, phone: initialPhone, message, errors: 
     const selectLanguage = (language: Language): void => {
         sendOtpForm.setData('language', language);
         verifyOtpForm.setData('language', language);
-        emailForm.setData('language', language);
     };
 
     const selectConsent = (checked: boolean): void => {
         sendOtpForm.setData('consent', checked);
         verifyOtpForm.setData('consent', checked);
-        emailForm.setData('consent', checked);
     };
 
     const handleSendOtp = (event: React.FormEvent): void => {
@@ -143,11 +160,35 @@ export default function Login({ otp_sent, phone: initialPhone, message, errors: 
         });
     };
 
-    const handleEmailContinue = (event: React.FormEvent): void => {
-        event.preventDefault();
-        emailForm.post('/auth/email-continue', {
-            preserveScroll: true,
+    const handleResendOtp = (): void => {
+        if (resendInSeconds > 0 || verifyOtpForm.processing) {
+            return;
+        }
+
+        verifyOtpForm
+            .transform((data) => ({
+                phone: data.phone,
+                language: data.language,
+                consent: data.consent ? '1' : '0',
+            }))
+            .post('/auth/resend-otp', {
+                preserveScroll: true,
+                onSuccess: () => {
+                    verifyOtpForm.setData('otp', '');
+                },
+                onFinish: () => {
+                    verifyOtpForm.transform((data) => data);
+                },
+            });
+    };
+
+    const handleGoogleContinue = (): void => {
+        const params = new URLSearchParams({
+            language: sendOtpForm.data.language,
+            consent: sendOtpForm.data.consent ? '1' : '0',
         });
+
+        window.location.assign(`/auth/google/redirect?${params.toString()}`);
     };
 
     if (showSplash) {
@@ -190,9 +231,7 @@ export default function Login({ otp_sent, phone: initialPhone, message, errors: 
                             <div className="mb-4 flex items-center gap-2">
                                 <span className={`h-1.5 flex-1 rounded-full ${step === 'language' ? 'bg-(--theme-primary-1)' : 'bg-gray-200'}`} />
                                 <span className={`h-1.5 flex-1 rounded-full ${step === 'method' ? 'bg-(--theme-primary-1)' : 'bg-gray-200'}`} />
-                                <span
-                                    className={`h-1.5 flex-1 rounded-full ${step === 'phone' || step === 'email' ? 'bg-(--theme-primary-1)' : 'bg-gray-200'}`}
-                                />
+                                <span className={`h-1.5 flex-1 rounded-full ${step === 'phone' ? 'bg-(--theme-primary-1)' : 'bg-gray-200'}`} />
                                 <span className={`h-1.5 flex-1 rounded-full ${step === 'otp' ? 'bg-(--theme-primary-1)' : 'bg-gray-200'}`} />
                             </div>
 
@@ -202,20 +241,29 @@ export default function Login({ otp_sent, phone: initialPhone, message, errors: 
                                     {step === 'method' && 'Continue with'}
                                     {step === 'phone' && 'Login with mobile number'}
                                     {step === 'otp' && 'Enter OTP'}
-                                    {step === 'email' && 'Continue with email'}
                                 </h2>
                                 <p className="mt-1 text-sm text-gray-600">
                                     {step === 'language' && 'This is for messages and updates (not full translation).'}
-                                    {step === 'method' && 'Use mobile OTP or email/password to continue.'}
+                                    {step === 'method' && 'Use mobile OTP or Google sign-in to continue.'}
                                     {step === 'phone' && 'We will send a one-time password to your mobile.'}
                                     {step === 'otp' && `OTP sent to +91 ${phoneValue.replace(/(\d{2})(\d{4})(\d{4})/, '$1 $2 $3')}.`}
-                                    {step === 'email' && 'Create/continue account with email and password.'}
                                 </p>
+                                {step === 'otp' && (
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Code expires in about {Math.max(1, Math.floor((otp_expires_in ?? 300) / 60))} minutes.
+                                    </p>
+                                )}
                             </div>
 
                             {message && (
                                 <div className="mb-4 rounded-lg bg-(--theme-primary-1)/10 px-4 py-3 text-sm text-(--theme-primary-1-dark)">
                                     {message}
+                                </div>
+                            )}
+
+                            {step === 'otp' && debug_otp && (
+                                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                                    Test mode OTP: <span className="font-semibold tracking-wider">{debug_otp}</span>
                                 </div>
                             )}
 
@@ -266,15 +314,29 @@ export default function Login({ otp_sent, phone: initialPhone, message, errors: 
 
                                     <button
                                         type="button"
-                                        onClick={() => setStep('email')}
+                                        onClick={handleGoogleContinue}
                                         className="flex w-full items-center justify-between rounded-2xl border border-gray-200 px-4 py-4 text-left transition-colors hover:border-(--theme-primary-1) hover:bg-(--theme-primary-1)/5"
                                     >
                                         <span>
-                                            <span className="block text-sm font-semibold text-gray-900">Email + Password</span>
-                                            <span className="mt-0.5 block text-xs text-gray-600">Use Gmail or any email address</span>
+                                            <span className="block text-sm font-semibold text-gray-900">Continue with Google</span>
+                                            <span className="mt-0.5 block text-xs text-gray-600">Sign in using your Gmail account</span>
                                         </span>
-                                        <Mail className="h-5 w-5 text-(--theme-primary-1)" />
+                                        <Chrome className="h-5 w-5 text-(--theme-primary-1)" />
                                     </button>
+
+                                    <label className="flex cursor-pointer items-start gap-2.5 pt-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={sendOtpForm.data.consent}
+                                            onChange={(event) => selectConsent(event.target.checked)}
+                                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-(--theme-primary-1) focus:ring-(--theme-primary-1)"
+                                        />
+                                        <span className="text-xs leading-relaxed text-gray-600">
+                                            By continuing, you agree to our Terms and Privacy Policy and allow marketing communication via SMS, email,
+                                            WhatsApp, push notifications, and DM.
+                                        </span>
+                                    </label>
+                                    {consentError && <p className="text-sm text-red-600">{consentError}</p>}
 
                                     <button
                                         type="button"
@@ -382,86 +444,14 @@ export default function Login({ otp_sent, phone: initialPhone, message, errors: 
                                     >
                                         Change mobile number
                                     </button>
-                                </form>
-                            )}
-
-                            {step === 'email' && (
-                                <form onSubmit={handleEmailContinue} className="space-y-4.5">
-                                    <div>
-                                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                            Email / Gmail
-                                        </label>
-                                        <input
-                                            id="email"
-                                            type="email"
-                                            value={emailForm.data.email}
-                                            onChange={(event) => emailForm.setData('email', event.target.value)}
-                                            className="mt-1 block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1)"
-                                            placeholder="you@example.com"
-                                            autoComplete="email"
-                                        />
-                                        {emailForm.errors.email && <p className="mt-1 text-sm text-red-600">{emailForm.errors.email}</p>}
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                            New password
-                                        </label>
-                                        <input
-                                            id="password"
-                                            type="password"
-                                            value={emailForm.data.password}
-                                            onChange={(event) => emailForm.setData('password', event.target.value)}
-                                            className="mt-1 block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1)"
-                                            placeholder="At least 8 characters"
-                                            autoComplete="new-password"
-                                        />
-                                        {emailForm.errors.password && <p className="mt-1 text-sm text-red-600">{emailForm.errors.password}</p>}
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
-                                            Confirm password
-                                        </label>
-                                        <input
-                                            id="password_confirmation"
-                                            type="password"
-                                            value={emailForm.data.password_confirmation}
-                                            onChange={(event) => emailForm.setData('password_confirmation', event.target.value)}
-                                            className="mt-1 block w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-(--theme-primary-1) focus:ring-1 focus:ring-(--theme-primary-1)"
-                                            placeholder="Re-enter password"
-                                            autoComplete="new-password"
-                                        />
-                                    </div>
-
-                                    <label className="flex cursor-pointer items-start gap-2.5">
-                                        <input
-                                            type="checkbox"
-                                            checked={emailForm.data.consent}
-                                            onChange={(event) => selectConsent(event.target.checked)}
-                                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-(--theme-primary-1) focus:ring-(--theme-primary-1)"
-                                        />
-                                        <span className="text-xs leading-relaxed text-gray-600">
-                                            By clicking continue, you agree to our Terms and Privacy Policy and allow marketing communication via SMS,
-                                            email, WhatsApp, push notifications, and DM.
-                                        </span>
-                                    </label>
-                                    {consentError && <p className="text-sm text-red-600">{consentError}</p>}
-
-                                    <button
-                                        type="submit"
-                                        disabled={emailForm.processing}
-                                        className="w-full rounded-2xl bg-(--theme-primary-1) px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-(--theme-primary-1-dark) disabled:opacity-70"
-                                    >
-                                        {emailForm.processing ? 'Continuing…' : 'Continue'}
-                                    </button>
 
                                     <button
                                         type="button"
-                                        onClick={() => setStep('method')}
-                                        className="w-full text-sm font-medium text-gray-600 hover:text-(--theme-primary-1)"
+                                        onClick={handleResendOtp}
+                                        disabled={resendInSeconds > 0 || verifyOtpForm.processing}
+                                        className="w-full text-sm font-medium text-(--theme-primary-1) disabled:cursor-not-allowed disabled:text-gray-400"
                                     >
-                                        Back
+                                        {resendInSeconds > 0 ? `Resend OTP in ${resendInSeconds}s` : 'Resend OTP'}
                                     </button>
                                 </form>
                             )}

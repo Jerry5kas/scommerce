@@ -6,6 +6,7 @@ use App\Enums\BusinessVertical;
 use App\Models\Product;
 use App\Services\CatalogService;
 use App\Services\FreeSampleService;
+use App\Support\VerticalContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,18 +22,17 @@ class ProductController extends Controller
      */
     public function index(Request $request): Response|RedirectResponse
     {
+        $vertical = VerticalContext::current($request, BusinessVertical::DailyFresh->value);
         $zone = $this->getUserZone($request);
         if ($zone === null) {
             // Return view with empty data
             return Inertia::render('products', [
                 'categories' => collect([]),
                 'products' => collect([]),
-                'vertical' => $request->string('vertical', 'all')->toString(),
+                'vertical' => $vertical,
                 'zone' => null,
             ]);
         }
-
-        $vertical = $request->string('vertical', 'all')->toString();
 
         $categories = $this->catalogService->getCategoriesWithProducts($zone, $vertical);
         $products = $this->catalogService->getProductsForZone($zone, $vertical);
@@ -55,9 +55,15 @@ class ProductController extends Controller
             $requestedVertical = '';
         }
 
+        if ($requestedVertical !== '') {
+            $request->session()->put('vertical', $requestedVertical);
+        }
+
         $vertical = $requestedVertical !== ''
             ? $requestedVertical
-            : ($product->vertical === Product::VERTICAL_BOTH ? BusinessVertical::DailyFresh->value : $product->vertical);
+            : ($product->vertical === Product::VERTICAL_BOTH
+                ? VerticalContext::current($request, BusinessVertical::DailyFresh->value)
+                : $product->vertical);
 
         $zone = $this->getUserZone($request);
         if ($zone === null) {
@@ -119,10 +125,7 @@ class ProductController extends Controller
      */
     public function relatedProducts(Request $request, Product $product): \Illuminate\Http\JsonResponse
     {
-        $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
-        if (! in_array($vertical, array_merge(BusinessVertical::values(), ['both']), true)) {
-            $vertical = BusinessVertical::DailyFresh->value;
-        }
+        $vertical = VerticalContext::current($request, BusinessVertical::DailyFresh->value);
 
         $zone = $this->getUserZone($request);
         if ($zone === null) {

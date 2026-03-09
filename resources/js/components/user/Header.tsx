@@ -1,17 +1,15 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     ClipboardList,
-    Grid3X3,
     Heart,
     Home,
-    LayoutDashboard,
     LogOut,
     MapPin,
     Menu,
     Package,
     Repeat,
     Search,
-    Settings,
+    Sparkles,
     ShoppingCart,
     TicketPercent,
     User,
@@ -21,12 +19,43 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import LocationModal from '@/components/user/LocationModal';
-import { getVerticalFromQuery, type StrictVertical } from '@/lib/vertical';
+import { getVerticalFromQuery, normalizeVertical, type StrictVertical } from '@/lib/vertical';
 
-const NAV_LINKS = [
-    { label: 'Home', href: '/', icon: Home },
-    { label: 'Products', href: '/products', icon: Package },
-    { label: 'Subscriptions', href: '/subscription', icon: Repeat },
+type DrawerLink = {
+    label: string;
+    href: string;
+    icon: typeof Home;
+};
+
+type DrawerGroup = {
+    groupLabel: string;
+    links: DrawerLink[];
+};
+
+const DRAWER_GROUPS: DrawerGroup[] = [
+    {
+        groupLabel: 'My Account',
+        links: [
+            { label: 'Home', href: '/', icon: Home },
+            { label: 'Subscriptions', href: '/subscription', icon: Repeat },
+            { label: 'Wishlist', href: '/wishlist', icon: Heart },
+        ],
+    },
+    {
+        groupLabel: 'Billing & Orders',
+        links: [
+            { label: 'Monthly Bills', href: '/orders', icon: ClipboardList },
+            { label: 'Transactions & Invoice', href: '/wallet/transactions', icon: Wallet },
+        ],
+    },
+    {
+        groupLabel: 'Support & Rewards',
+        links: [
+            { label: 'Contact Us', href: '/notifications', icon: User },
+            { label: 'Refer a Friend', href: '/referrals', icon: Heart },
+            { label: 'Policies', href: '/welcome', icon: TicketPercent },
+        ],
+    },
 ];
 
 interface Location {
@@ -50,10 +79,18 @@ interface HeaderProps {
 }
 
 export default function Header({ showTopBanner }: HeaderProps) {
+    const searchPlaceholderOptions = [
+        'Try farm fresh milk',
+        'Discover creamy fresh curd',
+        'Order hand-churned ghee',
+        'Find soft paneer packs',
+        'Shop pure country butter',
+    ];
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [webMenuOpen, setWebMenuOpen] = useState(false);
     const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
     const [desktopSearchQuery, setDesktopSearchQuery] = useState('');
+    const [searchPlaceholderIndex, setSearchPlaceholderIndex] = useState(0);
     const [isMobileSearchPinned, setIsMobileSearchPinned] = useState(false);
     const [isMobileCompactCartVisible, setIsMobileCompactCartVisible] = useState(false);
     const { url } = usePage();
@@ -63,6 +100,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
         cart?: { items_count?: number };
         zone?: { id: number; name: string; code: string } | null;
         location?: Location | null;
+        currentVertical?: StrictVertical;
     };
     const auth = pageProps.auth;
     const authUser = auth?.user;
@@ -76,9 +114,25 @@ export default function Header({ showTopBanner }: HeaderProps) {
         compactAddress !== '' ? `${compactAddress}${addressWords.length > 3 ? '…' : ''}` : location?.city || zone?.name || 'Select location';
     const [currentPath, currentQuery = ''] = url.split('?');
     const isHomePage = currentPath === '/';
-    const urlVertical = getVerticalFromQuery(currentQuery);
+    const sharedVertical = normalizeVertical(pageProps.currentVertical);
+    const urlVertical = getVerticalFromQuery(currentQuery, sharedVertical);
     const [activeVertical, setActiveVertical] = useState<StrictVertical>(urlVertical);
     const mobileHeaderTitle = 'High Quality, Freshness';
+
+    const withActiveVertical = (href: string): string => {
+        if (href.startsWith('#')) {
+            return href;
+        }
+
+        const [path, query = ''] = href.split('?');
+        const queryParams = new URLSearchParams(query);
+
+        queryParams.set('vertical', activeVertical);
+
+        const nextQuery = queryParams.toString();
+
+        return nextQuery !== '' ? `${path}?${nextQuery}` : path;
+    };
 
     const isPathActive = (path: string): boolean => {
         if (path === '/') {
@@ -91,18 +145,6 @@ export default function Header({ showTopBanner }: HeaderProps) {
 
     const actionIconButtonClass =
         'flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none';
-
-    const webPanelLinks = [
-        { label: 'Home', href: '/', icon: Home },
-        { label: 'Dashboard', href: authUser ? '/profile' : '/login', icon: LayoutDashboard },
-        { label: 'Categories', href: '/catalog', icon: Grid3X3 },
-        { label: 'Products', href: '/products', icon: Package },
-        { label: 'Wallet', href: '/wallet', icon: Wallet },
-        { label: 'Coupons', href: '/cart', icon: TicketPercent },
-        { label: 'My Orders', href: '/orders', icon: ClipboardList },
-        { label: 'My Subscription', href: '/subscriptions', icon: Repeat },
-        { label: 'Wishlist', href: '/wishlist', icon: Heart },
-    ];
 
     useEffect(() => {
         // Auto-open modal if zone is missing and we are not on the location page
@@ -135,6 +177,20 @@ export default function Header({ showTopBanner }: HeaderProps) {
     useEffect(() => {
         setActiveVertical(urlVertical);
     }, [urlVertical]);
+
+    useEffect(() => {
+        if (desktopSearchQuery.trim() !== '') {
+            return;
+        }
+
+        const intervalId = window.setInterval(() => {
+            setSearchPlaceholderIndex((current) => (current + 1) % searchPlaceholderOptions.length);
+        }, 2200);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [desktopSearchQuery, searchPlaceholderOptions.length]);
 
     useEffect(() => {
         let lastScrollY = window.scrollY;
@@ -221,12 +277,12 @@ export default function Header({ showTopBanner }: HeaderProps) {
         const query = desktopSearchQuery.trim();
 
         if (query === '') {
-            router.visit('/catalog/search');
+            router.visit(withActiveVertical('/catalog/search'));
 
             return;
         }
 
-        router.visit(`/catalog/search?q=${encodeURIComponent(query)}`);
+        router.visit(withActiveVertical(`/catalog/search?q=${encodeURIComponent(query)}`));
     };
 
     return (
@@ -259,7 +315,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
 
                                 <div className="flex shrink-0 items-center gap-2">
                                     <Link
-                                        href="/wallet"
+                                        href={withActiveVertical('/wallet')}
                                         className="inline-flex items-center gap-1 rounded-2xl border border-white/50 bg-white px-2 py-0.5 text-(--theme-primary-1-dark) shadow-sm"
                                         aria-label="Wallet"
                                     >
@@ -333,15 +389,21 @@ export default function Header({ showTopBanner }: HeaderProps) {
                                     type="search"
                                     value={desktopSearchQuery}
                                     onChange={(event) => setDesktopSearchQuery(event.target.value)}
-                                    placeholder='Search for "Milk"'
-                                    className="h-9 w-full rounded-2xl border border-white/70 bg-white py-2 pr-3 pl-10.5 text-base text-gray-800 outline-none placeholder:text-gray-600"
+                                    placeholder={searchPlaceholderOptions[searchPlaceholderIndex]}
+                                    className="h-8.5 w-full rounded-2xl border border-white/70 bg-white py-1.5 pr-9 pl-10 text-sm text-gray-800 outline-none placeholder:text-xs placeholder:font-medium placeholder:text-gray-500"
                                 />
+                                {desktopSearchQuery.trim() === '' && (
+                                    <Sparkles
+                                        className="pointer-events-none absolute top-1/2 right-3 h-3.5 w-3.5 -translate-y-1/2 text-(--theme-primary-1)/70"
+                                        strokeWidth={2}
+                                    />
+                                )}
                             </div>
 
                             {(isMobileSearchPinned || !isHomePage) && (
                                 <button
                                     type="button"
-                                    onClick={() => router.visit('/wishlist')}
+                                    onClick={() => router.visit(withActiveVertical('/wishlist'))}
                                     className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-white/60 bg-white text-(--theme-primary-1-dark) shadow-sm"
                                     aria-label="Wishlist"
                                 >
@@ -363,7 +425,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
                     <div className="items-center justify-between gap-2.5 py-2 sm:py-2.5 lg:flex lg:py-2.5">
                         <div className="flex min-w-0 items-center gap-3 lg:gap-4">
                             <Link
-                                href="/"
+                                href={withActiveVertical('/')}
                                 className="flex shrink-0 items-center rounded-xl bg-white px-2.5 py-1.5 transition-all duration-200 focus:ring-2 focus:ring-(--theme-primary-1) focus:ring-offset-2 focus:outline-none"
                                 aria-label="Freshtick Home"
                             >
@@ -392,9 +454,15 @@ export default function Header({ showTopBanner }: HeaderProps) {
                                         type="search"
                                         value={desktopSearchQuery}
                                         onChange={(event) => setDesktopSearchQuery(event.target.value)}
-                                        placeholder="Search products"
-                                        className="h-8 w-52 rounded-full border border-gray-200 bg-white py-1 pr-3 pl-8 text-xs text-gray-700 transition-colors outline-none placeholder:text-gray-400 hover:border-gray-300 focus:border-(--theme-primary-1)"
+                                        placeholder={searchPlaceholderOptions[searchPlaceholderIndex]}
+                                        className="h-8 w-52 rounded-full border border-gray-200 bg-white py-1 pr-8 pl-8 text-xs text-gray-700 transition-colors outline-none placeholder:text-gray-400 hover:border-gray-300 focus:border-(--theme-primary-1)"
                                     />
+                                    {desktopSearchQuery.trim() === '' && (
+                                        <Sparkles
+                                            className="pointer-events-none absolute top-1/2 right-2.5 h-3.5 w-3.5 -translate-y-1/2 text-(--theme-primary-1)/70"
+                                            strokeWidth={2}
+                                        />
+                                    )}
                                 </div>
                             </form>
 
@@ -423,7 +491,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
                                 </button>
                             </div>
 
-                            <Link href="/wishlist" className={`${actionIconButtonClass} relative`} aria-label="Wishlist">
+                            <Link href={withActiveVertical('/wishlist')} className={`${actionIconButtonClass} relative`} aria-label="Wishlist">
                                 <Heart className="h-3.5 w-3.5" strokeWidth={2} />
                                 {wishlistCount > 0 && (
                                     <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-red-500 px-0.5 text-[9px] leading-none font-semibold text-white ring-2 ring-white">
@@ -432,7 +500,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
                                 )}
                             </Link>
 
-                            <Link href="/cart" className={`${actionIconButtonClass} relative`} aria-label="Cart">
+                            <Link href={withActiveVertical('/cart')} className={`${actionIconButtonClass} relative`} aria-label="Cart">
                                 <ShoppingCart className="h-3.5 w-3.5" strokeWidth={2} />
                                 {cartItemsCount > 0 && (
                                     <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-(--theme-primary-1) px-0.5 text-[9px] leading-none font-semibold text-white ring-2 ring-white">
@@ -484,62 +552,47 @@ export default function Header({ showTopBanner }: HeaderProps) {
                     </div>
 
                     <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-4">
-                        {webPanelLinks.map((item) => {
-                            const Icon = item.icon;
+                        {DRAWER_GROUPS.map((group) => (
+                            <div key={group.groupLabel} className="mb-3">
+                                <p className="px-4 pb-2 text-[11px] font-semibold tracking-wide text-gray-400 uppercase">{group.groupLabel}</p>
+                                <div className="flex flex-col gap-1">
+                                    {group.links.map((item) => {
+                                        const Icon = item.icon;
 
-                            return (
-                                <Link
-                                    key={item.label}
-                                    href={item.href}
-                                    onClick={() => setWebMenuOpen(false)}
-                                    className="group flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-(--theme-primary-1)"
-                                >
-                                    <span className="flex items-center gap-2.5">
-                                        <Icon className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-(--theme-primary-1)" strokeWidth={2} />
-                                        {item.label}
-                                    </span>
-                                    <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
-                                </Link>
-                            );
-                        })}
-
-                        <div className="my-2 border-t border-gray-100" />
-
-                        <button
-                            type="button"
-                            className="flex w-full items-center gap-3 rounded-lg border border-gray-200/80 bg-gray-50/60 px-4 py-3 text-left text-sm font-medium text-gray-700"
-                            onClick={() => {
-                                setWebMenuOpen(false);
-                                setIsLocationModalOpen(true);
-                            }}
-                        >
-                            <MapPin className="h-4 w-4 shrink-0" strokeWidth={2} />
-                            <span className="truncate">{locationDisplay}</span>
-                        </button>
+                                        return (
+                                            <Link
+                                                key={`${group.groupLabel}-${item.label}`}
+                                                href={withActiveVertical(item.href)}
+                                                onClick={() => setWebMenuOpen(false)}
+                                                className="group flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-(--theme-primary-1)"
+                                            >
+                                                <span className="flex items-center gap-2.5">
+                                                    <Icon
+                                                        className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-(--theme-primary-1)"
+                                                        strokeWidth={2}
+                                                    />
+                                                    {item.label}
+                                                </span>
+                                                <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
 
                         <div className="my-2 border-t border-gray-100" />
 
                         {authUser ? (
                             <>
                                 <Link
-                                    href="/profile"
+                                    href={withActiveVertical('/profile')}
                                     onClick={() => setWebMenuOpen(false)}
                                     className="group flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-(--theme-primary-1)"
                                 >
                                     <span className="flex items-center gap-2.5">
                                         <User className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-(--theme-primary-1)" strokeWidth={2} />
                                         Profile
-                                    </span>
-                                    <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
-                                </Link>
-                                <Link
-                                    href="/profile"
-                                    onClick={() => setWebMenuOpen(false)}
-                                    className="group flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-(--theme-primary-1)"
-                                >
-                                    <span className="flex items-center gap-2.5">
-                                        <Settings className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-(--theme-primary-1)" strokeWidth={2} />
-                                        Settings
                                     </span>
                                     <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
                                 </Link>
@@ -560,7 +613,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
                             </>
                         ) : (
                             <Link
-                                href="/login"
+                                href={withActiveVertical('/login')}
                                 onClick={() => setWebMenuOpen(false)}
                                 className="group flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-(--theme-primary-1)"
                             >
@@ -577,35 +630,37 @@ export default function Header({ showTopBanner }: HeaderProps) {
 
             {shouldRenderMobileCartWidget && (
                 <div
-                    className={`fixed right-3 left-3 z-1260 transition-all duration-300 ease-out lg:hidden ${
+                    className={`fixed right-5 left-5 z-1260 transition-all duration-300 ease-out lg:hidden ${
                         isMobileCompactCartVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
                     }`}
-                    style={{ bottom: 'calc(env(safe-area-inset-bottom) + 72px)' }}
+                    style={{ bottom: 'calc(env(safe-area-inset-bottom) + 62px)' }}
                 >
                     <Link
-                        href="/cart"
-                        className="flex items-center justify-between gap-3 rounded-2xl border border-white/20 bg-(--theme-primary-1) px-3 py-2 text-white shadow-[0_14px_32px_rgba(15,118,110,0.3)]"
+                        href={withActiveVertical('/cart')}
+                        className="flex items-center justify-between gap-1.5 rounded-xl border border-white/20 bg-(--theme-primary-1) px-2 py-1 text-white shadow-[0_8px_18px_rgba(15,118,110,0.26)]"
                         aria-label="Open cart"
                     >
-                        <span className="flex min-w-0 items-center gap-2">
-                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
-                                <ShoppingCart className="h-4.5 w-4.5" strokeWidth={2.2} />
+                        <span className="flex min-w-0 items-center gap-1.5">
+                            <span className="flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full bg-white/15">
+                                <ShoppingCart className="h-3.5 w-3.5" strokeWidth={2.2} />
                             </span>
-                            <span className="truncate text-sm font-semibold">
+                            <span className="truncate text-xs leading-none font-semibold">
                                 {cartItemsCount} {cartItemsCount === 1 ? 'item in cart' : 'items in cart'}
                             </span>
                         </span>
-                        <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-semibold text-(--theme-primary-1)">View cart</span>
+                        <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-(--theme-primary-1)">
+                            View cart
+                        </span>
                     </Link>
                 </div>
             )}
 
-            <nav className="fixed right-0 bottom-0 left-0 z-1250 border-t border-gray-200 bg-white/96 pb-[calc(env(safe-area-inset-bottom)+4px)] shadow-[0_-6px_20px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden">
-                <div className="grid grid-cols-5 px-1.5 pt-1">
+            <nav className="fixed right-0 bottom-0 left-0 z-1250 border-t border-gray-200 bg-white/96 pb-[calc(env(safe-area-inset-bottom)+2px)] shadow-[0_-5px_14px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden">
+                <div className="grid grid-cols-5 px-1 pt-0.5">
                     {[
                         { label: 'Home', href: '/', icon: Home, active: isPathActive('/') },
-                        { label: 'Categories', href: '/catalog', icon: Grid3X3, active: isPathActive('/catalog') },
                         { label: 'Products', href: '/products', icon: Package, active: isPathActive('/products') },
+                        { label: 'Sub', href: '/subscription', icon: Repeat, active: isPathActive('/subscription') },
                         { label: 'Deliveries', href: '/deliveries', icon: ClipboardList, active: isPathActive('/deliveries') },
                     ].map((item) => {
                         const Icon = item.icon;
@@ -613,19 +668,19 @@ export default function Header({ showTopBanner }: HeaderProps) {
                         return (
                             <Link
                                 key={item.label}
-                                href={item.href}
-                                className={`relative flex flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] leading-none font-medium transition-colors focus:outline-none ${
+                                href={withActiveVertical(item.href)}
+                                className={`relative flex flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 text-[10px] leading-none font-medium transition-colors focus:outline-none ${
                                     item.active ? 'font-semibold text-(--theme-primary-1)' : 'text-gray-700'
                                 }`}
                                 aria-current={item.active ? 'page' : undefined}
                             >
                                 {item.active && <span className="absolute top-0 h-0.5 w-7 rounded-full bg-(--theme-primary-1)" aria-hidden="true" />}
                                 <span
-                                    className={`relative flex h-6.5 w-6.5 items-center justify-center rounded-lg ${
+                                    className={`relative flex h-6 w-6 items-center justify-center rounded-md ${
                                         item.active ? 'bg-(--theme-primary-1)/12' : ''
                                     }`}
                                 >
-                                    <Icon className="h-4.5 w-4.5" strokeWidth={item.active ? 2.3 : 2} />
+                                    <Icon className="h-4 w-4" strokeWidth={item.active ? 2.3 : 2} />
                                 </span>
                                 <span className="truncate">{item.label}</span>
                             </Link>
@@ -635,14 +690,14 @@ export default function Header({ showTopBanner }: HeaderProps) {
                     <button
                         type="button"
                         onClick={() => setWebMenuOpen(true)}
-                        className={`relative flex flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[11px] leading-none font-medium transition-colors focus:outline-none ${
+                        className={`relative flex flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 text-[10px] leading-none font-medium transition-colors focus:outline-none ${
                             webMenuOpen ? 'font-semibold text-(--theme-primary-1)' : 'text-gray-700'
                         }`}
                         aria-label="Open more options"
                     >
                         {webMenuOpen && <span className="absolute top-0 h-0.5 w-7 rounded-full bg-(--theme-primary-1)" aria-hidden="true" />}
-                        <span className={`flex h-6.5 w-6.5 items-center justify-center rounded-lg ${webMenuOpen ? 'bg-(--theme-primary-1)/12' : ''}`}>
-                            <Menu className="h-4.5 w-4.5" strokeWidth={webMenuOpen ? 2.3 : 2} />
+                        <span className={`flex h-6 w-6 items-center justify-center rounded-md ${webMenuOpen ? 'bg-(--theme-primary-1)/12' : ''}`}>
+                            <Menu className="h-4 w-4" strokeWidth={webMenuOpen ? 2.3 : 2} />
                         </span>
                         <span>More</span>
                     </button>
@@ -676,47 +731,58 @@ export default function Header({ showTopBanner }: HeaderProps) {
                         </button>
                     </div>
                     <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-4">
-                        {NAV_LINKS.map((item, i) => {
-                            const Icon = item.icon;
-                            const isAnchor = item.href.startsWith('#');
-                            const className =
-                                'nav-drawer-item group flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-700 opacity-0 transition-colors hover:bg-gray-50 hover:text-(--theme-primary-1)';
-                            const style = mobileMenuOpen ? { animationDelay: `${i * 50}ms` } : undefined;
-                            const content = (
-                                <>
-                                    <span className="flex items-center gap-2.5">
-                                        <Icon className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-(--theme-primary-1)" strokeWidth={2} />
-                                        {item.label}
-                                    </span>
-                                    <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
-                                </>
-                            );
-                            if (isAnchor) {
-                                return (
-                                    <a key={item.label} href={item.href} className={className} style={style} onClick={() => setMobileMenuOpen(false)}>
-                                        {content}
-                                    </a>
-                                );
-                            }
-                            return (
-                                <Link key={item.label} href={item.href} className={className} style={style} onClick={() => setMobileMenuOpen(false)}>
-                                    {content}
-                                </Link>
-                            );
-                        })}
-                        <div className="my-3 border-t border-gray-100" />
-                        <button
-                            type="button"
-                            className="flex w-full items-center gap-3 rounded-lg border border-gray-200/80 bg-gray-50/60 px-4 py-3 text-left text-sm font-medium text-gray-600"
-                            onClick={() => {
-                                setMobileMenuOpen(false);
-                                setIsLocationModalOpen(true);
-                            }}
-                        >
-                            <MapPin className="h-4 w-4 shrink-0" strokeWidth={2} />
-                            <span>{zone?.name ?? 'Select location'}</span>
-                        </button>
+                        {DRAWER_GROUPS.map((group, groupIndex) => (
+                            <div key={group.groupLabel} className="mb-3">
+                                <p className="px-4 pb-2 text-[11px] font-semibold tracking-wide text-gray-400 uppercase">{group.groupLabel}</p>
+                                <div className="flex flex-col gap-0.5">
+                                    {group.links.map((item, itemIndex) => {
+                                        const Icon = item.icon;
+                                        const isAnchor = item.href.startsWith('#');
+                                        const className =
+                                            'nav-drawer-item group flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-gray-700 opacity-0 transition-colors hover:bg-gray-50 hover:text-(--theme-primary-1)';
+                                        const style = mobileMenuOpen ? { animationDelay: `${(groupIndex * 4 + itemIndex) * 50}ms` } : undefined;
+                                        const content = (
+                                            <>
+                                                <span className="flex items-center gap-2.5">
+                                                    <Icon
+                                                        className="h-4 w-4 shrink-0 text-gray-500 group-hover:text-(--theme-primary-1)"
+                                                        strokeWidth={2}
+                                                    />
+                                                    {item.label}
+                                                </span>
+                                                <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={2} />
+                                            </>
+                                        );
 
+                                        if (isAnchor) {
+                                            return (
+                                                <a
+                                                    key={`${group.groupLabel}-${item.label}`}
+                                                    href={item.href}
+                                                    className={className}
+                                                    style={style}
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                >
+                                                    {content}
+                                                </a>
+                                            );
+                                        }
+
+                                        return (
+                                            <Link
+                                                key={`${group.groupLabel}-${item.label}`}
+                                                href={withActiveVertical(item.href)}
+                                                className={className}
+                                                style={style}
+                                                onClick={() => setMobileMenuOpen(false)}
+                                            >
+                                                {content}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
                         {authUser && (
                             <button
                                 onClick={() => {
@@ -732,7 +798,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
 
                         <div className="mt-2 flex items-center gap-2">
                             <Link
-                                href={authUser ? '/profile' : '/login'}
+                                href={withActiveVertical(authUser ? '/profile' : '/login')}
                                 className="flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-(--theme-primary-1)"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
@@ -740,7 +806,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
                                 {authUser ? 'Account' : 'Login'}
                             </Link>
                             <Link
-                                href="/wishlist"
+                                href={withActiveVertical('/wishlist')}
                                 className="flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-(--theme-primary-1)"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
@@ -755,7 +821,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
                                 Wishlist
                             </Link>
                             <Link
-                                href="/cart"
+                                href={withActiveVertical('/cart')}
                                 className="flex flex-1 items-center justify-center gap-2 rounded-lg py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-(--theme-primary-1)"
                                 onClick={() => setMobileMenuOpen(false)}
                             >

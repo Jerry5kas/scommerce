@@ -1,18 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import {
-    ArrowLeft,
-    Calendar,
-    Check,
-    Clock,
-    Image as ImageIcon,
-    MapPin,
-    Package,
-    Phone,
-    Truck,
-    User,
-    X,
-    AlertTriangle,
-} from 'lucide-react';
+import { ArrowLeft, Calendar, Check, Clock, Image as ImageIcon, MapPin, Package, Phone, Truck, User, X, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
 
@@ -42,6 +29,9 @@ interface Delivery {
         id: number;
         order_number: string;
         total: string;
+        type: string;
+        vertical: string;
+        subscription_id: number | null;
         status: string;
         payment_status: string;
         payment_method: string;
@@ -108,13 +98,7 @@ const statusLabels: Record<string, string> = {
     cancelled: 'Cancelled',
 };
 
-export default function DeliveryShow({
-    delivery,
-    timeline,
-    availableStatuses,
-    drivers,
-    proofUrl,
-}: Props) {
+export default function DeliveryShow({ delivery, timeline, availableStatuses, drivers, proofUrl }: Props) {
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [showOverrideModal, setShowOverrideModal] = useState(false);
@@ -152,32 +136,30 @@ export default function DeliveryShow({
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-4">
-                    <Link
-                        href="/admin/deliveries"
-                        className="rounded-lg border border-gray-300 p-2 hover:bg-gray-50"
-                    >
+                    <Link href="/admin/deliveries" className="rounded-lg border border-gray-300 p-2 hover:bg-gray-50">
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                     <div className="flex-1">
                         <div className="flex items-center gap-3">
-                            <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
-                                Delivery #{delivery.id}
-                            </h1>
-                            <span
-                                className={`rounded-full border px-3 py-1 text-sm font-medium ${statusColors[delivery.status]}`}
-                            >
+                            <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Delivery #{delivery.id}</h1>
+                            <span className={`rounded-full border px-3 py-1 text-sm font-medium ${statusColors[delivery.status]}`}>
                                 {statusLabels[delivery.status]}
                             </span>
                         </div>
                         <p className="mt-1 text-sm text-gray-500">
                             Order{' '}
-                            <Link
-                                href={`/admin/orders/${delivery.order.id}`}
-                                className="text-emerald-600 hover:text-emerald-700"
-                            >
+                            <Link href={`/admin/orders/${delivery.order.id}`} className="text-emerald-600 hover:text-emerald-700">
                                 {delivery.order.order_number}
                             </Link>
                         </p>
+                        {delivery.order.type === 'subscription' && delivery.order.subscription_id && (
+                            <p className="mt-1 text-xs font-medium text-purple-700">
+                                Subscription{' '}
+                                <Link href={`/admin/subscriptions/${delivery.order.subscription_id}`} className="underline hover:text-purple-800">
+                                    #{delivery.order.subscription_id}
+                                </Link>
+                            </p>
+                        )}
                     </div>
 
                     {/* Action Buttons */}
@@ -210,33 +192,21 @@ export default function DeliveryShow({
                         <div className="rounded-xl border border-gray-200 bg-white p-6">
                             <h2 className="mb-4 font-semibold text-gray-900">Delivery Timeline</h2>
                             <div className="relative">
-                                <div className="absolute left-4 top-0 h-full w-0.5 bg-gray-200" />
+                                <div className="absolute top-0 left-4 h-full w-0.5 bg-gray-200" />
                                 <div className="space-y-6">
                                     {timeline.map((item, index) => (
                                         <div key={item.status} className="relative flex gap-4">
                                             <div
                                                 className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full ${
-                                                    item.completed
-                                                        ? 'bg-emerald-500 text-white'
-                                                        : 'border-2 border-gray-300 bg-white text-gray-400'
+                                                    item.completed ? 'bg-emerald-500 text-white' : 'border-2 border-gray-300 bg-white text-gray-400'
                                                 }`}
                                             >
-                                                {item.completed ? (
-                                                    <Check className="h-4 w-4" />
-                                                ) : (
-                                                    <span className="text-xs">{index + 1}</span>
-                                                )}
+                                                {item.completed ? <Check className="h-4 w-4" /> : <span className="text-xs">{index + 1}</span>}
                                             </div>
                                             <div className="flex-1 pb-2">
-                                                <p
-                                                    className={`font-medium ${item.completed ? 'text-gray-900' : 'text-gray-400'}`}
-                                                >
-                                                    {item.label}
-                                                </p>
+                                                <p className={`font-medium ${item.completed ? 'text-gray-900' : 'text-gray-400'}`}>{item.label}</p>
                                                 {item.timestamp && (
-                                                    <p className="text-sm text-gray-500">
-                                                        {new Date(item.timestamp).toLocaleString()}
-                                                    </p>
+                                                    <p className="text-sm text-gray-500">{new Date(item.timestamp).toLocaleString()}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -250,24 +220,15 @@ export default function DeliveryShow({
                             <h2 className="mb-4 font-semibold text-gray-900">Order Items</h2>
                             <div className="space-y-3">
                                 {delivery.order.items.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="flex items-center justify-between rounded-lg bg-gray-50 p-3"
-                                    >
+                                    <div key={item.id} className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
                                         <div className="flex items-center gap-3">
                                             <Package className="h-5 w-5 text-gray-400" />
                                             <div>
-                                                <p className="font-medium text-gray-900">
-                                                    {item.product_name}
-                                                </p>
-                                                <p className="text-sm text-gray-500">
-                                                    Qty: {item.quantity}
-                                                </p>
+                                                <p className="font-medium text-gray-900">{item.product_name}</p>
+                                                <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                                             </div>
                                         </div>
-                                        <p className="font-medium">
-                                            ₹{(parseFloat(item.price) * item.quantity).toFixed(2)}
-                                        </p>
+                                        <p className="font-medium">₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -285,11 +246,7 @@ export default function DeliveryShow({
                             {proofUrl ? (
                                 <div className="space-y-4">
                                     <div className="overflow-hidden rounded-lg border">
-                                        <img
-                                            src={proofUrl}
-                                            alt="Delivery proof"
-                                            className="h-64 w-full object-cover"
-                                        />
+                                        <img src={proofUrl} alt="Delivery proof" className="h-64 w-full object-cover" />
                                     </div>
                                     <div className="flex items-center justify-between">
                                         {delivery.delivery_proof_verified ? (
@@ -297,9 +254,7 @@ export default function DeliveryShow({
                                                 <Check className="h-5 w-5" />
                                                 <span>Verified</span>
                                                 {delivery.verified_by && (
-                                                    <span className="text-sm text-gray-500">
-                                                        by {delivery.verified_by.name}
-                                                    </span>
+                                                    <span className="text-sm text-gray-500">by {delivery.verified_by.name}</span>
                                                 )}
                                             </div>
                                         ) : (
@@ -316,9 +271,7 @@ export default function DeliveryShow({
                             ) : delivery.status === 'out_for_delivery' ? (
                                 <div className="text-center">
                                     <ImageIcon className="mx-auto h-12 w-12 text-gray-300" />
-                                    <p className="mt-2 text-sm text-gray-500">
-                                        Proof will be uploaded upon delivery
-                                    </p>
+                                    <p className="mt-2 text-sm text-gray-500">Proof will be uploaded upon delivery</p>
                                     <button
                                         onClick={() => setShowOverrideModal(true)}
                                         className="mt-4 inline-flex items-center gap-2 rounded-lg border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 hover:bg-orange-100"
@@ -359,10 +312,7 @@ export default function DeliveryShow({
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <Phone className="h-5 w-5 text-gray-400" />
-                                    <a
-                                        href={`tel:${delivery.user.phone}`}
-                                        className="text-emerald-600 hover:text-emerald-700"
-                                    >
+                                    <a href={`tel:${delivery.user.phone}`} className="text-emerald-600 hover:text-emerald-700">
                                         {delivery.user.phone}
                                     </a>
                                 </div>
@@ -377,12 +327,9 @@ export default function DeliveryShow({
                                     <MapPin className="mt-0.5 h-5 w-5 text-gray-400" />
                                     <div>
                                         <p className="text-gray-900">{delivery.address.address_line}</p>
-                                        {delivery.address.area && (
-                                            <p className="text-sm text-gray-500">{delivery.address.area}</p>
-                                        )}
+                                        {delivery.address.area && <p className="text-sm text-gray-500">{delivery.address.area}</p>}
                                         <p className="text-sm text-gray-500">
-                                            {delivery.address.city}, {delivery.address.state}{' '}
-                                            {delivery.address.pincode}
+                                            {delivery.address.city}, {delivery.address.state} {delivery.address.pincode}
                                         </p>
                                     </div>
                                 </div>
@@ -433,10 +380,7 @@ export default function DeliveryShow({
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <Phone className="h-5 w-5 text-gray-400" />
-                                        <a
-                                            href={`tel:${delivery.driver.phone}`}
-                                            className="text-emerald-600 hover:text-emerald-700"
-                                        >
+                                        <a href={`tel:${delivery.driver.phone}`} className="text-emerald-600 hover:text-emerald-700">
                                             {delivery.driver.phone}
                                         </a>
                                     </div>
@@ -455,9 +399,7 @@ export default function DeliveryShow({
                         {/* Delivery Instructions */}
                         {delivery.delivery_instructions && (
                             <div className="rounded-xl border border-gray-200 bg-white p-6">
-                                <h2 className="mb-2 font-semibold text-gray-900">
-                                    Delivery Instructions
-                                </h2>
+                                <h2 className="mb-2 font-semibold text-gray-900">Delivery Instructions</h2>
                                 <p className="text-gray-600">{delivery.delivery_instructions}</p>
                             </div>
                         )}
@@ -471,22 +413,17 @@ export default function DeliveryShow({
                     <div className="w-full max-w-md rounded-xl bg-white p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <h3 className="text-lg font-semibold">Assign Driver</h3>
-                            <button
-                                onClick={() => setShowAssignModal(false)}
-                                className="rounded-lg p-1 hover:bg-gray-100"
-                            >
+                            <button onClick={() => setShowAssignModal(false)} className="rounded-lg p-1 hover:bg-gray-100">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="mb-1 block text-sm font-medium">
-                                    Select Driver
-                                </label>
+                                <label className="mb-1 block text-sm font-medium">Select Driver</label>
                                 <select
                                     value={assignForm.data.driver_id}
                                     onChange={(e) => assignForm.setData('driver_id', e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                                 >
                                     <option value="">Choose a driver</option>
                                     {drivers.map((driver) => (
@@ -522,10 +459,7 @@ export default function DeliveryShow({
                     <div className="w-full max-w-md rounded-xl bg-white p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <h3 className="text-lg font-semibold">Update Status</h3>
-                            <button
-                                onClick={() => setShowStatusModal(false)}
-                                className="rounded-lg p-1 hover:bg-gray-100"
-                            >
+                            <button onClick={() => setShowStatusModal(false)} className="rounded-lg p-1 hover:bg-gray-100">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
@@ -535,7 +469,7 @@ export default function DeliveryShow({
                                 <select
                                     value={statusForm.data.status}
                                     onChange={(e) => statusForm.setData('status', e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                                 >
                                     <option value="">Select status</option>
                                     {availableStatuses.map((status) => (
@@ -547,14 +481,12 @@ export default function DeliveryShow({
                             </div>
                             {statusForm.data.status === 'failed' && (
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium">
-                                        Failure Reason *
-                                    </label>
+                                    <label className="mb-1 block text-sm font-medium">Failure Reason *</label>
                                     <textarea
                                         value={statusForm.data.reason}
                                         onChange={(e) => statusForm.setData('reason', e.target.value)}
                                         rows={3}
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                                         placeholder="Why did the delivery fail?"
                                     />
                                 </div>
@@ -565,7 +497,7 @@ export default function DeliveryShow({
                                     value={statusForm.data.notes}
                                     onChange={(e) => statusForm.setData('notes', e.target.value)}
                                     rows={2}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                                     placeholder="Optional notes..."
                                 />
                             </div>
@@ -595,36 +527,27 @@ export default function DeliveryShow({
                     <div className="w-full max-w-md rounded-xl bg-white p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <h3 className="text-lg font-semibold text-orange-700">Override Proof</h3>
-                            <button
-                                onClick={() => setShowOverrideModal(false)}
-                                className="rounded-lg p-1 hover:bg-gray-100"
-                            >
+                            <button onClick={() => setShowOverrideModal(false)} className="rounded-lg p-1 hover:bg-gray-100">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
                         <div className="mb-4 rounded-lg bg-orange-50 p-3">
                             <p className="text-sm text-orange-800">
-                                <strong>Warning:</strong> This will mark the delivery as complete without a
-                                proof image. This action will be logged for audit purposes.
+                                <strong>Warning:</strong> This will mark the delivery as complete without a proof image. This action will be logged
+                                for audit purposes.
                             </p>
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="mb-1 block text-sm font-medium">
-                                    Reason for Override *
-                                </label>
+                                <label className="mb-1 block text-sm font-medium">Reason for Override *</label>
                                 <textarea
                                     value={overrideForm.data.reason}
                                     onChange={(e) => overrideForm.setData('reason', e.target.value)}
                                     rows={3}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                                     placeholder="Provide a detailed reason (min 10 characters)"
                                 />
-                                {overrideForm.errors.reason && (
-                                    <p className="mt-1 text-sm text-red-600">
-                                        {overrideForm.errors.reason}
-                                    </p>
-                                )}
+                                {overrideForm.errors.reason && <p className="mt-1 text-sm text-red-600">{overrideForm.errors.reason}</p>}
                             </div>
                             <div className="flex gap-2">
                                 <button
@@ -648,4 +571,3 @@ export default function DeliveryShow({
         </AdminLayout>
     );
 }
-

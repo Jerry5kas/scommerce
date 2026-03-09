@@ -79,6 +79,14 @@ const STORIES = [
     { id: 5, src: '/video/stories/8064134-hd_1080_1920_24fps.mp4', label: 'Daily fresh', views: '2.9K' },
 ] as const;
 
+const EXCLUSIVE_COLLECTION_BANNERS = [
+    'https://ik.imagekit.io/freshtickstorage/collection/cheese%20-%20collection.png',
+    'https://ik.imagekit.io/freshtickstorage/collection/Untitled%20design%20(12).png',
+    'https://ik.imagekit.io/freshtickstorage/collection/Untitled%20design%20(11).png',
+    'https://ik.imagekit.io/freshtickstorage/collection/Untitled%20design%20(14).png',
+    'https://ik.imagekit.io/freshtickstorage/collection/Untitled%20design%20(13).png',
+] as const;
+
 const PRODUCTS_PER_VIEW = { mobile: 2, sm: 3, md: 5, lg: 6 };
 const TESTIMONIALS_PER_VIEW = { mobile: 1, sm: 2, lg: 3 };
 const GAP_PX = 16; // gap-4
@@ -151,6 +159,7 @@ interface SubscriptionPlan {
 interface HomeProps {
     banners: Banner[];
     promotionalBanners: Banner[];
+    productBanners: Banner[];
     coupons: CouponOffer[];
     customerFavouritesCollection: CustomerFavouritesCollection | null;
     categories: Category[];
@@ -161,6 +170,7 @@ interface HomeProps {
 export default function Home({
     banners,
     promotionalBanners,
+    productBanners,
     coupons,
     customerFavouritesCollection,
     categories,
@@ -229,6 +239,7 @@ export default function Home({
 
     const getSafeUrl = (url: string | null | undefined) => {
         if (!url) return DEFAULT_IMAGE_FALLBACK;
+        if (url === 'default.png' || url === '/demo/milk.png' || url === 'demo/milk.png') return DEFAULT_IMAGE_FALLBACK;
         if (url.startsWith('http') || url.startsWith('/')) return url;
         if (url.startsWith('demo/') || url.startsWith('images/') || url.startsWith('video/')) return `/${url}`;
         return `/storage/${url}`;
@@ -282,6 +293,9 @@ export default function Home({
         return banner.vertical === undefined || banner.vertical === selectedVertical || banner.vertical === 'both';
     });
     const promoBanners = promotionalBanners.filter((banner) => {
+        return banner.vertical === undefined || banner.vertical === selectedVertical || banner.vertical === 'both';
+    });
+    const productTypeBanners = productBanners.filter((banner) => {
         return banner.vertical === undefined || banner.vertical === selectedVertical || banner.vertical === 'both';
     });
     const homeCoupons = coupons.slice(0, 10);
@@ -419,7 +433,7 @@ export default function Home({
         const weightLabel = getWeightUnitLabel(mobileOptionsProduct);
 
         return (
-            <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Product options">
+            <div className="fixed inset-0 z-1270 lg:hidden" role="dialog" aria-modal="true" aria-label="Product options">
                 <button
                     type="button"
                     className={`absolute inset-0 bg-black/45 transition-opacity duration-200 ${mobileOptionsDrawerOpen ? 'opacity-100' : 'opacity-0'}`}
@@ -428,7 +442,7 @@ export default function Home({
                 />
 
                 <div
-                    className={`absolute right-0 bottom-0 left-0 max-h-[82vh] overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl transition-transform duration-200 ${
+                    className={`absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-2xl transition-transform duration-200 ${
                         mobileOptionsDrawerOpen ? 'translate-y-0' : 'translate-y-full'
                     }`}
                 >
@@ -507,7 +521,8 @@ export default function Home({
                         onClick={() =>
                             addMobileCardProductToCart(mobileOptionsProduct, mobileOptionsQuantity, mobileOptionsVariantId ?? undefined, true)
                         }
-                        disabled={mobileCardAddingProductId === mobileOptionsProduct.id}
+                        d
+                        isabled={mobileCardAddingProductId === mobileOptionsProduct.id}
                         className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                         {mobileCardAddingProductId === mobileOptionsProduct.id ? 'Adding...' : `Add to Cart • ${formatPrice(totalPrice)}`}
@@ -517,7 +532,7 @@ export default function Home({
         );
     };
 
-    const renderMobilePostBannerCards = () => {
+    const renderMobilePostBannerCards = (title = 'Top Picks', tagline = 'Handpicked for today') => {
         if (mobileShowcaseProducts.length === 0) {
             return null;
         }
@@ -526,99 +541,14 @@ export default function Home({
             <section className="bg-white py-3 lg:hidden">
                 <div className="container mx-auto px-3">
                     {renderSectionHeader(
-                        'Top Picks',
-                        'Handpicked for today',
+                        title,
+                        tagline,
                         `/products?vertical=${selectedVertical}`,
                         <Sparkles className="h-6 w-6" strokeWidth={2.2} />,
                     )}
 
                     <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-                        {mobileShowcaseProducts.map((product) => {
-                            const displayPrice = getDisplayPrice(product);
-                            const hasDiscount = typeof product.compare_at_price === 'number' && product.compare_at_price > displayPrice;
-                            const savings = hasDiscount ? Math.round((product.compare_at_price as number) - displayPrice) : 0;
-                            const activeVariants = getActiveVariants(product);
-                            const selectedVariantId = activeVariants.length > 0 ? (getSelectedVariantId(product) ?? activeVariants[0].id) : undefined;
-                            const isWishlisted = wishlistedProductIds.has(product.id);
-                            const weightLabel = getWeightUnitLabel(product);
-
-                            return (
-                                <article key={product.id} className="w-[calc(33.333%-6px)] min-w-24 shrink-0">
-                                    <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-xs">
-                                        <Link href={`/products/${product.slug}?vertical=${selectedVertical}`} className="block">
-                                            <img
-                                                src={getSafeUrl(product.image)}
-                                                alt={product.name}
-                                                className="h-20 w-full rounded-lg bg-gray-50 object-cover"
-                                                loading="lazy"
-                                                onError={(event) => {
-                                                    (event.target as HTMLImageElement).src = DEFAULT_IMAGE_FALLBACK;
-                                                }}
-                                            />
-                                        </Link>
-
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                toggleProductWishlist(product.id);
-                                            }}
-                                            aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                                            className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 sm:h-8 sm:w-8"
-                                        >
-                                            <Heart
-                                                className={`h-3.5 w-3.5 transition-all duration-200 sm:h-4 sm:w-4 ${isWishlisted ? 'scale-110 fill-red-500 text-red-500' : 'fill-white text-black'}`}
-                                                strokeWidth={2}
-                                            />
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => addMobileCardProductToCart(product, 1, selectedVariantId)}
-                                            disabled={mobileCardAddingProductId === product.id}
-                                            className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-lg border border-blue-600 bg-blue-50 text-blue-700 shadow-sm disabled:opacity-60"
-                                            aria-label="Add to cart"
-                                        >
-                                            <Plus className="h-4 w-4" strokeWidth={2.5} />
-                                        </button>
-                                    </div>
-
-                                    <div className="mt-1">
-                                        <div className="flex items-center gap-1">
-                                            <span className="inline-flex rounded-md bg-green-600 px-1.5 py-0.5 text-[11px] leading-none font-bold text-white">
-                                                {formatPrice(displayPrice)}
-                                            </span>
-                                            {hasDiscount && (
-                                                <span className="text-[11px] font-medium text-gray-400 line-through">
-                                                    {formatPrice(product.compare_at_price as number)}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {hasDiscount && savings > 0 && (
-                                            <p className="mt-0.5 text-[10px] font-semibold text-green-700">₹{savings} OFF</p>
-                                        )}
-
-                                        <Link href={`/products/${product.slug}?vertical=${selectedVertical}`}>
-                                            <p className="mt-0.5 line-clamp-1 text-xs leading-tight font-semibold text-gray-900">{product.name}</p>
-                                        </Link>
-                                        <p className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">
-                                            {product.short_description || 'Fresh daily quality.'}
-                                        </p>
-                                        <p className="mt-0.5 text-[10px] text-gray-500">{weightLabel || getMobilePackLabel(product)}</p>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => openMobileOptionsDrawer(product)}
-                                            className="mt-1 w-full rounded-md bg-blue-100 px-2 py-1 text-[11px] font-semibold text-blue-700"
-                                        >
-                                            See options
-                                        </button>
-                                    </div>
-                                </article>
-                            );
-                        })}
+                        {mobileShowcaseProducts.map((product) => renderTopPicksMobileProductCard(product, selectedVertical))}
                     </div>
                 </div>
             </section>
@@ -711,7 +641,7 @@ export default function Home({
                             const weightLabel = getWeightUnitLabel(product);
 
                             return (
-                                <article key={product.id} className="w-[calc(33.333%-6px)] min-w-24 shrink-0 sm:w-[calc(25%-8px)] lg:w-56">
+                                <article key={product.id} className="w-[calc(33.333%-6px)] min-w-24 shrink-0 sm:w-[calc(25%-8px)] lg:w-52">
                                     <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-xs">
                                         <Link href={`/products/${product.slug}?vertical=daily_fresh`} className="block">
                                             <img
@@ -757,6 +687,9 @@ export default function Home({
                                             <span className="inline-flex rounded-md bg-green-600 px-1.5 py-0.5 text-[11px] leading-none font-bold text-white">
                                                 {formatPrice(displayPrice)}
                                             </span>
+                                            <span className="text-[10px] font-medium text-gray-600">
+                                                / {weightLabel || getMobilePackLabel(product)}
+                                            </span>
                                             {hasDiscount && (
                                                 <span className="text-[11px] font-medium text-gray-400 line-through">
                                                     {formatPrice(product.compare_at_price as number)}
@@ -774,8 +707,6 @@ export default function Home({
                                         <p className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">
                                             {product.short_description || 'Fresh daily quality.'}
                                         </p>
-                                        <p className="mt-0.5 text-[10px] text-gray-500">{weightLabel || getMobilePackLabel(product)}</p>
-
                                         <button
                                             type="button"
                                             onClick={() => openMobileOptionsDrawer(product)}
@@ -824,6 +755,205 @@ export default function Home({
         );
     };
 
+    const renderTopPicksMobileProductCard = (
+        product: ProductItem,
+        verticalParam: 'daily_fresh' | 'society_fresh',
+        keyPrefix?: string,
+        articleClass = 'w-[calc(33.333%-6px)] min-w-24 shrink-0',
+        contentTextTone: 'default' | 'light' = 'default',
+        showDescription = true,
+        showWeight = true,
+        pinActionToBottom = false,
+    ) => {
+        const displayPrice = getDisplayPrice(product);
+        const hasDiscount = typeof product.compare_at_price === 'number' && product.compare_at_price > displayPrice;
+        const savings = hasDiscount ? Math.round((product.compare_at_price as number) - displayPrice) : 0;
+        const activeVariants = getActiveVariants(product);
+        const selectedVariantId = activeVariants.length > 0 ? (getSelectedVariantId(product) ?? activeVariants[0].id) : undefined;
+        const isWishlisted = wishlistedProductIds.has(product.id);
+        const weightLabel = getWeightUnitLabel(product);
+        const titleTextClass = contentTextTone === 'light' ? 'text-white' : 'text-gray-900';
+        const descriptionTextClass = contentTextTone === 'light' ? 'text-white/85' : 'text-gray-500';
+        const weightTextClass = contentTextTone === 'light' ? 'text-white/85' : 'text-gray-500';
+
+        return (
+            <article key={keyPrefix ? `${keyPrefix}-${product.id}` : product.id} className={articleClass}>
+                <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-xs">
+                    <Link href={`/products/${product.slug}?vertical=${verticalParam}`} className="block">
+                        <img
+                            src={getSafeUrl(product.image)}
+                            alt={product.name}
+                            className="h-20 w-full rounded-lg bg-gray-50 object-cover"
+                            loading="lazy"
+                            onError={(event) => {
+                                (event.target as HTMLImageElement).src = DEFAULT_IMAGE_FALLBACK;
+                            }}
+                        />
+                    </Link>
+
+                    <button
+                        type="button"
+                        onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            toggleProductWishlist(product.id);
+                        }}
+                        aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                        className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 sm:h-8 sm:w-8"
+                    >
+                        <Heart
+                            className={`h-3.5 w-3.5 transition-all duration-200 sm:h-4 sm:w-4 ${isWishlisted ? 'scale-110 fill-red-500 text-red-500' : 'fill-white text-black'}`}
+                            strokeWidth={2}
+                        />
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => addMobileCardProductToCart(product, 1, selectedVariantId)}
+                        disabled={mobileCardAddingProductId === product.id}
+                        className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-lg border border-blue-600 bg-blue-50 text-blue-700 shadow-sm disabled:opacity-60"
+                        aria-label="Add to cart"
+                    >
+                        <Plus className="h-4 w-4" strokeWidth={2.5} />
+                    </button>
+                </div>
+
+                <div className={pinActionToBottom ? 'mt-1 flex min-h-14 flex-col justify-end' : 'mt-1'}>
+                    <div className="flex items-center gap-1">
+                        <span className="inline-flex rounded-md bg-green-600 px-1.5 py-0.5 text-[11px] leading-none font-bold text-white">
+                            {formatPrice(displayPrice)}
+                        </span>
+                        {showWeight && (
+                            <span className={`text-[10px] font-medium ${weightTextClass}`}>/ {weightLabel || getMobilePackLabel(product)}</span>
+                        )}
+                        {hasDiscount && (
+                            <span className="text-[11px] font-medium text-gray-400 line-through">
+                                {formatPrice(product.compare_at_price as number)}
+                            </span>
+                        )}
+                    </div>
+
+                    {hasDiscount && savings > 0 && <p className="mt-0.5 text-[10px] font-semibold text-green-700">₹{savings} OFF</p>}
+
+                    <Link href={`/products/${product.slug}?vertical=${verticalParam}`}>
+                        <p className={`mt-0.5 line-clamp-1 text-xs leading-tight font-semibold ${titleTextClass}`}>{product.name}</p>
+                    </Link>
+                    {showDescription && (
+                        <p className={`mt-0.5 line-clamp-1 text-[10px] ${descriptionTextClass}`}>
+                            {product.short_description || 'Fresh daily quality.'}
+                        </p>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => openMobileOptionsDrawer(product)}
+                        className={`${pinActionToBottom ? 'mt-auto' : 'mt-1'} w-full rounded-md bg-blue-100 px-2 py-1 text-[11px] font-semibold text-blue-700`}
+                    >
+                        See options
+                    </button>
+                </div>
+            </article>
+        );
+    };
+
+    const renderTopPicksDesktopProductCard = (
+        product: ProductItem,
+        verticalParam: 'daily_fresh' | 'society_fresh',
+        keyPrefix?: string,
+        articleClass = 'w-48 shrink-0 xl:w-52',
+        contentTextTone: 'default' | 'light' = 'default',
+        showDescription = true,
+        showWeight = true,
+    ) => {
+        const displayPrice = getDisplayPrice(product);
+        const hasDiscount = typeof product.compare_at_price === 'number' && product.compare_at_price > displayPrice;
+        const savings = hasDiscount ? Math.round((product.compare_at_price as number) - displayPrice) : 0;
+        const activeVariants = getActiveVariants(product);
+        const selectedVariantId = activeVariants.length > 0 ? (getSelectedVariantId(product) ?? activeVariants[0].id) : undefined;
+        const isWishlisted = wishlistedProductIds.has(product.id);
+        const weightLabel = getWeightUnitLabel(product);
+        const titleTextClass = contentTextTone === 'light' ? 'text-white' : 'text-gray-900';
+        const descriptionTextClass = contentTextTone === 'light' ? 'text-white/85' : 'text-gray-500';
+        const weightTextClass = contentTextTone === 'light' ? 'text-white/85' : 'text-gray-500';
+
+        return (
+            <article key={keyPrefix ? `${keyPrefix}-${product.id}` : product.id} className={articleClass}>
+                <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-xs">
+                    <Link href={`/products/${product.slug}?vertical=${verticalParam}`} className="block">
+                        <img
+                            src={getSafeUrl(product.image)}
+                            alt={product.name}
+                            className="aspect-square w-full rounded-lg bg-gray-50 object-cover"
+                            loading="lazy"
+                            onError={(event) => {
+                                (event.target as HTMLImageElement).src = DEFAULT_IMAGE_FALLBACK;
+                            }}
+                        />
+                    </Link>
+
+                    <button
+                        type="button"
+                        onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            toggleProductWishlist(product.id);
+                        }}
+                        aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                        className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 sm:h-8 sm:w-8"
+                    >
+                        <Heart
+                            className={`h-3.5 w-3.5 transition-all duration-200 sm:h-4 sm:w-4 ${isWishlisted ? 'scale-110 fill-red-500 text-red-500' : 'fill-white text-black'}`}
+                            strokeWidth={2}
+                        />
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => addMobileCardProductToCart(product, 1, selectedVariantId)}
+                        disabled={mobileCardAddingProductId === product.id}
+                        className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-lg border border-blue-600 bg-blue-50 text-blue-700 shadow-sm disabled:opacity-60"
+                        aria-label="Add to cart"
+                    >
+                        <Plus className="h-4 w-4" strokeWidth={2.5} />
+                    </button>
+                </div>
+
+                <div className="mt-1">
+                    <div className="flex items-center gap-1">
+                        <span className="inline-flex rounded-md bg-green-600 px-1.5 py-0.5 text-[11px] leading-none font-bold text-white">
+                            {formatPrice(displayPrice)}
+                        </span>
+                        {showWeight && (
+                            <span className={`text-[10px] font-medium ${weightTextClass}`}>/ {weightLabel || getMobilePackLabel(product)}</span>
+                        )}
+                        {hasDiscount && (
+                            <span className="text-[11px] font-medium text-gray-400 line-through">
+                                {formatPrice(product.compare_at_price as number)}
+                            </span>
+                        )}
+                    </div>
+
+                    {hasDiscount && savings > 0 && <p className="mt-0.5 text-[10px] font-semibold text-green-700">₹{savings} OFF</p>}
+
+                    <Link href={`/products/${product.slug}?vertical=${verticalParam}`}>
+                        <p className={`mt-0.5 line-clamp-1 text-xs leading-tight font-semibold ${titleTextClass}`}>{product.name}</p>
+                    </Link>
+                    {showDescription && (
+                        <p className={`mt-0.5 line-clamp-1 text-[10px] ${descriptionTextClass}`}>
+                            {product.short_description || 'Fresh daily quality.'}
+                        </p>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => openDesktopOptionsDrawer(product)}
+                        className="mt-1 w-full rounded-md bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700"
+                    >
+                        See options
+                    </button>
+                </div>
+            </article>
+        );
+    };
+
     const renderMobileCategorySection = (categoryItems: Category[], verticalParam: 'daily_fresh' | 'society_fresh') => {
         if (categoryItems.length === 0) {
             return null;
@@ -843,7 +973,7 @@ export default function Home({
                         {categoryItems.map((category) => (
                             <Link
                                 key={category.id}
-                                href={`/categories/${category.slug}?vertical=${verticalParam}`}
+                                href={`/products?vertical=${verticalParam}`}
                                 className="w-22 shrink-0 rounded-xl p-1.5 text-center"
                             >
                                 <img
@@ -883,7 +1013,7 @@ export default function Home({
                         {categoryItems.map((category) => (
                             <Link
                                 key={category.id}
-                                href={`/categories/${category.slug}?vertical=${verticalParam}`}
+                                href={`/products?vertical=${verticalParam}`}
                                 className="group w-40 shrink-0 rounded-2xl p-2 text-center transition-transform duration-200 hover:-translate-y-0.5"
                             >
                                 <img
@@ -904,7 +1034,7 @@ export default function Home({
         );
     };
 
-    const renderDesktopTopPicks = () => {
+    const renderDesktopTopPicks = (title = 'Top Picks', tagline = 'Handpicked for today') => {
         if (mobileShowcaseProducts.length === 0) {
             return null;
         }
@@ -913,99 +1043,14 @@ export default function Home({
             <section className="hidden bg-white py-6 lg:block">
                 <div className="container mx-auto px-4">
                     {renderSectionHeader(
-                        'Top Picks',
-                        'Handpicked for today',
+                        title,
+                        tagline,
                         `/products?vertical=${selectedVertical}`,
                         <Sparkles className="h-6 w-6" strokeWidth={2.2} />,
                     )}
 
                     <div className="no-scrollbar flex gap-3 overflow-x-auto pb-2">
-                        {mobileShowcaseProducts.map((product) => {
-                            const displayPrice = getDisplayPrice(product);
-                            const hasDiscount = typeof product.compare_at_price === 'number' && product.compare_at_price > displayPrice;
-                            const savings = hasDiscount ? Math.round((product.compare_at_price as number) - displayPrice) : 0;
-                            const activeVariants = getActiveVariants(product);
-                            const selectedVariantId = activeVariants.length > 0 ? (getSelectedVariantId(product) ?? activeVariants[0].id) : undefined;
-                            const isWishlisted = wishlistedProductIds.has(product.id);
-                            const weightLabel = getWeightUnitLabel(product);
-
-                            return (
-                                <article key={product.id} className="w-52 shrink-0 xl:w-56">
-                                    <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-xs">
-                                        <Link href={`/products/${product.slug}?vertical=${selectedVertical}`} className="block">
-                                            <img
-                                                src={getSafeUrl(product.image)}
-                                                alt={product.name}
-                                                className="aspect-square w-full rounded-lg bg-gray-50 object-cover"
-                                                loading="lazy"
-                                                onError={(event) => {
-                                                    (event.target as HTMLImageElement).src = DEFAULT_IMAGE_FALLBACK;
-                                                }}
-                                            />
-                                        </Link>
-
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                toggleProductWishlist(product.id);
-                                            }}
-                                            aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                                            className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 sm:h-8 sm:w-8"
-                                        >
-                                            <Heart
-                                                className={`h-3.5 w-3.5 transition-all duration-200 sm:h-4 sm:w-4 ${isWishlisted ? 'scale-110 fill-red-500 text-red-500' : 'fill-white text-black'}`}
-                                                strokeWidth={2}
-                                            />
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => addMobileCardProductToCart(product, 1, selectedVariantId)}
-                                            disabled={mobileCardAddingProductId === product.id}
-                                            className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-lg border border-blue-600 bg-blue-50 text-blue-700 shadow-sm disabled:opacity-60"
-                                            aria-label="Add to cart"
-                                        >
-                                            <Plus className="h-4 w-4" strokeWidth={2.5} />
-                                        </button>
-                                    </div>
-
-                                    <div className="mt-1">
-                                        <div className="flex items-center gap-1">
-                                            <span className="inline-flex rounded-md bg-green-600 px-1.5 py-0.5 text-[11px] leading-none font-bold text-white">
-                                                {formatPrice(displayPrice)}
-                                            </span>
-                                            {hasDiscount && (
-                                                <span className="text-[11px] font-medium text-gray-400 line-through">
-                                                    {formatPrice(product.compare_at_price as number)}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {hasDiscount && savings > 0 && (
-                                            <p className="mt-0.5 text-[10px] font-semibold text-green-700">₹{savings} OFF</p>
-                                        )}
-
-                                        <Link href={`/products/${product.slug}?vertical=${selectedVertical}`}>
-                                            <p className="mt-0.5 line-clamp-1 text-xs leading-tight font-semibold text-gray-900">{product.name}</p>
-                                        </Link>
-                                        <p className="mt-0.5 line-clamp-1 text-[10px] text-gray-500">
-                                            {product.short_description || 'Fresh daily quality.'}
-                                        </p>
-                                        <p className="mt-0.5 text-[10px] text-gray-500">{weightLabel || getMobilePackLabel(product)}</p>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => openDesktopOptionsDrawer(product)}
-                                            className="mt-1 w-full rounded-md bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700"
-                                        >
-                                            See options
-                                        </button>
-                                    </div>
-                                </article>
-                            );
-                        })}
+                        {mobileShowcaseProducts.map((product) => renderTopPicksDesktopProductCard(product, selectedVertical))}
                     </div>
                 </div>
             </section>
@@ -1157,9 +1202,8 @@ export default function Home({
                                         loading="lazy"
                                     />
 
-                                    <div className="absolute inset-0 flex flex-col justify-between p-1.5 sm:p-2.5 lg:p-3">
+                                    <div className="absolute inset-0 flex flex-col justify-center p-1.5 sm:p-2.5 lg:p-3 lg:px-6">
                                         <div>
-                                            <p className="text-[7px] font-medium tracking-wide text-white/90 sm:text-[9px]">COUPON ID</p>
                                             <p className="mt-0.5 inline-flex rounded border border-white/45 px-1 py-0.5 font-mono text-[7px] font-bold text-white sm:px-1.5 sm:text-[10px]">
                                                 {coupon.code}
                                             </p>
@@ -1188,6 +1232,20 @@ export default function Home({
         );
     };
 
+    const renderProductBannerSection = () => {
+        if (productTypeBanners.length === 0) {
+            return null;
+        }
+
+        return (
+            <section className="lg:py-6">
+                <div className="lg:container lg:mx-auto lg:px-4">
+                    <HeroBanner banners={productTypeBanners} autoPlay={true} interval={5000} variant="promo" />
+                </div>
+            </section>
+        );
+    };
+
     const renderDailyCustomerFavouritesSection = () => {
         if (selectedVertical !== 'daily_fresh' || !customerFavouritesCollection || customerFavouriteProducts.length === 0) {
             return null;
@@ -1199,189 +1257,97 @@ export default function Home({
         return (
             <section className="py-3 lg:py-6">
                 <div className="mx-auto w-full max-w-7xl px-3 lg:px-4">
-                    <div className="relative min-h-62.5 overflow-hidden rounded-2xl lg:min-h-90 lg:rounded-3xl">
-                        <img
-                            src={mobileBannerImage}
-                            alt="Customer favourites"
-                            className="absolute inset-0 h-full w-full object-cover lg:hidden"
-                            loading="lazy"
-                        />
-                        <img
-                            src={desktopBannerImage}
-                            alt="Customer favourites"
-                            className="absolute inset-0 hidden h-full w-full object-cover lg:block"
-                            loading="lazy"
-                        />
+                    <div className="relative overflow-hidden rounded-2xl lg:rounded-3xl">
+                        <img src={mobileBannerImage} alt="Customer favourites" className="block h-auto w-full lg:hidden" loading="lazy" />
+                        <img src={desktopBannerImage} alt="Customer favourites" className="hidden h-auto w-full lg:block" loading="lazy" />
                         <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-black/45 via-black/15 to-black/10 lg:from-black/10 lg:via-black/0 lg:to-black/0" />
 
-                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-3 lg:hidden">
+                        <div className="absolute inset-x-0 bottom-3 px-3 lg:hidden">
                             <div className="no-scrollbar flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
-                                {customerFavouriteProducts.map((product) => {
-                                    const displayPrice = getDisplayPrice(product);
-                                    const hasDiscount = typeof product.compare_at_price === 'number' && product.compare_at_price > displayPrice;
-                                    const activeVariants = getActiveVariants(product);
-                                    const selectedVariantId =
-                                        activeVariants.length > 0 ? (getSelectedVariantId(product) ?? activeVariants[0].id) : undefined;
-                                    const isWishlisted = wishlistedProductIds.has(product.id);
-
-                                    return (
-                                        <article
-                                            key={`cf-mobile-${product.id}`}
-                                            className="w-40 shrink-0 snap-start rounded-xl border border-white/35 bg-white/90 p-1.5 backdrop-blur-sm"
-                                        >
-                                            <div className="group relative overflow-hidden rounded-lg">
-                                                <Link href={`/products/${product.slug}?vertical=daily_fresh`} className="block">
-                                                    <img
-                                                        src={getSafeUrl(product.image)}
-                                                        alt={product.name}
-                                                        className="h-24 w-full rounded-lg bg-gray-50 object-cover"
-                                                        loading="lazy"
-                                                        onError={(event) => {
-                                                            (event.target as HTMLImageElement).src = DEFAULT_IMAGE_FALLBACK;
-                                                        }}
-                                                    />
-                                                </Link>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={(event) => {
-                                                        event.preventDefault();
-                                                        event.stopPropagation();
-                                                        toggleProductWishlist(product.id);
-                                                    }}
-                                                    aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                                                    className="absolute top-1.5 right-1.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90"
-                                                >
-                                                    <Heart
-                                                        className={`h-3.5 w-3.5 ${isWishlisted ? 'fill-red-500 text-red-500' : 'fill-white text-black'}`}
-                                                        strokeWidth={2}
-                                                    />
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => addMobileCardProductToCart(product, 1, selectedVariantId)}
-                                                    disabled={mobileCardAddingProductId === product.id}
-                                                    className="absolute right-1.5 bottom-1.5 flex h-6 w-6 items-center justify-center rounded-md border border-blue-600 bg-blue-50 text-blue-700 shadow-sm disabled:opacity-60"
-                                                    aria-label="Add to cart"
-                                                >
-                                                    <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                                </button>
-                                            </div>
-
-                                            <div className="mt-1">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="inline-flex rounded-md bg-green-600 px-1.5 py-0.5 text-[10px] leading-none font-bold text-white">
-                                                        {formatPrice(displayPrice)}
-                                                    </span>
-                                                    {hasDiscount && (
-                                                        <span className="text-[10px] font-medium text-gray-400 line-through">
-                                                            {formatPrice(product.compare_at_price as number)}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <Link href={`/products/${product.slug}?vertical=daily_fresh`}>
-                                                    <p className="mt-0.5 line-clamp-1 text-[11px] font-semibold text-gray-900">{product.name}</p>
-                                                </Link>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openMobileOptionsDrawer(product)}
-                                                    className="mt-1 w-full rounded-md bg-blue-100 px-2 py-1 text-[10px] font-semibold text-blue-700"
-                                                >
-                                                    See options
-                                                </button>
-                                            </div>
-                                        </article>
-                                    );
-                                })}
+                                {customerFavouriteProducts.map((product) =>
+                                    renderTopPicksMobileProductCard(
+                                        product,
+                                        'daily_fresh',
+                                        'cf-mobile',
+                                        'w-[calc(33.333%-6px)] min-w-24 shrink-0 snap-start',
+                                        'light',
+                                        false,
+                                        false,
+                                        true,
+                                    ),
+                                )}
                             </div>
                         </div>
 
-                        <div className="absolute inset-y-0 right-0 hidden w-[70%] items-center pr-5 lg:flex">
+                        <div className="absolute inset-y-0 right-0 hidden w-[65%] items-center pr-5 lg:flex">
                             <div className="no-scrollbar flex w-full snap-x snap-mandatory gap-3 overflow-x-auto py-3">
-                                {customerFavouriteProducts.map((product) => {
-                                    const displayPrice = getDisplayPrice(product);
-                                    const hasDiscount = typeof product.compare_at_price === 'number' && product.compare_at_price > displayPrice;
-                                    const activeVariants = getActiveVariants(product);
-                                    const selectedVariantId =
-                                        activeVariants.length > 0 ? (getSelectedVariantId(product) ?? activeVariants[0].id) : undefined;
-                                    const isWishlisted = wishlistedProductIds.has(product.id);
-
-                                    return (
-                                        <article
-                                            key={`cf-desktop-${product.id}`}
-                                            className="w-52 shrink-0 snap-start rounded-xl border border-white/35 bg-white/92 p-2 backdrop-blur-sm"
-                                        >
-                                            <div className="group relative overflow-hidden rounded-lg">
-                                                <Link href={`/products/${product.slug}?vertical=daily_fresh`} className="block">
-                                                    <img
-                                                        src={getSafeUrl(product.image)}
-                                                        alt={product.name}
-                                                        className="aspect-square w-full rounded-lg bg-gray-50 object-cover"
-                                                        loading="lazy"
-                                                        onError={(event) => {
-                                                            (event.target as HTMLImageElement).src = DEFAULT_IMAGE_FALLBACK;
-                                                        }}
-                                                    />
-                                                </Link>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={(event) => {
-                                                        event.preventDefault();
-                                                        event.stopPropagation();
-                                                        toggleProductWishlist(product.id);
-                                                    }}
-                                                    aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                                                    className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/95"
-                                                >
-                                                    <Heart
-                                                        className={`h-3.5 w-3.5 ${isWishlisted ? 'fill-red-500 text-red-500' : 'fill-white text-black'}`}
-                                                        strokeWidth={2}
-                                                    />
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => addMobileCardProductToCart(product, 1, selectedVariantId)}
-                                                    disabled={mobileCardAddingProductId === product.id}
-                                                    className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-md border border-blue-600 bg-blue-50 text-blue-700 shadow-sm disabled:opacity-60"
-                                                    aria-label="Add to cart"
-                                                >
-                                                    <Plus className="h-4 w-4" strokeWidth={2.5} />
-                                                </button>
-                                            </div>
-
-                                            <div className="mt-1.5">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="inline-flex rounded-md bg-green-600 px-1.5 py-0.5 text-[11px] leading-none font-bold text-white">
-                                                        {formatPrice(displayPrice)}
-                                                    </span>
-                                                    {hasDiscount && (
-                                                        <span className="text-[11px] font-medium text-gray-400 line-through">
-                                                            {formatPrice(product.compare_at_price as number)}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <Link href={`/products/${product.slug}?vertical=daily_fresh`}>
-                                                    <p className="mt-0.5 line-clamp-1 text-xs font-semibold text-gray-900">{product.name}</p>
-                                                </Link>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openDesktopOptionsDrawer(product)}
-                                                    className="mt-1 w-full rounded-md bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700"
-                                                >
-                                                    See options
-                                                </button>
-                                            </div>
-                                        </article>
-                                    );
-                                })}
+                                {customerFavouriteProducts.map((product) =>
+                                    renderTopPicksDesktopProductCard(
+                                        product,
+                                        'daily_fresh',
+                                        'cf-desktop',
+                                        'w-40 shrink-0 snap-start xl:w-44',
+                                        'light',
+                                        false,
+                                        false,
+                                    ),
+                                )}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+    };
+
+    const renderExclusiveCollectionsGridSection = () => {
+        return (
+            <section className="py-3 lg:py-6">
+                <div className="container mx-auto px-3 lg:px-4">
+                    {renderSectionHeader(
+                        'Exclusive Collections',
+                        'Shop by curated collection banners',
+                        null,
+                        <Package className="h-6 w-6" strokeWidth={2.2} />,
+                    )}
+
+                    <div className="space-y-2.5 lg:space-y-3">
+                        <div className="grid grid-cols-2 gap-2.5 lg:gap-3">
+                            {EXCLUSIVE_COLLECTION_BANNERS.slice(0, 2).map((bannerUrl, index) => (
+                                <article
+                                    key={`exclusive-collection-top-${index}`}
+                                    className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs"
+                                >
+                                    <img
+                                        src={bannerUrl}
+                                        alt={`Exclusive collection ${index + 1}`}
+                                        className="h-30 w-full object-cover sm:h-36 lg:h-56"
+                                        loading="lazy"
+                                        onError={(event) => {
+                                            (event.target as HTMLImageElement).src = DEFAULT_IMAGE_FALLBACK;
+                                        }}
+                                    />
+                                </article>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2.5 lg:gap-3">
+                            {EXCLUSIVE_COLLECTION_BANNERS.slice(2, 5).map((bannerUrl, index) => (
+                                <article
+                                    key={`exclusive-collection-bottom-${index}`}
+                                    className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs"
+                                >
+                                    <img
+                                        src={bannerUrl}
+                                        alt={`Exclusive collection ${index + 3}`}
+                                        className="h-24 w-full object-cover sm:h-30 lg:h-44"
+                                        loading="lazy"
+                                        onError={(event) => {
+                                            (event.target as HTMLImageElement).src = DEFAULT_IMAGE_FALLBACK;
+                                        }}
+                                    />
+                                </article>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -1548,9 +1514,21 @@ export default function Home({
 
                 {renderCouponOffersSection()}
 
+                {renderDailyBestSellersSection()}
+
                 {renderDailyCustomerFavouritesSection()}
 
-                {renderDailyBestSellersSection()}
+                {renderDesktopTopPicks('Fresh Essentials', 'Daily kitchen staples')}
+
+                {renderDesktopTopPicks('Trending Dairy', 'Most loved today')}
+
+                {renderMobilePostBannerCards('Fresh Essentials', 'Daily kitchen staples')}
+
+                {renderMobilePostBannerCards('Trending Dairy', 'Most loved today')}
+
+                {renderProductBannerSection()}
+
+                {renderExclusiveCollectionsGridSection()}
 
                 {renderDesktopOptionsDrawer()}
 
@@ -1576,7 +1554,7 @@ export default function Home({
 
             {renderPromotionalBannerSection()}
 
-            {renderCouponOffersSection()}
+            {renderProductBannerSection()}
 
             <SocietyHomeSections>
                 <SocietySubscriptionStepsSection />

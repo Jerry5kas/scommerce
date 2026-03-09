@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\BusinessVertical;
 use App\Models\Banner;
+use App\Support\VerticalContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,11 +17,7 @@ class BannerController extends Controller
     {
         $type = $request->get('type', Banner::TYPE_HOME);
         $zoneId = $request->get('zone_id');
-        $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
-
-        if (! in_array($vertical, BusinessVertical::values(), true)) {
-            $vertical = BusinessVertical::DailyFresh->value;
-        }
+        $vertical = VerticalContext::current($request, BusinessVertical::DailyFresh->value);
 
         $banners = Banner::current()
             ->byType($type)

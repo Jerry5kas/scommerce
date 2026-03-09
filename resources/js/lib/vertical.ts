@@ -10,8 +10,13 @@ export const normalizeVertical = (value: string | null | undefined): StrictVerti
     return DEFAULT_VERTICAL;
 };
 
-export const getVerticalFromQuery = (queryString: string): StrictVertical => {
+export const getVerticalFromQuery = (queryString: string, fallback: StrictVertical = DEFAULT_VERTICAL): StrictVertical => {
     const queryParams = new URLSearchParams(queryString);
+    const queryVertical = queryParams.get('vertical');
 
-    return normalizeVertical(queryParams.get('vertical'));
+    if (queryVertical === null || queryVertical.trim() === '') {
+        return normalizeVertical(fallback);
+    }
+
+    return normalizeVertical(queryVertical);
 };

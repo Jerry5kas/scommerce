@@ -20,6 +20,18 @@ Schedule::command('subscriptions:generate-orders')
     ->withoutOverlapping()
     ->onOneServer();
 
+Schedule::command('subscriptions:process-payments')
+    ->dailyAt('06:30')
+    ->name('subscriptions:process-payments')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+Schedule::command('subscriptions:process-payments --retry-only')
+    ->hourly()
+    ->name('subscriptions:process-payments-retry')
+    ->withoutOverlapping()
+    ->onOneServer();
+
 // Update next delivery dates - runs daily at 5 AM (before order generation)
 Schedule::command('subscriptions:update-next-delivery')
     ->dailyAt('05:00')

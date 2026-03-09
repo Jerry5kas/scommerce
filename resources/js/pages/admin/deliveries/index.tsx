@@ -1,15 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Calendar,
-    Eye,
-    Filter,
-    MapPin,
-    Package,
-    Search,
-    Truck,
-    User,
-    AlertCircle,
-} from 'lucide-react';
+import { Calendar, Eye, Filter, MapPin, Package, Search, Truck, User, AlertCircle, Repeat } from 'lucide-react';
 import { useState } from 'react';
 import AdminLayout from '@/layouts/AdminLayout';
 
@@ -35,6 +25,9 @@ interface Delivery {
         id: number;
         order_number: string;
         total: string;
+        type: string;
+        vertical: string;
+        subscription_id: number | null;
     };
     driver: Driver | null;
     user: {
@@ -66,10 +59,18 @@ interface Props {
         search?: string;
         unassigned?: string;
         needs_verification?: string;
+        subscription_only?: string;
     };
     drivers: Driver[];
     zones: Zone[];
     statusOptions: Record<string, string>;
+    subscriptionMetrics: {
+        total: number;
+        pending_assignment: number;
+        out_for_delivery: number;
+        needs_verification: number;
+        due_today: number;
+    };
 }
 
 const statusColors: Record<string, string> = {
@@ -81,22 +82,12 @@ const statusColors: Record<string, string> = {
     cancelled: 'bg-gray-200 text-gray-600',
 };
 
-export default function DeliveriesIndex({
-    deliveries,
-    filters,
-    drivers,
-    zones,
-    statusOptions,
-}: Props) {
+export default function DeliveriesIndex({ deliveries, filters, drivers, zones, statusOptions, subscriptionMetrics }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [showFilters, setShowFilters] = useState(false);
 
     const handleFilter = (key: string, value: string) => {
-        router.get(
-            '/admin/deliveries',
-            { ...filters, [key]: value || undefined, page: 1 },
-            { preserveState: true }
-        );
+        router.get('/admin/deliveries', { ...filters, [key]: value || undefined, page: 1 }, { preserveState: true });
     };
 
     const handleSearch = (e: React.FormEvent) => {
@@ -108,6 +99,31 @@ export default function DeliveriesIndex({
         router.get('/admin/deliveries', {}, { preserveState: true });
     };
 
+    const handleAutoAssignSubscriptionDueToday = () => {
+        router.post(
+            '/admin/deliveries/auto-assign',
+            {
+                date: new Date().toISOString().split('T')[0],
+                subscription_only: true,
+            },
+            {
+                preserveScroll: true,
+            },
+        );
+    };
+
+    const handleAutoAssignAllDueToday = () => {
+        router.post(
+            '/admin/deliveries/auto-assign',
+            {
+                date: new Date().toISOString().split('T')[0],
+            },
+            {
+                preserveScroll: true,
+            },
+        );
+    };
+
     const hasActiveFilters =
         filters.status ||
         filters.date ||
@@ -115,7 +131,8 @@ export default function DeliveriesIndex({
         filters.zone_id ||
         filters.search ||
         filters.unassigned ||
-        filters.needs_verification;
+        filters.needs_verification ||
+        filters.subscription_only;
 
     return (
         <AdminLayout>
@@ -126,9 +143,7 @@ export default function DeliveriesIndex({
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Deliveries</h1>
-                        <p className="mt-1 text-sm text-gray-500">
-                            {deliveries.total} total deliveries
-                        </p>
+                        <p className="mt-1 text-sm text-gray-500">{deliveries.total} total deliveries</p>
                     </div>
 
                     <div className="flex gap-2">
@@ -147,26 +162,28 @@ export default function DeliveriesIndex({
                     <button
                         onClick={() => handleFilter('unassigned', filters.unassigned ? '' : 'true')}
                         className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                            filters.unassigned
-                                ? 'bg-orange-100 text-orange-700'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            filters.unassigned ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                     >
                         <Truck className="mr-1 inline h-3.5 w-3.5" />
                         Unassigned
                     </button>
                     <button
-                        onClick={() =>
-                            handleFilter('needs_verification', filters.needs_verification ? '' : 'true')
-                        }
+                        onClick={() => handleFilter('needs_verification', filters.needs_verification ? '' : 'true')}
                         className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                            filters.needs_verification
-                                ? 'bg-purple-100 text-purple-700'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            filters.needs_verification ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                     >
                         <AlertCircle className="mr-1 inline h-3.5 w-3.5" />
                         Needs Verification
+                    </button>
+                    <button
+                        onClick={() => handleFilter('subscription_only', filters.subscription_only ? '' : 'true')}
+                        className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                            filters.subscription_only ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                    >
+                        Subscription Only
                     </button>
                     <button
                         onClick={() => handleFilter('date', new Date().toISOString().split('T')[0])}
@@ -180,19 +197,70 @@ export default function DeliveriesIndex({
                     </button>
                 </div>
 
+                {/* Subscription Ops Summary */}
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                    <div className="rounded-xl border border-purple-100 bg-purple-50 p-3">
+                        <p className="text-xs font-medium tracking-wide text-purple-700 uppercase">Subscription Total</p>
+                        <p className="mt-1 text-2xl font-bold text-purple-900">{subscriptionMetrics.total}</p>
+                    </div>
+                    <div className="rounded-xl border border-orange-100 bg-orange-50 p-3">
+                        <p className="text-xs font-medium tracking-wide text-orange-700 uppercase">Pending Assignment</p>
+                        <p className="mt-1 text-2xl font-bold text-orange-900">{subscriptionMetrics.pending_assignment}</p>
+                    </div>
+                    <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3">
+                        <p className="text-xs font-medium tracking-wide text-emerald-700 uppercase">Due Today</p>
+                        <p className="mt-1 text-2xl font-bold text-emerald-900">{subscriptionMetrics.due_today}</p>
+                    </div>
+                    <div className="rounded-xl border border-yellow-100 bg-yellow-50 p-3">
+                        <p className="text-xs font-medium tracking-wide text-yellow-700 uppercase">Out For Delivery</p>
+                        <p className="mt-1 text-2xl font-bold text-yellow-900">{subscriptionMetrics.out_for_delivery}</p>
+                    </div>
+                    <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3">
+                        <p className="text-xs font-medium tracking-wide text-indigo-700 uppercase">Proof Pending</p>
+                        <p className="mt-1 text-2xl font-bold text-indigo-900">{subscriptionMetrics.needs_verification}</p>
+                        <p className="mt-1 text-[11px] text-indigo-700">Dispatch actions for today&apos;s delivery run</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={handleAutoAssignSubscriptionDueToday}
+                                title="Assign only pending subscription deliveries scheduled for today"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
+                            >
+                                <Repeat className="h-3.5 w-3.5" />
+                                Auto-assign recurring only
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleAutoAssignAllDueToday}
+                                title="Assign all pending deliveries scheduled for today"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-300 bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                            >
+                                <Truck className="h-3.5 w-3.5" />
+                                Auto-assign all due today
+                            </button>
+                        </div>
+                        <Link
+                            href="/admin/subscriptions/upcoming-deliveries"
+                            className="mt-2 inline-block text-xs font-semibold text-indigo-700 hover:text-indigo-900"
+                        >
+                            View upcoming schedule
+                        </Link>
+                    </div>
+                </div>
+
                 {/* Search and Filters */}
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                         {/* Search */}
                         <form onSubmit={handleSearch} className="flex-1">
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="text"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Search order number, customer..."
-                                    className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                                 />
                             </div>
                         </form>
@@ -219,13 +287,11 @@ export default function DeliveriesIndex({
                     {showFilters && (
                         <div className="mt-4 grid gap-4 border-t pt-4 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-700">
-                                    Status
-                                </label>
+                                <label className="mb-1 block text-xs font-medium text-gray-700">Status</label>
                                 <select
                                     value={filters.status || ''}
                                     onChange={(e) => handleFilter('status', e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                                 >
                                     <option value="">All Statuses</option>
                                     {Object.entries(statusOptions).map(([value, label]) => (
@@ -237,25 +303,21 @@ export default function DeliveriesIndex({
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-700">
-                                    Date
-                                </label>
+                                <label className="mb-1 block text-xs font-medium text-gray-700">Date</label>
                                 <input
                                     type="date"
                                     value={filters.date || ''}
                                     onChange={(e) => handleFilter('date', e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                                 />
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-700">
-                                    Driver
-                                </label>
+                                <label className="mb-1 block text-xs font-medium text-gray-700">Driver</label>
                                 <select
                                     value={filters.driver_id || ''}
                                     onChange={(e) => handleFilter('driver_id', e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                                 >
                                     <option value="">All Drivers</option>
                                     {drivers.map((driver) => (
@@ -267,13 +329,11 @@ export default function DeliveriesIndex({
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-gray-700">
-                                    Zone
-                                </label>
+                                <label className="mb-1 block text-xs font-medium text-gray-700">Zone</label>
                                 <select
                                     value={filters.zone_id || ''}
                                     onChange={(e) => handleFilter('zone_id', e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
                                 >
                                     <option value="">All Zones</option>
                                     {zones.map((zone) => (
@@ -286,10 +346,7 @@ export default function DeliveriesIndex({
 
                             {hasActiveFilters && (
                                 <div className="flex items-end sm:col-span-2 lg:col-span-4">
-                                    <button
-                                        onClick={clearFilters}
-                                        className="text-sm text-gray-500 hover:text-gray-700"
-                                    >
+                                    <button onClick={clearFilters} className="text-sm text-gray-500 hover:text-gray-700">
                                         Clear all filters
                                     </button>
                                 </div>
@@ -304,30 +361,14 @@ export default function DeliveriesIndex({
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Order
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Customer
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Scheduled
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Driver
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Zone
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Status
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Proof
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                                        Actions
-                                    </th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Order</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Customer</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Scheduled</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Driver</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Zone</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Status</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">Proof</th>
+                                    <th className="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 bg-white">
@@ -335,88 +376,77 @@ export default function DeliveriesIndex({
                                     <tr>
                                         <td colSpan={8} className="px-4 py-12 text-center">
                                             <Package className="mx-auto h-12 w-12 text-gray-300" />
-                                            <p className="mt-2 text-sm text-gray-500">
-                                                No deliveries found
-                                            </p>
+                                            <p className="mt-2 text-sm text-gray-500">No deliveries found</p>
                                         </td>
                                     </tr>
                                 ) : (
                                     deliveries.data.map((delivery) => (
                                         <tr key={delivery.id} className="hover:bg-gray-50">
-                                            <td className="whitespace-nowrap px-4 py-3">
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 <Link
                                                     href={`/admin/orders/${delivery.order.id}`}
                                                     className="font-medium text-emerald-600 hover:text-emerald-700"
                                                 >
                                                     {delivery.order.order_number}
                                                 </Link>
-                                                <p className="text-xs text-gray-500">
-                                                    ₹{delivery.order.total}
-                                                </p>
+                                                {delivery.order.type === 'subscription' && (
+                                                    <p className="mt-1 text-xs font-medium text-purple-700">
+                                                        Subscription #{delivery.order.subscription_id}
+                                                    </p>
+                                                )}
+                                                <p className="text-xs text-gray-500">₹{delivery.order.total}</p>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2">
                                                     <User className="h-4 w-4 text-gray-400" />
                                                     <div className="min-w-0">
-                                                        <p className="truncate text-sm font-medium text-gray-900">
-                                                            {delivery.user.name}
-                                                        </p>
-                                                        <p className="truncate text-xs text-gray-500">
-                                                            {delivery.address.address_line}
-                                                        </p>
+                                                        <p className="truncate text-sm font-medium text-gray-900">{delivery.user.name}</p>
+                                                        <p className="truncate text-xs text-gray-500">{delivery.address.address_line}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                                            <td className="px-4 py-3 text-sm whitespace-nowrap text-gray-500">
                                                 <div className="flex items-center gap-1">
                                                     <Calendar className="h-3.5 w-3.5" />
                                                     {new Date(delivery.scheduled_date).toLocaleDateString()}
                                                 </div>
-                                                {delivery.time_slot && (
-                                                    <p className="text-xs">{delivery.time_slot}</p>
-                                                )}
+                                                {delivery.time_slot && <p className="text-xs">{delivery.time_slot}</p>}
                                             </td>
-                                            <td className="whitespace-nowrap px-4 py-3">
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 {delivery.driver ? (
                                                     <div className="flex items-center gap-1.5">
                                                         <Truck className="h-3.5 w-3.5 text-gray-400" />
-                                                        <span className="text-sm">
-                                                            {delivery.driver.name}
-                                                        </span>
+                                                        <span className="text-sm">{delivery.driver.name}</span>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-xs text-orange-600">
-                                                        Not assigned
-                                                    </span>
+                                                    <span className="text-xs text-orange-600">Not assigned</span>
                                                 )}
                                             </td>
-                                            <td className="whitespace-nowrap px-4 py-3">
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 <div className="flex items-center gap-1.5">
                                                     <MapPin className="h-3.5 w-3.5 text-gray-400" />
                                                     <span className="text-sm">{delivery.zone.name}</span>
                                                 </div>
                                             </td>
-                                            <td className="whitespace-nowrap px-4 py-3">
+                                            <td className="px-4 py-3 whitespace-nowrap">
                                                 <span
                                                     className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${statusColors[delivery.status] || 'bg-gray-100 text-gray-700'}`}
                                                 >
                                                     {statusOptions[delivery.status] || delivery.status}
                                                 </span>
                                             </td>
-                                            <td className="whitespace-nowrap px-4 py-3 text-center">
+                                            <td className="px-4 py-3 text-center whitespace-nowrap">
                                                 {delivery.delivery_proof_image ? (
                                                     delivery.delivery_proof_verified ? (
                                                         <span className="text-xs text-green-600">✓ Verified</span>
                                                     ) : (
-                                                        <span className="text-xs text-yellow-600">
-                                                            Pending
-                                                        </span>
+                                                        <span className="text-xs text-yellow-600">Pending</span>
                                                     )
                                                 ) : (
                                                     <span className="text-xs text-gray-400">—</span>
                                                 )}
                                             </td>
-                                            <td className="whitespace-nowrap px-4 py-3 text-right">
+                                            <td className="px-4 py-3 text-right whitespace-nowrap">
                                                 <Link
                                                     href={`/admin/deliveries/${delivery.id}`}
                                                     className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
@@ -461,4 +491,3 @@ export default function DeliveriesIndex({
         </AdminLayout>
     );
 }
-

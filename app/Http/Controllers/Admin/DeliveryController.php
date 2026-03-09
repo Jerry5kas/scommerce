@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateDeliveryStatusRequest;
 use App\Http\Requests\VerifyProofRequest;
 use App\Models\Delivery;
 use App\Models\Driver;
+use App\Models\Order;
 use App\Models\Zone;
 use App\Services\DeliveryProofService;
 use App\Services\DeliveryStatusService;
@@ -69,17 +70,45 @@ class DeliveryController extends Controller
             $query->needsProofVerification();
         }
 
+        if ($request->filled('subscription_only') && $request->subscription_only === 'true') {
+            $query->whereHas('order', fn ($orderQuery) => $orderQuery->where('type', Order::TYPE_SUBSCRIPTION));
+        }
+
         $deliveries = $query->latest('scheduled_date')
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
 
+        $subscriptionMetricsQuery = Delivery::query()
+            ->whereHas('order', fn ($orderQuery) => $orderQuery->where('type', Order::TYPE_SUBSCRIPTION));
+
+        if ($request->filled('date')) {
+            $subscriptionMetricsQuery->whereDate('scheduled_date', $request->date);
+        }
+
+        if ($request->filled('zone_id')) {
+            $subscriptionMetricsQuery->where('zone_id', $request->zone_id);
+        }
+
+        if ($request->filled('driver_id')) {
+            $subscriptionMetricsQuery->where('driver_id', $request->driver_id);
+        }
+
+        $subscriptionMetrics = [
+            'total' => (clone $subscriptionMetricsQuery)->count(),
+            'pending_assignment' => (clone $subscriptionMetricsQuery)->whereNull('driver_id')->count(),
+            'out_for_delivery' => (clone $subscriptionMetricsQuery)->where('status', Delivery::STATUS_OUT_FOR_DELIVERY)->count(),
+            'needs_verification' => (clone $subscriptionMetricsQuery)->needsProofVerification()->count(),
+            'due_today' => (clone $subscriptionMetricsQuery)->whereDate('scheduled_date', today())->count(),
+        ];
+
         return Inertia::render('admin/deliveries/index', [
             'deliveries' => $deliveries,
-            'filters' => $request->only(['status', 'date', 'driver_id', 'zone_id', 'search', 'unassigned', 'needs_verification']),
+            'filters' => $request->only(['status', 'date', 'driver_id', 'zone_id', 'search', 'unassigned', 'needs_verification', 'subscription_only']),
             'drivers' => Driver::where('is_active', true)->select('id', 'name')->get(),
             'zones' => Zone::where('is_active', true)->select('id', 'name')->get(),
             'statusOptions' => Delivery::statusOptions(),
+            'subscriptionMetrics' => $subscriptionMetrics,
         ]);
     }
 
@@ -218,14 +247,19 @@ class DeliveryController extends Controller
     {
         $date = $request->get('date', now()->toDateString());
         $zoneId = $request->get('zone_id');
+        $subscriptionOnly = $request->boolean('subscription_only', false);
 
-        $result = $this->routeService->autoAssignDeliveries($date, $zoneId);
+        $result = $this->routeService->autoAssignDeliveries($date, $zoneId, $subscriptionOnly);
 
         if (! $result['success']) {
             return back()->with('error', $result['error'] ?? 'Auto-assign failed.');
         }
 
-        return back()->with('success', "{$result['assigned']} deliveries assigned.");
+        $successMessage = $subscriptionOnly
+            ? "{$result['assigned']} subscription deliveries assigned for the selected date."
+            : "{$result['assigned']} deliveries assigned for the selected date.";
+
+        return back()->with('success', $successMessage);
     }
 
     /**

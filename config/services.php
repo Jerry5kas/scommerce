@@ -47,9 +47,18 @@ return [
         'id' => env('GOOGLE_ADS_ID'),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
     'sms' => [
         'driver' => env('SMS_DRIVER', 'log'),
         'msg91_key' => env('MSG91_AUTH_KEY'),
+        'msg91_template_id' => env('MSG91_TEMPLATE_ID'),
+        'msg91_base_url' => env('MSG91_BASE_URL', 'https://control.msg91.com/api/v5'),
+        'msg91_country_code' => env('MSG91_COUNTRY_CODE', '91'),
         'twilio_sid' => env('TWILIO_SID'),
         'twilio_token' => env('TWILIO_AUTH_TOKEN'),
     ],

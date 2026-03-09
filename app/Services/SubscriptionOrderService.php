@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use App\Models\Subscription;
+use App\Models\SubscriptionPlan;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +13,9 @@ use Illuminate\Support\Facades\Log;
 class SubscriptionOrderService
 {
     public function __construct(
-        private SubscriptionScheduleService $scheduleService
+        private SubscriptionScheduleService $scheduleService,
+        private CheckoutService $checkoutService,
+        private SubscriptionPaymentService $subscriptionPaymentService
     ) {}
 
     /**
@@ -29,10 +33,17 @@ class SubscriptionOrderService
             ];
         }
 
-        // Check for existing order (prevent duplicates)
-        // Note: Order model will be created in Phase 6. For now, we'll return a placeholder.
-        // In production, we would check: Order::where('subscription_id', $subscription->id)
-        //     ->whereDate('delivery_date', $deliveryDate)->exists()
+        $alreadyExists = Order::query()
+            ->where('subscription_id', $subscription->id)
+            ->whereDate('scheduled_delivery_date', $deliveryDate)
+            ->exists();
+
+        if ($alreadyExists) {
+            return [
+                'success' => false,
+                'message' => 'Order already exists for this subscription and date.',
+            ];
+        }
 
         try {
             return DB::transaction(function () use ($subscription, $deliveryDate) {
@@ -46,26 +57,9 @@ class SubscriptionOrderService
                     ];
                 }
 
-                // Calculate order total
-                $total = $items->sum(fn ($item) => $item->getLineTotal());
+                $order = $this->checkoutService->createOrderFromSubscription($subscription, $deliveryDate);
 
-                // Apply plan discount if any
-                $plan = $subscription->plan;
-                $discount = 0;
-                if ($plan && $plan->discount_percent > 0) {
-                    $discount = $total * ($plan->discount_percent / 100);
-                    $total -= $discount;
-                }
-
-                // Order creation will be implemented in Phase 6
-                // For now, we log and update subscription
-                Log::info('Subscription order generated', [
-                    'subscription_id' => $subscription->id,
-                    'delivery_date' => $deliveryDate->format('Y-m-d'),
-                    'items_count' => $items->count(),
-                    'total' => $total,
-                    'discount' => $discount,
-                ]);
+                $paymentResult = $this->subscriptionPaymentService->attemptChargeForOrder($order);
 
                 // Update next delivery date
                 $subscription->next_delivery_date = $this->scheduleService->calculateNextDeliveryDate(
@@ -74,12 +68,21 @@ class SubscriptionOrderService
                 );
                 $subscription->save();
 
+                Log::info('Subscription order generated', [
+                    'subscription_id' => $subscription->id,
+                    'order_id' => $order->id,
+                    'delivery_date' => $deliveryDate->format('Y-m-d'),
+                ]);
+
                 return [
                     'success' => true,
                     'message' => 'Order generated successfully.',
-                    'total' => $total,
+                    'order_id' => $order->id,
+                    'total' => (float) $order->total,
                     'items_count' => $items->count(),
                     'next_delivery_date' => $subscription->next_delivery_date->format('Y-m-d'),
+                    'payment_status' => $order->fresh()->payment_status,
+                    'payment_attempt_status' => $paymentResult['status'] ?? null,
                 ];
             });
         } catch (\Exception $e) {
@@ -193,8 +196,14 @@ class SubscriptionOrderService
             $total = $items->sum(fn ($item) => $item->getLineTotal());
 
             $plan = $subscription->plan;
-            if ($plan && $plan->discount_percent > 0) {
-                $total -= $total * ($plan->discount_percent / 100);
+            if ($plan) {
+                if ($plan->discount_type === SubscriptionPlan::DISCOUNT_PERCENTAGE && (float) $plan->discount_value > 0) {
+                    $total -= $total * (((float) $plan->discount_value) / 100);
+                }
+
+                if ($plan->discount_type === SubscriptionPlan::DISCOUNT_FLAT && (float) $plan->discount_value > 0) {
+                    $total -= min($total, (float) $plan->discount_value);
+                }
             }
 
             return [

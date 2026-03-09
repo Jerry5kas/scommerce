@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Services\CatalogService;
 use App\Services\FreeSampleService;
 use App\Services\LocationService;
+use App\Support\VerticalContext;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,12 +24,7 @@ class CatalogController extends Controller
      */
     public function index(Request $request): Response|\Illuminate\Http\RedirectResponse
     {
-        $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
-
-        // Validate vertical
-        if (! in_array($vertical, array_merge(BusinessVertical::values(), ['both']), true)) {
-            $vertical = BusinessVertical::DailyFresh->value;
-        }
+        $vertical = VerticalContext::current($request, BusinessVertical::DailyFresh->value);
 
         $zone = $this->getUserZone($request);
         if ($zone === null) {
@@ -62,10 +58,7 @@ class CatalogController extends Controller
      */
     public function showCategory(Request $request, Category $category): Response|\Illuminate\Http\RedirectResponse
     {
-        $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
-        if (! in_array($vertical, array_merge(BusinessVertical::values(), ['both']), true)) {
-            $vertical = BusinessVertical::DailyFresh->value;
-        }
+        $vertical = VerticalContext::current($request, BusinessVertical::DailyFresh->value);
 
         $zone = $this->getUserZone($request);
         if ($zone === null) {
@@ -104,10 +97,7 @@ class CatalogController extends Controller
      */
     public function showCollection(Request $request, Collection $collection): Response|\Illuminate\Http\RedirectResponse
     {
-        $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
-        if (! in_array($vertical, array_merge(BusinessVertical::values(), ['both']), true)) {
-            $vertical = BusinessVertical::DailyFresh->value;
-        }
+        $vertical = VerticalContext::current($request, BusinessVertical::DailyFresh->value);
 
         $zone = $this->getUserZone($request);
         if ($zone === null) {
@@ -150,9 +140,15 @@ class CatalogController extends Controller
             $requestedVertical = '';
         }
 
+        if ($requestedVertical !== '') {
+            $request->session()->put('vertical', $requestedVertical);
+        }
+
         $vertical = $requestedVertical !== ''
             ? $requestedVertical
-            : ($product->vertical === Product::VERTICAL_BOTH ? BusinessVertical::DailyFresh->value : $product->vertical);
+            : ($product->vertical === Product::VERTICAL_BOTH
+                ? VerticalContext::current($request, BusinessVertical::DailyFresh->value)
+                : $product->vertical);
 
         $zone = $this->getUserZone($request);
         if ($zone === null) {
@@ -218,10 +214,7 @@ class CatalogController extends Controller
     public function search(Request $request): Response|\Illuminate\Http\RedirectResponse
     {
         $query = $request->string('q', '')->toString();
-        $vertical = $request->string('vertical', BusinessVertical::DailyFresh->value)->toString();
-        if (! in_array($vertical, array_merge(BusinessVertical::values(), ['both']), true)) {
-            $vertical = BusinessVertical::DailyFresh->value;
-        }
+        $vertical = VerticalContext::current($request, BusinessVertical::DailyFresh->value);
 
         $zone = $this->getUserZone($request);
         if ($zone === null) {

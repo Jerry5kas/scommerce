@@ -2,11 +2,20 @@
 
 namespace App\Providers;
 
+use App\Models\Banner;
+use App\Models\Category;
+use App\Models\Collection;
+use App\Models\Coupon;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\SubscriptionPlan;
+use App\Observers\HomePayloadCacheObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,7 +32,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->environment('local')) {
+        URL::forceScheme('https');
+        }
         $this->configureDefaults();
+        $this->registerObservers();
     }
 
     protected function configureDefaults(): void
@@ -43,5 +56,16 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null
         );
+    }
+
+    protected function registerObservers(): void
+    {
+        Banner::observe(HomePayloadCacheObserver::class);
+        Category::observe(HomePayloadCacheObserver::class);
+        Collection::observe(HomePayloadCacheObserver::class);
+        Coupon::observe(HomePayloadCacheObserver::class);
+        Product::observe(HomePayloadCacheObserver::class);
+        ProductVariant::observe(HomePayloadCacheObserver::class);
+        SubscriptionPlan::observe(HomePayloadCacheObserver::class);
     }
 }

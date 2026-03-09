@@ -2,10 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\BusinessVertical;
 use App\Models\Cart;
 use App\Models\ThemeSetting;
 use App\Models\User;
 use App\Models\UserAddress;
+use App\Support\VerticalContext;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,6 +41,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $currentVertical = VerticalContext::current($request, BusinessVertical::DailyFresh->value);
+
         $customer = $request->user();
         if (! $customer instanceof User) {
             $customer = null;
@@ -132,6 +136,7 @@ class HandleInertiaRequests extends Middleware
             // zone is null when user is unauthenticated or has no default address
             'zone' => $zone,
             'location' => $location,
+            'currentVertical' => $currentVertical,
             'googleMapsApiKey' => config('maps.google.api_key'),
         ];
     }

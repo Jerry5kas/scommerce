@@ -224,6 +224,10 @@ class DeliveryController extends Controller
                 'id' => $delivery->id,
                 'sequence' => $delivery->sequence,
                 'status' => $delivery->status,
+                'order_type' => $delivery->order->type,
+                'vertical' => $delivery->order->vertical,
+                'subscription_id' => $delivery->order->subscription_id,
+                'is_subscription' => $delivery->order->isSubscriptionOrder(),
                 'address' => [
                     'full_address' => $delivery->address->full_address ?? $delivery->address->address_line,
                     'latitude' => $delivery->address->latitude,
@@ -297,6 +301,10 @@ class DeliveryController extends Controller
         $data = [
             'id' => $delivery->id,
             'order_number' => $delivery->order->order_number,
+            'order_type' => $delivery->order->type,
+            'vertical' => $delivery->order->vertical,
+            'subscription_id' => $delivery->order->subscription_id,
+            'is_subscription' => $delivery->order->isSubscriptionOrder(),
             'status' => $delivery->status,
             'status_label' => $delivery->getStatusLabel(),
             'scheduled_date' => $delivery->scheduled_date->toDateString(),
@@ -323,6 +331,9 @@ class DeliveryController extends Controller
             $data['order'] = [
                 'id' => $delivery->order->id,
                 'total' => $delivery->order->total,
+                'type' => $delivery->order->type,
+                'vertical' => $delivery->order->vertical,
+                'subscription_id' => $delivery->order->subscription_id,
                 'payment_method' => $delivery->order->payment_method,
                 'payment_status' => $delivery->order->payment_status,
                 'items_count' => $delivery->order->items->count(),

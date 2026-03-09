@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AddToCartRequest;
+use App\Http\Requests\AddToTomorrowDeliveryRequest;
 use App\Http\Requests\UpdateCartItemRequest;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\SubscriptionPlan;
 use App\Services\CartService;
+use App\Services\CheckoutService;
 use App\Services\CouponService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +22,8 @@ class CartController extends Controller
 {
     public function __construct(
         private CartService $cartService,
-        private CouponService $couponService
+        private CouponService $couponService,
+        private CheckoutService $checkoutService
     ) {}
 
     /**
@@ -229,6 +232,83 @@ class CartController extends Controller
             'message' => 'Cart cleared.',
             'summary' => $this->cartService->getCartSummary($cart),
         ]);
+    }
+
+    /**
+     * Add current cart items to the next available delivery run.
+     */
+    public function addToTomorrowDelivery(AddToTomorrowDeliveryRequest $request): JsonResponse|RedirectResponse
+    {
+        $user = $request->user();
+        $sessionId = $request->session()->getId();
+        $cart = $this->cartService->getOrCreateCart($user, $sessionId);
+
+        if ($cart->isEmpty()) {
+            if ($this->shouldReturnJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Your cart is empty.',
+                ], 422);
+            }
+
+            return back()->with('error', 'Your cart is empty.');
+        }
+
+        $validated = $request->validated();
+
+        $address = null;
+        if (! empty($validated['user_address_id'])) {
+            $address = $user->addresses()
+                ->active()
+                ->find($validated['user_address_id']);
+        }
+
+        $address ??= $user->addresses()
+            ->active()
+            ->where('is_default', true)
+            ->first();
+
+        $address ??= $user->addresses()->active()->first();
+
+        if (! $address) {
+            if ($this->shouldReturnJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Please add a delivery address first.',
+                ], 422);
+            }
+
+            return back()->with('error', 'Please add a delivery address first.');
+        }
+
+        $result = $this->checkoutService->addCartToNextDelivery($cart, $user, $address, $validated);
+
+        if (! $result['success']) {
+            if ($this->shouldReturnJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $result['error'] ?? 'Unable to add items to next delivery.',
+                ], 422);
+            }
+
+            return back()->with('error', $result['error'] ?? 'Unable to add items to next delivery.');
+        }
+
+        $message = ($result['merged'] ?? false)
+            ? 'Items added to your existing next delivery.'
+            : 'Items scheduled for your next delivery.';
+
+        if ($this->shouldReturnJson($request)) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'order_id' => $result['order']?->id,
+                'scheduled_delivery_date' => $result['scheduled_delivery_date'] ?? null,
+            ]);
+        }
+
+        return redirect()->route('orders.show', $result['order'])
+            ->with('success', $message);
     }
 
     /**

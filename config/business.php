@@ -29,4 +29,16 @@ return [
 
     'vertical_values' => BusinessVertical::values(),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Delivery Cutoff
+    |--------------------------------------------------------------------------
+    |
+    | Orders added before this time are eligible for next-day delivery.
+    | After cutoff, the next available slot shifts by one additional day.
+    |
+    */
+
+    'next_day_cutoff_time' => env('NEXT_DAY_DELIVERY_CUTOFF', '22:30'),
+
 ];

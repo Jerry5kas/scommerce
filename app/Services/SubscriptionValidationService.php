@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BusinessVertical;
 use App\Models\Product;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
@@ -40,6 +41,10 @@ class SubscriptionValidationService
         // Validate products availability
         $zone = $address->zone;
         if ($zone) {
+            if (! $zone->supportsVertical(BusinessVertical::SocietyFresh->value)) {
+                $errors[] = 'Society Fresh subscriptions are not available in your selected delivery zone.';
+            }
+
             $productsValidation = $this->validateProductsAvailability($products, $zone);
             if (! $productsValidation['valid']) {
                 $errors = array_merge($errors, $productsValidation['errors']);
@@ -174,6 +179,12 @@ class SubscriptionValidationService
                 continue;
             }
 
+            if (! in_array($product->vertical, [BusinessVertical::SocietyFresh->value, Product::VERTICAL_BOTH], true)) {
+                $errors[] = "Product '{$product->name}' is not available for Society Fresh subscriptions.";
+
+                continue;
+            }
+
             if (! $product->isAvailableInZone($zone)) {
                 $errors[] = "Product '{$product->name}' is not available in your delivery zone.";
 
@@ -270,6 +281,7 @@ class SubscriptionValidationService
             ->active()
             ->inStock()
             ->subscriptionEligible()
+            ->forVertical(BusinessVertical::SocietyFresh->value)
             ->whereHas('zones', function ($query) use ($zone) {
                 $query->where('zones.id', $zone->id)
                     ->where('product_zones.is_available', true);

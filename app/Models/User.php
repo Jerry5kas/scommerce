@@ -27,6 +27,8 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'email_verified_at',
+        'phone_verified_at',
         'password',
         'role',
         'preferred_language',
@@ -56,6 +58,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'password' => 'hashed',
             'communication_consent' => 'boolean',
             'is_active' => 'boolean',
@@ -67,6 +70,14 @@ class User extends Authenticatable
     public function addresses(): HasMany
     {
         return $this->hasMany(UserAddress::class);
+    }
+
+    /**
+     * @return HasMany<SocialAccount, $this>
+     */
+    public function socialAccounts(): HasMany
+    {
+        return $this->hasMany(SocialAccount::class);
     }
 
     /**

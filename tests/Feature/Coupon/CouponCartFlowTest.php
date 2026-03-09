@@ -159,4 +159,52 @@ class CouponCartFlowTest extends TestCase
             ->where('available_coupons.0.code', 'WELCOME50')
         );
     }
+
+    public function test_coupon_with_free_sample_exclusion_fails_for_zero_priced_cart_item(): void
+    {
+        $user = User::factory()->customer()->create();
+        $product = Product::factory()->create(['price' => 0]);
+
+        $cart = Cart::query()->create([
+            'user_id' => $user->id,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        CartItem::query()->create([
+            'cart_id' => $cart->id,
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'price' => 0,
+            'subtotal' => 0,
+            'vertical' => 'daily_fresh',
+            'is_subscription' => false,
+        ]);
+
+        $cart->calculateTotals();
+
+        Coupon::query()->create([
+            'code' => 'NOFREE',
+            'name' => 'No Free Samples',
+            'type' => Coupon::TYPE_FIXED,
+            'value' => 10,
+            'is_active' => true,
+            'applicable_to' => Coupon::APPLICABLE_ALL,
+            'exclude_free_samples' => true,
+            'exclude_subscriptions' => false,
+            'first_order_only' => false,
+            'new_users_only' => false,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->from('/cart')
+            ->withSession(['_token' => 'test-csrf-token'])
+            ->post('/coupons/apply', [
+                'code' => 'NOFREE',
+            ], ['X-CSRF-TOKEN' => 'test-csrf-token']);
+
+        $response->assertRedirect('/cart');
+        $response->assertSessionHasErrors([
+            'code' => 'This coupon cannot be used with free samples.',
+        ]);
+    }
 }
