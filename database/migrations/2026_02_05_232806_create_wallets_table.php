@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('balance', 10, 2)->default(0);
             $table->string('currency', 3)->default('INR');
             $table->boolean('is_active')->default(true);
-            $table->decimal('low_balance_threshold', 10, 2)->default(100)->comment('For reminders');
+            $table->decimal('low_balance_threshold', 10, 2)->default(100);
             $table->boolean('auto_recharge_enabled')->default(false);
             $table->decimal('auto_recharge_amount', 10, 2)->nullable();
             $table->decimal('auto_recharge_threshold', 10, 2)->nullable();

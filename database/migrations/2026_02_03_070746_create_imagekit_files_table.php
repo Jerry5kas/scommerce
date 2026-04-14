@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('imagekit_files', function (Blueprint $table) {
             $table->id();
-            $table->string('file_hash', 64)->unique()->comment('MD5 hash of the file content');
-            $table->string('file_id', 255)->unique()->comment('ImageKit file ID');
-            $table->string('url', 500)->comment('ImageKit CDN URL');
-            $table->string('file_path', 500)->comment('ImageKit file path');
-            $table->string('name', 255)->comment('Original filename');
-            $table->unsignedBigInteger('size')->comment('File size in bytes');
+            $table->string('file_hash', 64)->unique();
+            $table->string('file_id', 255)->unique();
+            $table->string('url', 500);
+            $table->string('file_path', 500);
+            $table->string('name', 255);
+            $table->unsignedBigInteger('size');
             $table->string('mime_type', 100)->nullable();
-            $table->string('folder', 255)->nullable()->comment('Folder path in ImageKit');
+            $table->string('folder', 255)->nullable();
             $table->timestamps();
 
             $table->index('file_hash');

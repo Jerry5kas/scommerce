@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::disableForeignKeyConstraints();
 
-        if (Schema::hasColumn('subscription_plans', 'slug') && DB::getDriverName() === 'sqlite') {
+        if (Schema::hasColumn('subscription_plans', 'slug') && in_array(DB::getDriverName(), ['sqlite', 'pgsql'])) {
             Schema::table('subscription_plans', function (Blueprint $table) {
                 try {
                     $table->dropUnique('subscription_plans_slug_unique');
@@ -62,10 +62,10 @@ return new class extends Migration
         });
 
         Schema::table('subscription_plans', function (Blueprint $table) {
-            $table->enum('frequency_type', ['daily', 'alternate', 'weekly', 'custom'])->default('daily')->after('description');
-            $table->enum('discount_type', ['none', 'percentage', 'flat'])->default('none')->after('frequency_type');
-            $table->decimal('discount_value', 10, 2)->default(0)->after('discount_type');
-            $table->integer('sort_order')->default(0)->after('is_active');
+            $table->enum('frequency_type', ['daily', 'alternate', 'weekly', 'custom'])->default('daily');
+            $table->enum('discount_type', ['none', 'percentage', 'flat'])->default('none');
+            $table->decimal('discount_value', 10, 2)->default(0);
+            $table->integer('sort_order')->default(0);
         });
 
         // 2. Create subscription_plan_items

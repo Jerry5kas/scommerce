@@ -20,8 +20,8 @@ return new class extends Migration
             $table->decimal('balance_before', 10, 2);
             $table->decimal('balance_after', 10, 2);
             $table->enum('transaction_type', ['recharge', 'payment', 'refund', 'loyalty', 'referral', 'admin_adjustment', 'cashback']);
-            $table->string('reference_id')->nullable()->comment('Order ID, payment ID, etc.');
-            $table->string('reference_type')->nullable()->comment('Model class');
+            $table->string('reference_id')->nullable();
+            $table->string('reference_type')->nullable();
             $table->text('description')->nullable();
             $table->enum('status', ['pending', 'completed', 'failed'])->default('completed');
             $table->timestamps();

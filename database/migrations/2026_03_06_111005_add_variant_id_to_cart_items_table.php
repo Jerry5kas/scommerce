@@ -15,7 +15,6 @@ return new class extends Migration
             $table->dropUnique('cart_items_cart_id_product_id_is_subscription_unique');
             $table->foreignId('variant_id')
                 ->nullable()
-                ->after('product_id')
                 ->constrained('product_variants')
                 ->nullOnDelete();
 

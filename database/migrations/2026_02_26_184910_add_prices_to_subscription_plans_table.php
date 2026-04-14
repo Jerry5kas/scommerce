@@ -25,7 +25,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('subscription_plans', function (Blueprint $table) {
-            $table->json('prices')->nullable()->after('discount_percent');
+            $table->json('prices')->nullable();
         });
     }
 

@@ -12,11 +12,11 @@ class ExampleTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_is_redirected_to_login_from_home(): void
+    public function test_guest_can_access_home(): void
     {
         $response = $this->get(route('home'));
 
-        $response->assertRedirect(route('login'));
+        $response->assertOk();
     }
 
     public function test_authenticated_user_with_default_serviceable_address_can_access_home(): void

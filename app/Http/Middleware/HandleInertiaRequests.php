@@ -50,12 +50,14 @@ class HandleInertiaRequests extends Middleware
 
         $admin = $request->user('admin');
 
-        // compute user's default zone for sharing (nullable)
+        // On admin routes, skip all customer-specific data to avoid unnecessary queries
+        $isAdminRoute = str_starts_with($request->path(), 'admin');
+
         $zone = null;
         $location = null;
         $cartItemsCount = 0;
 
-        if ($customer !== null) {
+        if (! $isAdminRoute && $customer !== null) {
             $defaultAddress = $customer
                 ->addresses()
                 ->active()
@@ -98,7 +100,7 @@ class HandleInertiaRequests extends Middleware
                     'longitude' => (float) $defaultAddress->longitude,
                 ];
             }
-        } elseif (session('guest_zone_id')) {
+        } elseif (! $isAdminRoute && session('guest_zone_id')) {
             $guestZone = \App\Models\Zone::find(session('guest_zone_id'));
             if ($guestZone) {
                 $zone = $guestZone->only(['id', 'name', 'code']);

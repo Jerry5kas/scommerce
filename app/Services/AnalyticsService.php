@@ -203,17 +203,29 @@ class AnalyticsService
      */
     public function getRevenueChart(Carbon $startDate, Carbon $endDate, string $groupBy = 'day'): array
     {
-        $dateFormat = match ($groupBy) {
-            'week' => '%Y-%u',
-            'month' => '%Y-%m',
-            default => '%Y-%m-%d',
-        };
+        $driver = DB::getDriverName();
+
+        if ($driver === 'pgsql') {
+            $dateFormat = match ($groupBy) {
+                'week' => 'IYYY-IW',
+                'month' => 'YYYY-MM',
+                default => 'YYYY-MM-DD',
+            };
+            $periodExpr = DB::raw("TO_CHAR(created_at, '{$dateFormat}') as period");
+        } else {
+            $dateFormat = match ($groupBy) {
+                'week' => '%Y-%u',
+                'month' => '%Y-%m',
+                default => '%Y-%m-%d',
+            };
+            $periodExpr = DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as period");
+        }
 
         return DB::table('orders')
             ->whereBetween('created_at', [$startDate, $endDate])
             ->where('payment_status', 'paid')
             ->select(
-                DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as period"),
+                $periodExpr,
                 DB::raw('SUM(total) as revenue'),
                 DB::raw('COUNT(*) as orders')
             )
@@ -233,15 +245,15 @@ class AnalyticsService
         $query = TrackingEvent::byEvent(TrackingEvent::EVENT_VIEW_ITEM)
             ->byDate($startDate, $endDate)
             ->select(
-                DB::raw("JSON_EXTRACT(properties, '$.product_id') as product_id"),
-                DB::raw("JSON_EXTRACT(properties, '$.product_name') as product_name"),
+                DB::raw("properties->>'product_id' as product_id"),
+                DB::raw("properties->>'product_name' as product_name"),
                 DB::raw('COUNT(*) as views')
             )
-            ->groupBy('product_id', 'product_name')
+            ->groupBy(DB::raw("properties->>'product_id'"), DB::raw("properties->>'product_name'"))
             ->orderByDesc('views');
 
         if ($productId) {
-            $query->whereRaw("JSON_EXTRACT(properties, '$.product_id') = ?", [$productId]);
+            $query->whereRaw("(properties->>'product_id')::integer = ?", [$productId]);
         }
 
         return $query->limit(20)->get()->toArray();

@@ -9,13 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('categories', function (Blueprint $table) {
-            $table->string('vertical', 50)->default('both')->after('is_active');
+            $table->string('vertical', 50)->default('both');
         });
         Schema::table('collections', function (Blueprint $table) {
-            $table->string('vertical', 50)->default('both')->after('is_active');
+            $table->string('vertical', 50)->default('both');
         });
         Schema::table('products', function (Blueprint $table) {
-            $table->string('vertical', 50)->default('both')->after('is_active');
+            $table->string('vertical', 50)->default('both');
         });
     }
 

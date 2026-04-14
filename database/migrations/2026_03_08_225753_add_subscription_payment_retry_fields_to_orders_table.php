@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->unsignedInteger('payment_attempts')->default(0)->after('payment_status');
-            $table->timestamp('next_payment_retry_at')->nullable()->after('payment_attempts');
-            $table->timestamp('payment_failed_at')->nullable()->after('next_payment_retry_at');
+            $table->unsignedInteger('payment_attempts')->default(0);
+            $table->timestamp('next_payment_retry_at')->nullable();
+            $table->timestamp('payment_failed_at')->nullable();
 
             $table->index('next_payment_retry_at');
         });

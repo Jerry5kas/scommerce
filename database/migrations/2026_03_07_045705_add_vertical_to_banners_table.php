@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('banners', function (Blueprint $table) {
-            $table->string('vertical')->default(Banner::VERTICAL_BOTH)->after('type');
+            $table->string('vertical')->default(Banner::VERTICAL_BOTH);
 
             $table->index(['type', 'vertical', 'is_active']);
         });

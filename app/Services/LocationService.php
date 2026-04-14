@@ -100,7 +100,7 @@ class LocationService
             ->when($addressId !== null, fn ($q) => $q->where('address_id', $addressId))
             ->when($addressId === null && $userId !== null, fn ($q) => $q->where('user_id', $userId))
             ->with('zone')
-            ->orderByRaw('address_id IS NOT NULL DESC')
+            ->orderByRaw('address_id IS NOT NULL DESC NULLS LAST')
             ->first();
 
         if ($override === null || ! $override->zone) {

@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('zones', function (Blueprint $table) {
-            $table->json('verticals')->nullable()->after('is_active');
+            $table->json('verticals')->nullable();
         });
 
         $both = json_encode(BusinessVertical::values());

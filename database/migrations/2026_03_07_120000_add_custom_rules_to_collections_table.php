@@ -9,11 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('collections', function (Blueprint $table) {
-            $table->string('product_selection_mode')->default('category')->after('category_id');
-            $table->string('category_selection_mode')->default('all')->after('product_selection_mode');
-            $table->json('category_ids')->nullable()->after('category_selection_mode');
-            $table->json('product_ids')->nullable()->after('category_ids');
-            $table->unsignedInteger('random_products_limit')->default(12)->after('product_ids');
+            $table->string('product_selection_mode')->default('category');
+            $table->string('category_selection_mode')->default('all');
+            $table->json('category_ids')->nullable();
+            $table->json('product_ids')->nullable();
+            $table->unsignedInteger('random_products_limit')->default(12);
         });
     }
 

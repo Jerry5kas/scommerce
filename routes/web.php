@@ -301,7 +301,7 @@ Route::get('/', function (Request $request) {
     });
 
     return Inertia::render('home', $payload);
-})->name('home')->middleware(['auth', 'location']);
+})->name('home')->middleware(['location']);
 
 Route::middleware('location')->group(function () {
     // Catalog home

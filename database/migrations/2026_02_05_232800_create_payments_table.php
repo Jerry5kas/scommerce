@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('payment_id')->unique()->nullable()->comment('Gateway payment ID');
+            $table->string('payment_id')->unique()->nullable();
             $table->decimal('amount', 10, 2);
             $table->string('currency', 3)->default('INR');
             $table->enum('method', ['gateway', 'wallet', 'cod', 'split'])->default('gateway');
-            $table->string('gateway')->nullable()->comment('e.g., razorpay, stripe');
+            $table->string('gateway')->nullable();
             $table->enum('status', ['pending', 'processing', 'completed', 'failed', 'refunded', 'partially_refunded'])->default('pending');
             $table->json('gateway_response')->nullable();
             $table->text('failure_reason')->nullable();
