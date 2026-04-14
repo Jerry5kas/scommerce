@@ -7,6 +7,8 @@ use App\Models\Cart;
 use App\Models\ThemeSetting;
 use App\Models\User;
 use App\Models\UserAddress;
+use App\Models\Zone;
+use App\Services\LocationService;
 use App\Support\VerticalContext;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -41,8 +43,6 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $currentVertical = VerticalContext::current($request, BusinessVertical::DailyFresh->value);
-
         $customer = $request->user();
         if (! $customer instanceof User) {
             $customer = null;
@@ -53,6 +53,7 @@ class HandleInertiaRequests extends Middleware
         // On admin routes, skip all customer-specific data to avoid unnecessary queries
         $isAdminRoute = str_starts_with($request->path(), 'admin');
 
+        $zoneModel = null;
         $zone = null;
         $location = null;
         $cartItemsCount = 0;
@@ -89,7 +90,8 @@ class HandleInertiaRequests extends Middleware
 
             if ($defaultAddress) {
                 if ($defaultAddress->zone) {
-                    $zone = $defaultAddress->zone->only(['id', 'name', 'code']);
+                    $zoneModel = $defaultAddress->zone;
+                    $zone = $zoneModel->only(['id', 'name', 'code']);
                 }
                 $location = [
                     'address_line_1' => $defaultAddress->address_line_1,
@@ -101,8 +103,9 @@ class HandleInertiaRequests extends Middleware
                 ];
             }
         } elseif (! $isAdminRoute && session('guest_zone_id')) {
-            $guestZone = \App\Models\Zone::find(session('guest_zone_id'));
+            $guestZone = Zone::find(session('guest_zone_id'));
             if ($guestZone) {
+                $zoneModel = $guestZone;
                 $zone = $guestZone->only(['id', 'name', 'code']);
             }
             if (session('guest_address')) {
@@ -118,6 +121,12 @@ class HandleInertiaRequests extends Middleware
 
             $cartItemsCount = $guestCart?->itemCount() ?? 0;
         }
+
+        $currentVertical = VerticalContext::current($request, BusinessVertical::DailyFresh->value, $zoneModel);
+
+        $availableVerticals = $zoneModel !== null
+            ? app(LocationService::class)->getVerticalsForZone($zoneModel)
+            : BusinessVertical::values();
 
         return [
             ...parent::share($request),
@@ -139,6 +148,7 @@ class HandleInertiaRequests extends Middleware
             'zone' => $zone,
             'location' => $location,
             'currentVertical' => $currentVertical,
+            'availableVerticals' => $availableVerticals,
             'googleMapsApiKey' => config('maps.google.api_key'),
         ];
     }

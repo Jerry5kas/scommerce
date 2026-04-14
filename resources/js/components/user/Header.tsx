@@ -101,6 +101,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
         zone?: { id: number; name: string; code: string } | null;
         location?: Location | null;
         currentVertical?: StrictVertical;
+        availableVerticals?: string[];
     };
     const auth = pageProps.auth;
     const authUser = auth?.user;
@@ -117,6 +118,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
     const sharedVertical = normalizeVertical(pageProps.currentVertical);
     const urlVertical = getVerticalFromQuery(currentQuery, sharedVertical);
     const [activeVertical, setActiveVertical] = useState<StrictVertical>(urlVertical);
+    const availableVerticals = pageProps.availableVerticals ?? ['daily_fresh', 'society_fresh'];
     const mobileHeaderTitle = 'High Quality, Freshness';
 
     const withActiveVertical = (href: string): string => {
@@ -334,6 +336,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
                                 </div>
                             </div>
 
+                            {availableVerticals.length > 1 && (
                             <div className="mt-1.5 rounded-2xl bg-[#4dbfa6]/30 p-1">
                                 <div className="grid grid-cols-2 gap-1">
                                     <button
@@ -368,6 +371,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
                                     </button>
                                 </div>
                             </div>
+                            )}
                         </div>
                     )}
 
@@ -466,6 +470,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
                                 </div>
                             </form>
 
+                            {availableVerticals.length > 1 && (
                             <div className="hidden items-center rounded-full border border-gray-200 bg-gray-50 p-0.5 lg:flex">
                                 <button
                                     type="button"
@@ -490,6 +495,7 @@ export default function Header({ showTopBanner }: HeaderProps) {
                                     Society
                                 </button>
                             </div>
+                            )}
 
                             <Link href={withActiveVertical('/wishlist')} className={`${actionIconButtonClass} relative`} aria-label="Wishlist">
                                 <Heart className="h-3.5 w-3.5" strokeWidth={2} />
