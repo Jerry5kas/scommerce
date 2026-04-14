@@ -70,7 +70,9 @@ COPY . .
 COPY --from=node-builder /app/public/build public/build
 
 # Create .env from example before composer install so package:discover can run
-RUN cp .env.example .env && php -r "echo 'APP_KEY=base64:' . base64_encode(random_bytes(32)) . PHP_EOL;" >> .env
+RUN cp .env.example .env \
+    && APP_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')" \
+    && sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" .env
 
 # Install PHP dependencies (production only)
 RUN composer install \
