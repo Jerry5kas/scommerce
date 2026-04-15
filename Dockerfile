@@ -75,12 +75,15 @@ RUN cp .env.example .env \
     && sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" .env
 
 # Install PHP dependencies (production only)
+# --no-scripts prevents package:discover from running during build (no DB available)
 RUN composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction \
     --no-progress \
-    --prefer-dist
+    --prefer-dist \
+    --no-scripts \
+    && php artisan package:discover --ansi
 
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html \
@@ -101,7 +104,7 @@ COPY docker/php.ini /usr/local/etc/php/conf.d/app.ini
 
 # Copy entrypoint
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 EXPOSE 8080
 
